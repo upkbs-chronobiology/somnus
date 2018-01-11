@@ -7,7 +7,7 @@
     @for(question <- questions) {
         <li>
             @question.content
-            <a href="@routes.QuestionController.delete(question.id)">
+            <a href="@routes.QuestionHtmlController.delete(question.id)">
                 delete (not working)
                 @* as we can't do DELETE requests from plain old links *@
             </a>
@@ -18,7 +18,7 @@
 
 <hr>
 <h2></h2>
-<form role="form" action='@routes.QuestionController.add' method="post">
+<form role="form" action='@routes.QuestionHtmlController.add' method="post">
     @helper.CSRF.formField
 
     <label for="content">Question content</label>

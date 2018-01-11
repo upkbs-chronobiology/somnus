@@ -1,11 +1,16 @@
-@()
+@()(implicit requestHeader: RequestHeader)
 
 @main("Welcome to Somnus") {
   <h1>Welcome to Somnus*</h1>
 
-  <a href="@routes.QuestionController.index">Questions</a>
+  <a href="@routes.QuestionHtmlController.index">Questions</a>
+
+  <br>
+
+  <em>CSRF Token (as JSON tuple):</em>
+  <code>"@helper.CSRF.getToken.name": "@helper.CSRF.getToken.value"</code>
+
+  <hr>
+
+  <sub>*It's a code name (Somnus is the Roman god of sleep)</sub>
 }
-
-<hr>
-
-<sub>*It's a code name (Somnus is the Roman god of sleep)</sub>

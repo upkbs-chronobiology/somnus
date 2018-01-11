@@ -4,10 +4,11 @@ import play.api.Play
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.db.slick.DatabaseConfigProvider
+import play.api.libs.json.{JsValue, Json, Writes}
 
 import scala.concurrent.Future
-import slick.driver.JdbcProfile
-import slick.driver.MySQLDriver.api._
+import slick.jdbc.JdbcProfile
+import slick.jdbc.H2Profile.api._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -15,6 +16,19 @@ case class Book(isbn: String)
 
 // TODO: Add properties like type (numeric, multi-choice, text, ...), time of asking (morning or evening) etc.
 case class Question(id: Long, content: String)
+
+object Question {
+  implicit val implicitWrites = new Writes[Question] {
+    def writes(question: Question): JsValue = {
+      Json.obj(
+        "id" -> question.id,
+        "content" -> question.content
+      )
+    }
+  }
+
+  val tupled = (this.apply _).tupled
+}
 
 case class QuestionFormData(content: String)
 
@@ -37,10 +51,10 @@ object Questions {
   val dbConfig = DatabaseConfigProvider.get[JdbcProfile](Play.current)
   val questions = TableQuery[QuestionTable]
 
-  def add(question: Question): Future[String] = {
-    dbConfig.db.run(questions += question).map(res => "Question successfully added").recover {
-      case ex: Exception => ex.getCause.getMessage
-    }
+  def add(question: Question): Future[Question] = {
+    dbConfig.db.run((questions returning questions.map(_.id)) += question) flatMap(idOptional => {
+      this.get(idOptional).map(_.get)
+    })
   }
 
   def delete(id: Long): Future[Int] = {

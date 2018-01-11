@@ -9,7 +9,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 @Singleton
-class QuestionController @Inject()(cc: ControllerComponents) extends AbstractController(cc) {
+class QuestionHtmlController @Inject()(cc: ControllerComponents) extends AbstractController(cc) {
 
   def index = Action.async { implicit request =>
     Questions.listAll.map(questions => Ok(views.html.questions(QuestionForm.form, questions)))
@@ -22,8 +22,8 @@ class QuestionController @Inject()(cc: ControllerComponents) extends AbstractCon
       })),
       data => {
         val newQuestion = Question(0, data.content)
-        Questions.add(newQuestion).map(res =>
-          Redirect(routes.QuestionController.index())
+        Questions.add(newQuestion).map(_ =>
+          Redirect(routes.QuestionHtmlController.index())
         )
       }
     )
@@ -31,7 +31,7 @@ class QuestionController @Inject()(cc: ControllerComponents) extends AbstractCon
 
   def delete(id: Long) = Action.async { implicit request =>
     Questions.delete(id) map { res =>
-      Redirect(routes.QuestionController.index());
+      Redirect(routes.QuestionHtmlController.index());
     }
   }
 
