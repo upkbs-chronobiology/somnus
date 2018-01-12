@@ -9,6 +9,7 @@ scalaVersion := "2.12.3"
 
 libraryDependencies += guice
 libraryDependencies += "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.2" % Test
+javaOptions in Test += "-Dconfig.file=conf/application.test.conf"
 
 libraryDependencies += "com.h2database" % "h2" % "1.4.192"
 libraryDependencies ++= Seq(

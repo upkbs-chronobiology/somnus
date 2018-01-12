@@ -15,6 +15,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 case class Book(isbn: String)
 
 // TODO: Add properties like type (numeric, multi-choice, text, ...), time of asking (morning or evening) etc.
+// XXX: Maybe "text" instead of "content"?
 case class Question(id: Long, content: String)
 
 object Question {
