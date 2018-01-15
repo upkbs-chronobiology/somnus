@@ -1,5 +1,7 @@
 # somnus
 
+[![Build Status](https://travis-ci.org/upkbs-chronobiology/somnus.svg?branch=master)](https://travis-ci.org/upkbs-chronobiology/somnus)
+
 Somnus is the code name for an electronic sleep log.
 This is the main application managing sleep log data.
 
