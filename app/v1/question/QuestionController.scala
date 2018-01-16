@@ -29,7 +29,7 @@ class QuestionController @Inject()(rcc: RestControllerComponents)(implicit ec: E
         Questions.add(Question(0, formData.content)) map { newQuestion =>
           Created(Json.toJson(newQuestion)) // XXX: And location header?
         } recover {
-          case _: Exception => InternalServerError("Could not create question.") // XXX: More info? JSON?
+          case _: Exception => BadRequest("Could not create question.") // XXX: More info? JSON?
         }
       }
     )

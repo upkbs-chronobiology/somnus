@@ -5,14 +5,13 @@ import play.api.data.Form
 import play.api.data.Forms._
 import play.api.db.slick.DatabaseConfigProvider
 import play.api.libs.json.{JsValue, Json, Writes}
+import slick.basic.DatabaseConfig
 
 import scala.concurrent.Future
 import slick.jdbc.JdbcProfile
 import slick.jdbc.H2Profile.api._
 
 import scala.concurrent.ExecutionContext.Implicits.global
-
-case class Book(isbn: String)
 
 // TODO: Add properties like type (numeric, multi-choice, text, ...), time of asking (morning or evening) etc.
 // XXX: Maybe "text" instead of "content"?
@@ -49,24 +48,25 @@ class QuestionTable(tag: Tag) extends Table[Question](tag, "question") {
 }
 
 object Questions {
-  val dbConfig = DatabaseConfigProvider.get[JdbcProfile](Play.current)
   val questions = TableQuery[QuestionTable]
+  // FIXME: Inject instead
+  def dbConfig(): DatabaseConfig[JdbcProfile] = DatabaseConfigProvider.get[JdbcProfile](Play.current)
 
   def add(question: Question): Future[Question] = {
-    dbConfig.db.run((questions returning questions.map(_.id)) += question) flatMap(idOptional => {
-      this.get(idOptional).map(_.get)
+    dbConfig().db.run((questions returning questions.map(_.id)) += question) flatMap(id => {
+      this.get(id).map(_.get)
     })
   }
 
   def delete(id: Long): Future[Int] = {
-    dbConfig.db.run(questions.filter(_.id === id).delete)
+    dbConfig().db.run(questions.filter(_.id === id).delete)
   }
 
   def get(id: Long): Future[Option[Question]] = {
-    dbConfig.db.run(questions.filter(_.id === id).result.headOption)
+    dbConfig().db.run(questions.filter(_.id === id).result.headOption)
   }
 
   def listAll: Future[Seq[Question]] = {
-    dbConfig.db.run(questions.result)
+    dbConfig().db.run(questions.result)
   }
 }
