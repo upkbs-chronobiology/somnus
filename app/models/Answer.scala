@@ -50,23 +50,23 @@ class AnswerTable(tag: Tag) extends Table[Answer](tag, "answer") {
 }
 
 object Answers {
-  val dbConfig = DatabaseConfigProvider.get[JdbcProfile](Play.current)
+  def dbConfig() = DatabaseConfigProvider.get[JdbcProfile](Play.current)
   val answers = TableQuery[AnswerTable]
 
   def add(answer: Answer): Future[Answer] = {
-    dbConfig.db.run((answers returning answers.map(_.id)) += answer)
+    dbConfig().db.run((answers returning answers.map(_.id)) += answer)
       .flatMap(this.get(_).map(_.get))
   }
 
   def delete(id: Long): Future[Int] = {
-    dbConfig.db.run(answers.filter(_.id === id).delete)
+    dbConfig().db.run(answers.filter(_.id === id).delete)
   }
 
   def get(id: Long): Future[Option[Answer]] = {
-    dbConfig.db.run(answers.filter(_.id === id).result.headOption)
+    dbConfig().db.run(answers.filter(_.id === id).result.headOption)
   }
 
   def listAll(): Future[Seq[Answer]] = {
-    dbConfig.db.run(answers.result)
+    dbConfig().db.run(answers.result)
   }
 }

@@ -37,7 +37,8 @@ class AnswerControllerSpec extends PlaySpec with GuiceOneAppPerSuite with Inject
       val finalList = contentAsJson(doRequest(GET, s"/v1/answers")).as[JsArray].value
       finalList.size must equal(0)
 
-      doSync(Questions.delete(question.id))
+      // delete question again to leave db in initial state
+      doSync(Questions.delete(question.id)) must equal(1)
     }
   }
 
