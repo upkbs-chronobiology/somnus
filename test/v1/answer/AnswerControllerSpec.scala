@@ -1,20 +1,14 @@
 package v1.answer
 
-import java.util.concurrent.TimeUnit
-
-import models.{Answer, Answers, Question, Questions}
+import models.{Question, Questions}
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.Play
 import play.api.libs.json.{JsArray, JsValue, Json}
-import play.api.mvc.Result
 import play.api.test.Helpers._
 import play.api.test._
+import util.TestUtils
 
-import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, Awaitable, Future}
-
-class AnswerControllerSpec extends PlaySpec with GuiceOneAppPerSuite with Injecting {
+class AnswerControllerSpec extends PlaySpec with GuiceOneAppPerSuite with Injecting with TestUtils {
 
   "AnswerController" should {
     "reject answer with invalid question id" in {
@@ -40,15 +34,6 @@ class AnswerControllerSpec extends PlaySpec with GuiceOneAppPerSuite with Inject
       // delete question again to leave db in initial state
       doSync(Questions.delete(question.id)) must equal(1)
     }
-  }
-
-  private def doSync[T](action: Awaitable[T]): T = {
-    Await.result(action, Duration(1, TimeUnit.SECONDS))
-  }
-
-  private def doRequest(httpMethod: String, target: String, body: JsValue = null): Future[Result] = {
-    val request = FakeRequest(httpMethod, target).withBody(body)
-    route(app, request).get
   }
 
   private def answerJson(questionId: Long, text: String): JsValue = {
