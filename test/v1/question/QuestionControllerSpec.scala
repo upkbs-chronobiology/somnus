@@ -6,11 +6,12 @@ import play.api.libs.json.{JsArray, JsValue, Json}
 import play.api.mvc.Result
 import play.api.test.Helpers._
 import play.api.test._
+import util.FreshDatabase
 
 import scala.concurrent.Future
 
 
-class QuestionControllerSpec extends PlaySpec with GuiceOneAppPerSuite with Injecting {
+class QuestionControllerSpec extends PlaySpec with GuiceOneAppPerSuite with FreshDatabase with Injecting {
 
   "QuestionController index" should {
     "initially serve an empty JSON array" in {
@@ -28,9 +29,6 @@ class QuestionControllerSpec extends PlaySpec with GuiceOneAppPerSuite with Inje
       val secondQuestionResult = postQuestion("Huh B?")
       status(secondQuestionResult) must equal(201)
       status(postQuestion("Huh C?")) must equal(201)
-
-      val initialList = contentAsJson(route(app, FakeRequest(GET, "/v1/questions")).get).as[JsArray].value
-      println(initialList)
 
       val secondId = (contentAsJson(secondQuestionResult) \ "id").result.as[Long]
       val getRequest = FakeRequest(GET, s"/v1/questions/$secondId")

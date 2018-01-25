@@ -2,19 +2,19 @@ package v1.answer
 
 import java.util.concurrent.TimeUnit
 
-import models.{Answer, Answers, Question, Questions}
+import models.{Question, Questions}
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.Play
 import play.api.libs.json.{JsArray, JsValue, Json}
 import play.api.mvc.Result
 import play.api.test.Helpers._
 import play.api.test._
+import util.FreshDatabase
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Awaitable, Future}
 
-class AnswerControllerSpec extends PlaySpec with GuiceOneAppPerSuite with Injecting {
+class AnswerControllerSpec extends PlaySpec with GuiceOneAppPerSuite with FreshDatabase with Injecting {
 
   "AnswerController" should {
     "reject answer with invalid question id" in {
