@@ -13,7 +13,6 @@ import slick.lifted.Tag
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-// TODO: How/where to include LoginInfo?
 case class User(id: Long, name: String, passwordId: Option[Long]) extends Identity
 
 object User {
@@ -32,7 +31,7 @@ class UserTable(tag: Tag) extends Table[User](tag, "user") {
   def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
   def name = column[String]("name", O.Unique)
   def passwordId = column[Long]("password_id", O.Unique)
-  def password = foreignKey("password", passwordId.?, Passwords.passwords)(_.id)
+  def password = foreignKey("password", passwordId.?, TableQuery[PasswordTable])(_.id)
 
   override def * = (id, name, passwordId.?) <> (User.tupled, User.unapply)
 }
@@ -41,7 +40,7 @@ trait UserService extends IdentityService[User]
 
 // TODO: Create initial user (e.g. admin) here?
 @Singleton
-class UserRepository @Inject() (dbConfigProvider: DatabaseConfigProvider) extends UserService {
+class UserRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) extends UserService {
 
   def users = TableQuery[UserTable]
 
@@ -74,5 +73,9 @@ class UserRepository @Inject() (dbConfigProvider: DatabaseConfigProvider) extend
 
   def listAll(): Future[Seq[User]] = {
     dbConfig.db.run(users.result)
+  }
+
+  def delete(name: String): Future[Int] = {
+    dbConfig.db.run(users.filter(_.name === name).delete)
   }
 }

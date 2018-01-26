@@ -6,15 +6,22 @@ import play.api.libs.json.{JsArray, JsValue, Json}
 import play.api.mvc.Result
 import play.api.test.Helpers._
 import play.api.test._
+import util.Authenticated
 
 import scala.concurrent.Future
 
 
-class QuestionControllerSpec extends PlaySpec with GuiceOneAppPerSuite with Injecting {
+class QuestionControllerSpec
+  extends PlaySpec with GuiceOneAppPerSuite with Injecting with Authenticated {
 
   "QuestionController index" should {
+    "reject unauthorized users" in {
+      val result = doRequest(GET, "/v1/questions")
+      status(result) must equal(UNAUTHORIZED)
+    }
+
     "initially serve an empty JSON array" in {
-      val request = FakeRequest(GET, "/v1/questions")
+      val request = AuthenticatedFakeRequest(GET, "/v1/questions")
       val list = route(app, request).get
 
       contentAsString(list) must equal("[]")
@@ -29,11 +36,13 @@ class QuestionControllerSpec extends PlaySpec with GuiceOneAppPerSuite with Inje
       status(secondQuestionResult) must equal(201)
       status(postQuestion("Huh C?")) must equal(201)
 
-      val initialList = contentAsJson(route(app, FakeRequest(GET, "/v1/questions")).get).as[JsArray].value
+      val initialList = contentAsJson(
+        route(app, AuthenticatedFakeRequest(GET, "/v1/questions")).get)
+        .as[JsArray].value
       println(initialList)
 
       val secondId = (contentAsJson(secondQuestionResult) \ "id").result.as[Long]
-      val getRequest = FakeRequest(GET, s"/v1/questions/$secondId")
+      val getRequest = AuthenticatedFakeRequest(GET, s"/v1/questions/$secondId")
       val getResult = route(app, getRequest).get
       status(getResult) must equal(200)
 
@@ -41,7 +50,7 @@ class QuestionControllerSpec extends PlaySpec with GuiceOneAppPerSuite with Inje
       foundObj("id").as[Long] must equal(secondId)
       foundObj("content").as[String] must equal("Huh B?")
 
-      val listResult = route(app, FakeRequest(GET, "/v1/questions")).get
+      val listResult = route(app, AuthenticatedFakeRequest(GET, "/v1/questions")).get
       status(listResult) must equal(200)
 
       val foundList = contentAsJson(listResult).as[JsArray].value
@@ -52,26 +61,26 @@ class QuestionControllerSpec extends PlaySpec with GuiceOneAppPerSuite with Inje
       status(deleteQuestion(secondId - 1)) must equal(200)
       status(deleteQuestion(secondId)) must equal(200)
 
-      val secondListResult = route(app, FakeRequest(GET, "/v1/questions")).get
+      val secondListResult = route(app, AuthenticatedFakeRequest(GET, "/v1/questions")).get
       val secondList = contentAsJson(secondListResult).as[JsArray].value
       secondList.size must equal(1)
       secondList.head("id").as[Long] must equal(secondId + 1)
 
       status(deleteQuestion(secondId + 1)) must equal(200)
-      val finalListResult = route(app, FakeRequest(GET, "/v1/questions")).get
+      val finalListResult = route(app, AuthenticatedFakeRequest(GET, "/v1/questions")).get
       val finalList = contentAsJson(finalListResult).as[JsArray].value
       finalList.size must equal(0)
     }
   }
 
   private def postQuestion(text: String): Future[Result] = {
-    val postRequest = FakeRequest(POST, "/v1/questions")
+    val postRequest = AuthenticatedFakeRequest(POST, "/v1/questions")
       .withBody(questionJson(text))
     route(app, postRequest).get
   }
 
   private def deleteQuestion(id: Long) = {
-    val deleteRequest = FakeRequest(DELETE, s"/v1/questions/$id")
+    val deleteRequest = AuthenticatedFakeRequest(DELETE, s"/v1/questions/$id")
     route(app, deleteRequest).get
   }
 

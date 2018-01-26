@@ -20,13 +20,13 @@ class QuestionController @Inject()(
     Questions.listAll.map(questions => Ok(Json.toJson(questions)))
   }
 
-  def get(id: Long) = Action.async { implicit request =>
+  def get(id: Long) = silhouette.SecuredAction.async { implicit request =>
     Questions.get(id) map (_.get) map (q => Ok(Json.toJson(q))) recover {
       case _: Exception => BadRequest("Cannot serve that question") // XXX: More info? JSON?
     }
   }
 
-  def add = Action.async { implicit request =>
+  def add = silhouette.SecuredAction.async { implicit request =>
     QuestionForm.form.bindFromRequest().fold(
       badForm => Future.successful(BadRequest(badForm.errorsAsJson)),
       formData => {
@@ -40,7 +40,7 @@ class QuestionController @Inject()(
     )
   }
 
-  def delete(id: Long) = Action.async { implicit request =>
+  def delete(id: Long) = silhouette.SecuredAction.async { implicit request =>
     Questions.delete(id) map (num => Ok(s"Deleted $num ${if (num == 1) "entry" else "entries"}")) // XXX: Respond with more information (JSON)?
   }
 }

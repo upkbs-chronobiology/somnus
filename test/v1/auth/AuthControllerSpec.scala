@@ -1,6 +1,6 @@
 package v1.auth
 
-import models.{Passwords, UserRepository}
+import models.{PasswordRepository, UserRepository}
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.libs.json.Json
@@ -13,6 +13,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class AuthControllerSpec extends PlaySpec with GuiceOneAppPerSuite with Injecting with TestUtils {
 
   private val userRepository = inject[UserRepository]
+  private val passwordRepository = inject[PasswordRepository]
 
   "AuthController sign-up endpoint" should {
 
@@ -31,7 +32,7 @@ class AuthControllerSpec extends PlaySpec with GuiceOneAppPerSuite with Injectin
       users.map(_.map(_.name)).map(_ must contain("John Karcis"))
       users.map(
         _.filter(_.name == "John Karcis").map(_.passwordId.get).head
-      ).flatMap(Passwords.get).map(_ must contain("notagoat"))
+      ).flatMap(passwordRepository.get).map(_ must contain("notagoat"))
     }
   }
 
@@ -50,6 +51,7 @@ class AuthControllerSpec extends PlaySpec with GuiceOneAppPerSuite with Injectin
     "accept correct credentials" in {
       val response = doRequest(POST, "/v1/auth/login", signUpJson("John Karcis", "notagoat"))
       status(response) must equal(OK)
+      header("X-Auth-Token", response).get.length must equal(256)
     }
   }
 

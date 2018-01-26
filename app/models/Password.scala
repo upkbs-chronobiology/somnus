@@ -1,6 +1,7 @@
 package models
 
-import play.api.Play
+import javax.inject.{Inject, Singleton}
+
 import play.api.db.slick.DatabaseConfigProvider
 import slick.jdbc.H2Profile.api._
 import slick.jdbc.JdbcProfile
@@ -20,26 +21,26 @@ class PasswordTable(tag: Tag) extends Table[Password](tag, "password") {
   override def * = (id, hash, salt, hasher) <> (Password.tupled, Password.unapply)
 }
 
-object Passwords {
+@Singleton
+class PasswordRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) {
   def passwords = TableQuery[PasswordTable]
 
-  // XXX: hacky (see other examples)
-  def dbConfig() = DatabaseConfigProvider.get[JdbcProfile](Play.current)
+  def dbConfig = dbConfigProvider.get[JdbcProfile]
 
   def add(password: Password): Future[Password] = {
-    dbConfig().db.run((passwords returning passwords.map(_.id)) += password)
+    dbConfig.db.run((passwords returning passwords.map(_.id)) += password)
       .flatMap(this.get(_).map(_.get))
   }
 
   def get(id: Long): Future[Option[Password]] = {
-    dbConfig().db.run(passwords.filter(_.id === id).result.headOption)
+    dbConfig.db.run(passwords.filter(_.id === id).result.headOption)
   }
 
   def update(id: Long, password: Password): Future[Int] = {
-    dbConfig().db.run(passwords.filter(_.id === id).update(password))
+    dbConfig.db.run(passwords.filter(_.id === id).update(password))
   }
 
   def delete(id: Long): Future[Int] = {
-    dbConfig().db.run(passwords.filter(_.id === id).delete)
+    dbConfig.db.run(passwords.filter(_.id === id).delete)
   }
 }

@@ -5,24 +5,27 @@ import javax.inject.Inject
 import com.mohiva.play.silhouette.api.LoginInfo
 import com.mohiva.play.silhouette.api.util.PasswordInfo
 import com.mohiva.play.silhouette.persistence.daos.DelegableAuthInfoDAO
-import models.{Password, Passwords, UserRepository}
+import models.{Password, PasswordRepository, UserRepository}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class PasswordAuthInfoDAO @Inject()(userRepository: UserRepository) extends DelegableAuthInfoDAO[PasswordInfo] {
+class PasswordAuthInfoDAO @Inject()(
+  userRepository: UserRepository,
+  passwordRepository: PasswordRepository
+) extends DelegableAuthInfoDAO[PasswordInfo] {
 
   override def find(loginInfo: LoginInfo): Future[Option[PasswordInfo]] = {
     userRepository.retrieve(loginInfo).flatMap {
       case Some(user) if user.passwordId.isDefined =>
-        Passwords.get(user.passwordId.get).map(_.map(
+        passwordRepository.get(user.passwordId.get).map(_.map(
           p => PasswordInfo(p.hasher, p.hash, p.salt)
         ))
     }
   }
 
   override def add(loginInfo: LoginInfo, authInfo: PasswordInfo): Future[PasswordInfo] = {
-    val password = Passwords.add(Password(0, authInfo.password, authInfo.salt, authInfo.hasher))
+    val password = passwordRepository.add(Password(0, authInfo.password, authInfo.salt, authInfo.hasher))
     val updatedUsers = password.flatMap(password => userRepository.updatePassword(loginInfo, Some(password.id)))
 
     updatedUsers.map {
@@ -34,7 +37,7 @@ class PasswordAuthInfoDAO @Inject()(userRepository: UserRepository) extends Dele
   override def update(loginInfo: LoginInfo, authInfo: PasswordInfo): Future[PasswordInfo] = {
     userRepository.retrieve(loginInfo).flatMap {
       case Some(user) if user.passwordId.isDefined =>
-        Passwords.update(
+        passwordRepository.update(
           user.passwordId.get,
           Password(0, authInfo.password, authInfo.salt, authInfo.hasher)
         ).map {
@@ -54,7 +57,7 @@ class PasswordAuthInfoDAO @Inject()(userRepository: UserRepository) extends Dele
     userRepository.retrieve(loginInfo).map {
       case Some(user) if user.passwordId.isDefined =>
         // pw table entry deletion is not sync-critical, therefore not waited upon
-        Passwords.delete(user.passwordId.get)
+        passwordRepository.delete(user.passwordId.get)
         userRepository.removePassword(loginInfo)
     }
   }
