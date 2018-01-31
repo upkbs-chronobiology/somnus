@@ -8,10 +8,17 @@ import play.api.mvc.Request
 
 import scala.concurrent.Future
 
-case class WithRole(role: Role) extends Authorization[User, BearerTokenAuthenticator] {
+/** Authorization implementation restricting based on roles.
+  *
+  * @param roles Roles enabling this endpoint. The ruling is disjunctive,
+  *              so at least one of the roles needs to be present.
+  */
+case class WithRole(roles: Role*) extends Authorization[User, BearerTokenAuthenticator] {
 
   override def isAuthorized[B](user: User, authenticator: BearerTokenAuthenticator)
     (implicit request: Request[B]): Future[Boolean] = {
-    Future.successful(user.role.orNull == role.toString)
+    Future.successful(roles.exists(_.toString == user.role.orNull))
   }
 }
+
+object ForEditors extends WithRole(Role.Admin, Role.Researcher)

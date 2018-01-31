@@ -3,7 +3,7 @@ package v1.question
 import javax.inject.Inject
 
 import auth.DefaultEnv
-import auth.roles.{Role, WithRole}
+import auth.roles.ForEditors
 import com.mohiva.play.silhouette.api.Silhouette
 import models.{Question, QuestionForm, Questions}
 import play.api.libs.json.Json
@@ -27,7 +27,7 @@ class QuestionController @Inject()(
     }
   }
 
-  def add = silhouette.SecuredAction(WithRole(Role.Researcher)).async { implicit request =>
+  def add = silhouette.SecuredAction(ForEditors).async { implicit request =>
     QuestionForm.form.bindFromRequest().fold(
       badForm => Future.successful(BadRequest(badForm.errorsAsJson)),
       formData => {
@@ -41,7 +41,7 @@ class QuestionController @Inject()(
     )
   }
 
-  def delete(id: Long) = silhouette.SecuredAction(WithRole(Role.Researcher)).async { implicit request =>
+  def delete(id: Long) = silhouette.SecuredAction(ForEditors).async { implicit request =>
     Questions.delete(id) map (num => Ok(s"Deleted $num ${if (num == 1) "entry" else "entries"}")) // XXX: Respond with more information (JSON)?
   }
 }
