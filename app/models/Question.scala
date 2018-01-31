@@ -6,12 +6,11 @@ import play.api.data.Forms._
 import play.api.db.slick.DatabaseConfigProvider
 import play.api.libs.json.{JsValue, Json, Writes}
 import slick.basic.DatabaseConfig
-
-import scala.concurrent.Future
-import slick.jdbc.JdbcProfile
 import slick.jdbc.H2Profile.api._
+import slick.jdbc.JdbcProfile
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 // TODO: Add properties like type (numeric, multi-choice, text, ...), time of asking (morning or evening) etc.
 // XXX: Maybe "text" instead of "content"?
@@ -53,7 +52,7 @@ object Questions {
   def dbConfig(): DatabaseConfig[JdbcProfile] = DatabaseConfigProvider.get[JdbcProfile](Play.current)
 
   def add(question: Question): Future[Question] = {
-    dbConfig().db.run((questions returning questions.map(_.id)) += question) flatMap(id => {
+    dbConfig().db.run((questions returning questions.map(_.id)) += question) flatMap (id => {
       this.get(id).map(_.get)
     })
   }

@@ -24,6 +24,7 @@ create table user (
   id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR NOT NULL UNIQUE,
   password_id BIGINT UNIQUE,
+  role VARCHAR,
   FOREIGN KEY(password_id) REFERENCES password(id)
 );
 
@@ -32,3 +33,4 @@ create table user (
 drop table question;
 drop table answer;
 drop table user;
+drop table password;

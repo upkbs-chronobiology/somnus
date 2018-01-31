@@ -2,6 +2,7 @@ package models
 
 import javax.inject.{Inject, Singleton}
 
+import auth.roles.Role.Role
 import com.mohiva.play.silhouette.api.services.IdentityService
 import com.mohiva.play.silhouette.api.{Identity, LoginInfo}
 import play.api.db.slick.DatabaseConfigProvider
@@ -13,7 +14,7 @@ import slick.lifted.Tag
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-case class User(id: Long, name: String, passwordId: Option[Long]) extends Identity
+case class User(id: Long, name: String, passwordId: Option[Long], role: Option[String] = None) extends Identity
 
 object User {
   implicit val implicitWrites = new Writes[User] {
@@ -32,8 +33,9 @@ class UserTable(tag: Tag) extends Table[User](tag, "user") {
   def name = column[String]("name", O.Unique)
   def passwordId = column[Long]("password_id", O.Unique)
   def password = foreignKey("password", passwordId.?, TableQuery[PasswordTable])(_.id)
+  def role = column[String]("role")
 
-  override def * = (id, name, passwordId.?) <> (User.tupled, User.unapply)
+  override def * = (id, name, passwordId.?, role.?) <> (User.tupled, User.unapply)
 }
 
 trait UserService extends IdentityService[User]
@@ -77,5 +79,10 @@ class UserRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) extends
 
   def delete(name: String): Future[Int] = {
     dbConfig.db.run(users.filter(_.name === name).delete)
+  }
+
+  def setRole(name: String, role: Role): Future[Int] = {
+    val query = users.filter(_.name === name).map(_.role.?).update(Option(role).map(_.toString))
+    dbConfig.db.run(query)
   }
 }

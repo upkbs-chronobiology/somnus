@@ -4,6 +4,9 @@ import java.security.cert.X509Certificate
 import java.util.concurrent.TimeUnit
 
 import auth.AuthService
+import auth.roles.Role
+import auth.roles.Role.Role
+import models.UserRepository
 import org.scalatest.{BeforeAndAfterAll, TestSuite}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.HttpConfiguration
@@ -21,41 +24,59 @@ import scala.concurrent.{Await, Future}
 trait Authenticated extends BeforeAndAfterAll with GuiceOneAppPerSuite with Injecting with TestUtils {
   this: TestSuite =>
 
+  val TestPassword = "12345678"
+
   private val authService = inject[AuthService]
+  private val userRepository = inject[UserRepository]
 
-  private var authToken: String = _
+  private var baseToken: String = _
+  private var researcherToken: String = _
+  private var adminToken: String = _
 
-  private def addToken(headers: Headers): Headers = headers.add(("X-Auth-Token", authToken))
+  private def addToken(headers: Headers, role: Role): Headers = {
+    headers.add(("X-Auth-Token", role match {
+      case Role.Admin => adminToken
+      case Role.Researcher => researcherToken
+      case _ => baseToken
+    }))
+  }
 
   private val Timeout = Duration(5, TimeUnit.SECONDS)
 
   override def beforeAll(): Unit = {
     super.beforeAll()
-    // XXX: Isn't there a cleaner solution?
-    Await.result(registerTestUser().map(_ => {
-      logInTestUser()
-    }), Timeout)
+
+    Await.result(for {
+      _ <- registerTestUser("test_base")
+      _ <- registerTestUser("test_researcher", Role.Researcher)
+      _ <- registerTestUser("test_admin", Role.Admin)
+    } yield {
+      baseToken = logInTestUser("test_base")
+      researcherToken = logInTestUser("test_researcher")
+      adminToken = logInTestUser("test_admin")
+    }, Timeout)
   }
 
-  private def registerTestUser(): Future[_] = {
+  private def registerTestUser(name: String, role: Role = null): Future[_] = {
     // XXX: Unregistering in afterAll would be cleaner, but doesn't work because of threading issues
-    deleteTestUser().flatMap({ _ =>
-      authService.register("testuser", "12345678")
+    deleteTestUser(name).flatMap({ _ =>
+      authService.register(name, TestPassword)
+        .map(_ => userRepository.setRole(name, role))
     })
   }
 
-  private def deleteTestUser(): Future[_] = {
-    authService.unregister("testuser")
+  private def deleteTestUser(name: String): Future[_] = {
+    authService.unregister(name)
   }
 
-  private def logInTestUser(): Unit = {
+  private def logInTestUser(name: Json.JsValueWrapper): String = {
     val user = Json.obj(
-      "name" -> "testuser",
-      "password" -> "12345678"
+      "name" -> name,
+      "password" -> TestPassword
     )
     val request = FakeRequest(POST, "/v1/auth/login").withBody(user)
     val result = route(app, request).get
-    authToken = header("X-Auth-Token", result)
+    header("X-Auth-Token", result)
       .getOrElse(throw new IllegalStateException("Auth token missing from login response"))
   }
 
@@ -63,13 +84,19 @@ trait Authenticated extends BeforeAndAfterAll with GuiceOneAppPerSuite with Inje
     httpMethod: String,
     target: String,
     body: JsValue = null,
-    headers: Headers = Headers()
+    headers: Headers = Headers(),
+    role: Role = null
   ): Future[Result] = {
-    doRequest(httpMethod, target, body, addToken(headers))
+    doRequest(httpMethod, target, body, addToken(headers, role))
   }
 
   // XXX: The following is a bit hacky
-  class AuthenticatedFakeRequestFactory(requestFactory: RequestFactory) extends FakeRequestFactory(requestFactory) {
+  class AuthenticatedFakeRequestFactory(requestFactory: RequestFactory)(implicit val role: Role = null) extends FakeRequestFactory(requestFactory) {
+
+    def apply(role: Role): AuthenticatedFakeRequestFactory = {
+      new AuthenticatedFakeRequestFactory(requestFactory)(role)
+    }
+
     override def apply[A](
       method: String,
       uri: String,
@@ -83,7 +110,7 @@ trait Authenticated extends BeforeAndAfterAll with GuiceOneAppPerSuite with Inje
       clientCertificateChain: Option[Seq[X509Certificate]],
       attrs: TypedMap
     ): FakeRequest[A] = {
-      super.apply(method, uri, addToken(headers), body, remoteAddress, version, id, tags, secure, clientCertificateChain, attrs)
+      super.apply(method, uri, addToken(headers, role), body, remoteAddress, version, id, tags, secure, clientCertificateChain, attrs)
     }
   }
 

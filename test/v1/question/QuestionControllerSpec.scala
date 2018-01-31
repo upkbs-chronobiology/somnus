@@ -1,16 +1,17 @@
 package v1.question
 
+import auth.roles.Role
+import models.Questions
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.libs.json.{JsArray, JsValue, Json}
 import play.api.mvc.Result
 import play.api.test.Helpers._
 import play.api.test._
-import util.Authenticated
-import util.FreshDatabase
+import util.{Authenticated, FreshDatabase}
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-
 
 class QuestionControllerSpec
   extends PlaySpec with GuiceOneAppPerSuite with FreshDatabase with Injecting with Authenticated {
@@ -30,6 +31,16 @@ class QuestionControllerSpec
   }
 
   "QuestionController" should {
+    "refuse adding or deleting question to basic users" in {
+      val resultCreation = doAuthenticatedRequest(POST, "/v1/questions", questionJson("This won't get through?"))
+      status(resultCreation) must equal(FORBIDDEN)
+
+      val resultDeletion = doAuthenticatedRequest(DELETE, "/v1/questions/321")
+      status(resultDeletion) must equal(FORBIDDEN)
+
+      doSync(Questions.listAll.map(_.size)) must equal(0)
+    }
+
     // XXX: Split into multiple tests? Would order be guaranteed?
     "create, serve and delete questions" in {
       status(postQuestion("Huh A?")) must equal(201)
@@ -70,13 +81,13 @@ class QuestionControllerSpec
   }
 
   private def postQuestion(text: String): Future[Result] = {
-    val postRequest = AuthenticatedFakeRequest(POST, "/v1/questions")
+    val postRequest = AuthenticatedFakeRequest(Role.Researcher)(POST, "/v1/questions")
       .withBody(questionJson(text))
     route(app, postRequest).get
   }
 
   private def deleteQuestion(id: Long) = {
-    val deleteRequest = AuthenticatedFakeRequest(DELETE, s"/v1/questions/$id")
+    val deleteRequest = AuthenticatedFakeRequest(Role.Researcher)(DELETE, s"/v1/questions/$id")
     route(app, deleteRequest).get
   }
 
