@@ -8,9 +8,8 @@ import play.api.libs.json.{JsValue, Json, Writes}
 import slick.jdbc.H2Profile.api._
 import slick.jdbc.JdbcProfile
 
-import scala.concurrent.Future
-
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 // XXX: Should content be of type String? It may depend on the question type (number, date, choice, ...)
 case class Answer(id: Long, questionId: Long, content: String)
