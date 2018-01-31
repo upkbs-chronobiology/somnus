@@ -57,6 +57,10 @@ class UserRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) extends
     dbConfig.db.run(users.filter(_.id === id).result.headOption)
   }
 
+  def get(name: String): Future[Option[User]] = {
+    dbConfig.db.run(users.filter(_.name === name).result.headOption)
+  }
+
   override def retrieve(loginInfo: LoginInfo): Future[Option[User]] = {
     // assume we only have simple login (by user name)
     val name = loginInfo.providerKey

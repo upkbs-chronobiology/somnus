@@ -1,6 +1,6 @@
 package modules
 
-import auth.{DefaultEnv, PasswordAuthInfoDAO, TokenRepository}
+import auth.{DefaultEnv, PasswordAuthInfoDAO, TokenRepository, UserGenerator}
 import com.google.inject.{AbstractModule, Provides}
 import com.mohiva.play.silhouette.api.repositories.AuthInfoRepository
 import com.mohiva.play.silhouette.api.services.AuthenticatorService
@@ -28,6 +28,8 @@ class SilhouetteModule extends AbstractModule with ScalaModule {
     bind[IDGenerator].toInstance(new SecureRandomIDGenerator)
     bind[Clock].toInstance(Clock())
     bind[PasswordHasher].toInstance(new BCryptPasswordHasher)
+
+    bind[UserGenerator].asEagerSingleton()
   }
 
   @Provides
