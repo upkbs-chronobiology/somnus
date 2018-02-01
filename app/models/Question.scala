@@ -53,7 +53,10 @@ object Questions {
 
   def add(question: Question): Future[Question] = {
     dbConfig().db.run((questions returning questions.map(_.id)) += question) flatMap (id => {
-      this.get(id).map(_.get)
+      this.get(id).flatMap {
+        case None => Future.failed(new IllegalStateException("Question could not be loaded after creation"))
+        case Some(question) => Future.successful(question)
+      }
     })
   }
 

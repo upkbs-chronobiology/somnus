@@ -16,32 +16,39 @@ class PasswordAuthInfoDAO @Inject()(
 ) extends DelegableAuthInfoDAO[PasswordInfo] {
 
   override def find(loginInfo: LoginInfo): Future[Option[PasswordInfo]] = {
-    userRepository.retrieve(loginInfo).flatMap {
-      case Some(user) if user.passwordId.isDefined =>
-        passwordRepository.get(user.passwordId.get).map(_.map(
-          p => PasswordInfo(p.hasher, p.hash, p.salt)
+    this.findPasswordId(loginInfo).flatMap {
+      case None => Future.successful(None)
+      case Some(pwId) =>
+        passwordRepository.get(pwId).map(_.map(
+          password => PasswordInfo(password.hasher, password.hash, password.salt)
         ))
+    }
+  }
+
+  private def findPasswordId(loginInfo: LoginInfo): Future[Option[Long]] = {
+    userRepository.retrieve(loginInfo).flatMap {
+      case None => Future.failed(new IllegalArgumentException(s"User for loginInfo $loginInfo not found"))
+      case Some(user) => Future.successful(user.passwordId)
     }
   }
 
   override def add(loginInfo: LoginInfo, authInfo: PasswordInfo): Future[PasswordInfo] = {
     val password = passwordRepository.add(Password(0, authInfo.password, authInfo.salt, authInfo.hasher))
-    val updatedUsers = password.flatMap(password => userRepository.updatePassword(loginInfo, Some(password.id)))
+    val updatedUsers = password.flatMap(p => userRepository.updatePassword(loginInfo, Some(p.id)))
 
-    updatedUsers.map {
-      case 0 => throw new IllegalStateException("User for LoginInfo not found")
-      case 1 => authInfo
+    updatedUsers.flatMap {
+      case 0 => Future.failed(new IllegalStateException("User for LoginInfo not found"))
+      case _ => Future.successful(authInfo)
     }
   }
 
   override def update(loginInfo: LoginInfo, authInfo: PasswordInfo): Future[PasswordInfo] = {
-    userRepository.retrieve(loginInfo).flatMap {
-      case Some(user) if user.passwordId.isDefined =>
-        passwordRepository.update(
-          user.passwordId.get,
-          Password(0, authInfo.password, authInfo.salt, authInfo.hasher)
-        ).map {
-          case 0 => throw new IllegalStateException("User or password not found; update failed")
+    this.findPasswordId(loginInfo).flatMap {
+      case None => Future.failed(new IllegalArgumentException(s"Password for loginInfo $loginInfo not found"))
+      case Some(pwId) =>
+        passwordRepository.update(pwId, Password(0, authInfo.password, authInfo.salt, authInfo.hasher)).flatMap {
+          case 0 => Future.failed(new IllegalStateException("User or password not found; update failed"))
+          case _ => Future.successful(authInfo)
         }
     }
   }
@@ -54,11 +61,12 @@ class PasswordAuthInfoDAO @Inject()(
   }
 
   override def remove(loginInfo: LoginInfo): Future[Unit] = {
-    userRepository.retrieve(loginInfo).map {
-      case Some(user) if user.passwordId.isDefined =>
+    this.findPasswordId(loginInfo).flatMap {
+      case None => Future.failed(new IllegalArgumentException(s"Password entry for loginInfo $loginInfo not found"))
+      case Some(pwId) =>
         // pw table entry deletion is not sync-critical, therefore not waited upon
-        passwordRepository.delete(user.passwordId.get)
+        val _ = passwordRepository.delete(pwId)
         userRepository.removePassword(loginInfo)
-    }
+    }.map(_ => {}) // XXX: Can we avoid this?
   }
 }

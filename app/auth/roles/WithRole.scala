@@ -7,6 +7,7 @@ import models.User
 import play.api.mvc.Request
 
 import scala.concurrent.Future
+import scalaz.Scalaz._
 
 /** Authorization implementation restricting based on roles.
   *
@@ -17,7 +18,7 @@ case class WithRole(roles: Role*) extends Authorization[User, BearerTokenAuthent
 
   override def isAuthorized[B](user: User, authenticator: BearerTokenAuthenticator)
     (implicit request: Request[B]): Future[Boolean] = {
-    Future.successful(roles.exists(_.toString == user.role.orNull))
+    Future.successful(roles.exists(_.toString === user.role.getOrElse("")))
   }
 }
 

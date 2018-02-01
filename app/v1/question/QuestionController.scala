@@ -22,7 +22,10 @@ class QuestionController @Inject()(
   }
 
   def get(id: Long) = silhouette.SecuredAction.async { implicit request =>
-    Questions.get(id) map (_.get) map (q => Ok(Json.toJson(q))) recover {
+    Questions.get(id) map {
+      case None => BadRequest("Question not found")
+      case Some(question) => Ok(Json.toJson(question))
+    } recover {
       case _: Exception => BadRequest("Cannot serve that question") // XXX: More info? JSON?
     }
   }

@@ -29,7 +29,10 @@ class PasswordRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) {
 
   def add(password: Password): Future[Password] = {
     dbConfig.db.run((passwords returning passwords.map(_.id)) += password)
-      .flatMap(this.get(_).map(_.get))
+      .flatMap(this.get(_).flatMap {
+        case None => Future.failed(new IllegalStateException("Failed to load password after creation"))
+        case Some(pw) => Future.successful(pw)
+      })
   }
 
   def get(id: Long): Future[Option[Password]] = {

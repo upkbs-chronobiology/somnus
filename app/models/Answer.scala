@@ -54,7 +54,12 @@ object Answers {
 
   def add(answer: Answer): Future[Answer] = {
     dbConfig().db.run((answers returning answers.map(_.id)) += answer)
-      .flatMap(this.get(_).map(_.get))
+      // XXX: Why not just .map(_.get) on the Option?
+      // https://softwareengineering.stackexchange.com/questions/365089/is-using-optionget-really-a-bad-idea-here
+      .flatMap(this.get(_).flatMap {
+        case Some(a) => Future.successful(a)
+        case None => Future.failed(new IllegalStateException("Failed to load answer after creation"))
+      })
   }
 
   def delete(id: Long): Future[Int] = {
