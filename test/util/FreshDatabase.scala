@@ -1,11 +1,11 @@
 package util
 
+import scala.util.Random
+
 import org.scalatest.TestSuite
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-
-import scala.util.Random
 
 trait FreshDatabase extends GuiceOneAppPerSuite {
   this: TestSuite =>

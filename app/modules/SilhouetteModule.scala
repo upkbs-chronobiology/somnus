@@ -1,22 +1,30 @@
 package modules
 
-import auth.{DefaultEnv, PasswordAuthInfoDAO, TokenRepository, UserGenerator}
-import com.google.inject.{AbstractModule, Provides}
+import scala.concurrent.ExecutionContext.Implicits.global
+
+import auth.DefaultEnv
+import auth.PasswordAuthInfoDAO
+import auth.TokenRepository
+import auth.UserGenerator
+import com.google.inject.AbstractModule
+import com.google.inject.Provides
+import com.mohiva.play.silhouette.api.Environment
+import com.mohiva.play.silhouette.api.EventBus
+import com.mohiva.play.silhouette.api.Silhouette
+import com.mohiva.play.silhouette.api.SilhouetteProvider
 import com.mohiva.play.silhouette.api.repositories.AuthInfoRepository
 import com.mohiva.play.silhouette.api.services.AuthenticatorService
 import com.mohiva.play.silhouette.api.util._
-import com.mohiva.play.silhouette.api.{Environment, EventBus, Silhouette, SilhouetteProvider}
 import com.mohiva.play.silhouette.impl.authenticators._
 import com.mohiva.play.silhouette.impl.providers.CredentialsProvider
 import com.mohiva.play.silhouette.impl.util.SecureRandomIDGenerator
 import com.mohiva.play.silhouette.password.BCryptPasswordHasher
 import com.mohiva.play.silhouette.persistence.daos.DelegableAuthInfoDAO
 import com.mohiva.play.silhouette.persistence.repositories.DelegableAuthInfoRepository
-import models.{UserRepository, UserService}
+import models.UserRepository
+import models.UserService
 import net.codingwell.scalaguice.ScalaModule
 import play.api.Configuration
-
-import scala.concurrent.ExecutionContext.Implicits.global
 
 class SilhouetteModule extends AbstractModule with ScalaModule {
 

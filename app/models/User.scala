@@ -1,18 +1,22 @@
 package models
 
-import javax.inject.{Inject, Singleton}
-
-import auth.roles.Role.Role
-import com.mohiva.play.silhouette.api.services.IdentityService
-import com.mohiva.play.silhouette.api.{Identity, LoginInfo}
-import play.api.db.slick.DatabaseConfigProvider
-import play.api.libs.json.{JsValue, Json, Writes}
-import slick.jdbc.H2Profile.api._
-import slick.jdbc.JdbcProfile
-import slick.lifted.Tag
+import javax.inject.Inject
+import javax.inject.Singleton
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+
+import auth.roles.Role.Role
+import com.mohiva.play.silhouette.api.services.IdentityService
+import com.mohiva.play.silhouette.api.Identity
+import com.mohiva.play.silhouette.api.LoginInfo
+import play.api.db.slick.DatabaseConfigProvider
+import play.api.libs.json.JsValue
+import play.api.libs.json.Json
+import play.api.libs.json.Writes
+import slick.jdbc.H2Profile.api._
+import slick.jdbc.JdbcProfile
+import slick.lifted.Tag
 
 case class User(id: Long, name: String, passwordId: Option[Long], role: Option[String] = None) extends Identity
 

@@ -1,0 +1,9 @@
+<?xml version="1.0" standalone="no" ?>
+<!DOCTYPE scalastyle [
+    <!ENTITY baseRules SYSTEM "scalastyle-base-rules.xml">
+    ]>
+<scalastyle>
+    <name>Scalastyle test configuration</name>
+
+    &baseRules;
+</scalastyle>

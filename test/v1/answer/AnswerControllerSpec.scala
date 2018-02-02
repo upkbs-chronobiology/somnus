@@ -1,12 +1,17 @@
 package v1.answer
 
-import models.{Question, Questions}
+import models.Question
+import models.Questions
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.libs.json.{JsArray, JsValue, Json}
+import play.api.libs.json.JsArray
+import play.api.libs.json.JsValue
+import play.api.libs.json.Json
 import play.api.test.Helpers._
 import play.api.test._
-import util.{Authenticated, TestUtils, FreshDatabase}
+import util.Authenticated
+import util.FreshDatabase
+import util.TestUtils
 
 class AnswerControllerSpec extends PlaySpec
   with GuiceOneAppPerSuite with FreshDatabase with Injecting with TestUtils with Authenticated {
@@ -21,14 +26,14 @@ class AnswerControllerSpec extends PlaySpec
 
     "logged in" should {
       "reject answer with invalid question id" in {
-        val response = doAuthenticatedRequest(POST, "/v1/answers", answerJson(999, "Some answer A"))
+        val response = doAuthenticatedRequest(POST, "/v1/answers", Some(answerJson(999, "Some answer A")))
         status(response) must equal(BAD_REQUEST)
       }
 
       "accept, then serve and delete answer with valid question id" in {
         val question = doSync(Questions.add(Question(0, "My question B")))
 
-        val response = doAuthenticatedRequest(POST, "/v1/answers", answerJson(question.id, "Some answer B"))
+        val response = doAuthenticatedRequest(POST, "/v1/answers", Some(answerJson(question.id, "Some answer B")))
         status(response) must equal(CREATED)
 
         val newItemJson = contentAsJson(response)

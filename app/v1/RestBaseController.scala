@@ -3,8 +3,13 @@ package v1
 import javax.inject.Inject
 
 import play.api.http.FileMimeTypes
-import play.api.i18n.{I18nSupport, Langs, MessagesApi}
-import play.api.mvc.{BaseController, ControllerComponents, DefaultActionBuilder, PlayBodyParsers}
+import play.api.i18n.I18nSupport
+import play.api.i18n.Langs
+import play.api.i18n.MessagesApi
+import play.api.mvc.BaseController
+import play.api.mvc.ControllerComponents
+import play.api.mvc.DefaultActionBuilder
+import play.api.mvc.PlayBodyParsers
 
 case class RestControllerComponents @Inject()(
   actionBuilder: DefaultActionBuilder,

@@ -1,17 +1,20 @@
 package v1.question
 
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+
 import auth.roles.Role
 import models.Questions
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.libs.json.{JsArray, JsValue, Json}
+import play.api.libs.json.JsArray
+import play.api.libs.json.JsValue
+import play.api.libs.json.Json
 import play.api.mvc.Result
 import play.api.test.Helpers._
 import play.api.test._
-import util.{Authenticated, FreshDatabase}
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import util.Authenticated
+import util.FreshDatabase
 
 class QuestionControllerSpec
   extends PlaySpec with GuiceOneAppPerSuite with FreshDatabase with Injecting with Authenticated {
@@ -32,7 +35,7 @@ class QuestionControllerSpec
 
   "QuestionController" should {
     "refuse adding or deleting question to basic users" in {
-      val resultCreation = doAuthenticatedRequest(POST, "/v1/questions", questionJson("This won't get through?"))
+      val resultCreation = doAuthenticatedRequest(POST, "/v1/questions", Some(questionJson("This won't get through?")))
       status(resultCreation) must equal(FORBIDDEN)
 
       val resultDeletion = doAuthenticatedRequest(DELETE, "/v1/questions/321")

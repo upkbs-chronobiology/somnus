@@ -1,15 +1,17 @@
 package models
 
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+
 import play.api.Play
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.db.slick.DatabaseConfigProvider
-import play.api.libs.json.{JsValue, Json, Writes}
+import play.api.libs.json.JsValue
+import play.api.libs.json.Json
+import play.api.libs.json.Writes
 import slick.jdbc.H2Profile.api._
 import slick.jdbc.JdbcProfile
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 // XXX: Should content be of type String? It may depend on the question type (number, date, choice, ...)
 case class Answer(id: Long, questionId: Long, content: String)

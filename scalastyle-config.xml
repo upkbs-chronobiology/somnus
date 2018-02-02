@@ -1,0 +1,15 @@
+<?xml version="1.0" standalone="no" ?>
+<!DOCTYPE scalastyle [
+    <!ENTITY baseRules SYSTEM "scalastyle-base-rules.xml">
+    ]>
+<scalastyle>
+    <name>Scalastyle standard configuration</name>
+
+    &baseRules;
+
+    <check level="warning" class="org.scalastyle.scalariform.MagicNumberChecker" enabled="true">
+        <parameters>
+            <parameter name="ignore"><![CDATA[-1,0,1,2,3]]></parameter>
+        </parameters>
+    </check>
+</scalastyle>

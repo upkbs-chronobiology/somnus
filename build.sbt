@@ -47,6 +47,18 @@ wartremoverErrors in Test ++= Warts.unsafe diff List(
 )
 wartremoverExcluded ++= routes.in(Compile).value
 
+// add scalastyle to compile task
+lazy val compileScalastyle = taskKey[Unit]("compileScalastyle")
+compileScalastyle := scalastyle.in(Compile).toTask("").value
+(compile in Compile) := ((compile in Compile) dependsOn compileScalastyle).value
+
+// add scalastyle to test task
+lazy val testScalastyle = taskKey[Unit]("testScalastyle")
+testScalastyle := scalastyle.in(Test).toTask("").value
+(test in Test) := ((test in Test) dependsOn testScalastyle).value
+
+(scalastyleConfig in Test) := baseDirectory.value / "scalastyle-test-config.xml"
+
 // Adds additional packages into Twirl
 //TwirlKeys.templateImports += "ch.chronobiology.controllers._"
 

@@ -3,23 +3,30 @@ package util
 import java.security.cert.X509Certificate
 import java.util.concurrent.TimeUnit
 
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.Duration
+import scala.concurrent.Await
+import scala.concurrent.Future
+
 import auth.AuthService
 import auth.roles.Role
 import auth.roles.Role.Role
 import models.UserRepository
-import org.scalatest.{BeforeAndAfterAll, TestSuite}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.TestSuite
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.HttpConfiguration
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.JsValue
+import play.api.libs.json.Json
 import play.api.libs.typedmap.TypedMap
-import play.api.mvc.request.{DefaultRequestFactory, RequestFactory}
-import play.api.mvc.{Headers, Result}
+import play.api.mvc.request.DefaultRequestFactory
+import play.api.mvc.request.RequestFactory
+import play.api.mvc.Headers
+import play.api.mvc.Result
 import play.api.test.Helpers._
-import play.api.test.{FakeRequest, FakeRequestFactory, Injecting}
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, Future}
+import play.api.test.FakeRequest
+import play.api.test.FakeRequestFactory
+import play.api.test.Injecting
 
 trait Authenticated extends BeforeAndAfterAll with GuiceOneAppPerSuite with Injecting with TestUtils {
   this: TestSuite =>
@@ -33,23 +40,24 @@ trait Authenticated extends BeforeAndAfterAll with GuiceOneAppPerSuite with Inje
   private var researcherToken: String = _
   private var adminToken: String = _
 
-  private def addToken(headers: Headers, role: Role): Headers = {
+  private def addToken(headers: Headers, role: Option[Role]): Headers = {
     headers.add(("X-Auth-Token", role match {
-      case Role.Admin => adminToken
-      case Role.Researcher => researcherToken
-      case _ => baseToken
+      case None => baseToken
+      case Some(Role.Admin) => adminToken
+      case Some(Role.Researcher) => researcherToken
     }))
   }
 
-  private val Timeout = Duration(5, TimeUnit.SECONDS)
+  private val TimeoutSeconds = 5
+  private val Timeout = Duration(TimeoutSeconds, TimeUnit.SECONDS)
 
   override def beforeAll(): Unit = {
     super.beforeAll()
 
     Await.result(for {
       _ <- registerTestUser("test_base")
-      _ <- registerTestUser("test_researcher", Role.Researcher)
-      _ <- registerTestUser("test_admin", Role.Admin)
+      _ <- registerTestUser("test_researcher", Some(Role.Researcher))
+      _ <- registerTestUser("test_admin", Some(Role.Admin))
     } yield {
       baseToken = logInTestUser("test_base")
       researcherToken = logInTestUser("test_researcher")
@@ -57,11 +65,11 @@ trait Authenticated extends BeforeAndAfterAll with GuiceOneAppPerSuite with Inje
     }, Timeout)
   }
 
-  private def registerTestUser(name: String, role: Role = null): Future[_] = {
+  private def registerTestUser(name: String, role: Option[Role] = None): Future[_] = {
     // XXX: Unregistering in afterAll would be cleaner, but doesn't work because of threading issues
     deleteTestUser(name).flatMap({ _ =>
       authService.register(name, TestPassword)
-        .map(_ => userRepository.setRole(name, role))
+        .map(_ => role.map(userRepository.setRole(name, _)))
     })
   }
 
@@ -83,18 +91,18 @@ trait Authenticated extends BeforeAndAfterAll with GuiceOneAppPerSuite with Inje
   def doAuthenticatedRequest(
     httpMethod: String,
     target: String,
-    body: JsValue = null,
+    body: Option[JsValue] = None,
     headers: Headers = Headers(),
-    role: Role = null
+    role: Option[Role] = None
   ): Future[Result] = {
     doRequest(httpMethod, target, body, addToken(headers, role))
   }
 
   // XXX: The following is a bit hacky
-  class AuthenticatedFakeRequestFactory(requestFactory: RequestFactory)(implicit val role: Role = null) extends FakeRequestFactory(requestFactory) {
+  class AuthenticatedFakeRequestFactory(requestFactory: RequestFactory)(implicit val role: Option[Role] = None) extends FakeRequestFactory(requestFactory) {
 
     def apply(role: Role): AuthenticatedFakeRequestFactory = {
-      new AuthenticatedFakeRequestFactory(requestFactory)(role)
+      new AuthenticatedFakeRequestFactory(requestFactory)(Some(role))
     }
 
     override def apply[A](

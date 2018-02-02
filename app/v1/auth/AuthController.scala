@@ -2,26 +2,32 @@ package v1.auth
 
 import javax.inject.Inject
 
-import auth.{AuthService, DefaultEnv}
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+
+import auth.AuthService
+import auth.DefaultEnv
+import com.mohiva.play.silhouette.api.Environment
+import com.mohiva.play.silhouette.api.Silhouette
 import com.mohiva.play.silhouette.api.util.Credentials
-import com.mohiva.play.silhouette.api.{Environment, Silhouette}
 import com.mohiva.play.silhouette.impl.providers.CredentialsProvider
 import models.UserService
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.data.validation.Constraints._
 import play.api.libs.json.Json
-import v1.{RestBaseController, RestControllerComponents}
-
-import scala.concurrent.{ExecutionContext, Future}
+import v1.RestBaseController
+import v1.RestControllerComponents
 
 case class SignUpFormData(name: String, password: String)
 
 object SignUpForm {
+  private val PasswordMinLength = 8
+
   val form = Form(
     mapping(
       "name" -> nonEmptyText,
-      "password" -> nonEmptyText.verifying(minLength(8))
+      "password" -> nonEmptyText.verifying(minLength(PasswordMinLength))
     )(SignUpFormData.apply)(SignUpFormData.unapply)
   )
 }

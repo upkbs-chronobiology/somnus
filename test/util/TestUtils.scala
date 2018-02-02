@@ -2,16 +2,19 @@ package util
 
 import java.util.concurrent.TimeUnit
 
+import scala.concurrent.duration.Duration
+import scala.concurrent.Await
+import scala.concurrent.Awaitable
+import scala.concurrent.Future
+
 import org.scalatest.TestSuite
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.libs.json.JsValue
-import play.api.mvc.{Headers, Result}
+import play.api.mvc.Headers
+import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers.route
-
-import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, Awaitable, Future}
 
 trait TestUtils extends GuiceOneAppPerSuite {
   this: TestSuite =>
@@ -21,10 +24,11 @@ trait TestUtils extends GuiceOneAppPerSuite {
   protected def doRequest(
     httpMethod: String,
     target: String,
-    body: JsValue = null,
+    body: Option[JsValue] = None,
     headers: Headers = Headers()
   ): Future[Result] = {
-    val base = FakeRequest(httpMethod, target).withBody(body)
+    val base = FakeRequest(httpMethod, target).withBody(body.orNull)
+
     val mergedHeaders = base.headers.add(headers.toSimpleMap.toList: _*)
     val request = base.withHeaders(mergedHeaders)
 

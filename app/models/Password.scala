@@ -1,14 +1,15 @@
 package models
 
-import javax.inject.{Inject, Singleton}
+import javax.inject.Inject
+import javax.inject.Singleton
+
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 import play.api.db.slick.DatabaseConfigProvider
 import slick.jdbc.H2Profile.api._
 import slick.jdbc.JdbcProfile
 import slick.lifted.Tag
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 case class Password(id: Long, hash: String, salt: Option[String], hasher: String)
 

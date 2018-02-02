@@ -1,10 +1,10 @@
 package auth
 
-import com.mohiva.play.silhouette.api.repositories.AuthenticatorRepository
-import com.mohiva.play.silhouette.impl.authenticators.BearerTokenAuthenticator
-
 import scala.collection.mutable
 import scala.concurrent.Future
+
+import com.mohiva.play.silhouette.api.repositories.AuthenticatorRepository
+import com.mohiva.play.silhouette.impl.authenticators.BearerTokenAuthenticator
 
 // TODO: This is currently just an in-memory solution. Might be worth to persist it across application restarts.
 object TokenRepository extends AuthenticatorRepository[BearerTokenAuthenticator] {

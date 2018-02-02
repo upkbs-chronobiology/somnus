@@ -1,16 +1,18 @@
 package models
 
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+
 import play.api.Play
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.db.slick.DatabaseConfigProvider
-import play.api.libs.json.{JsValue, Json, Writes}
+import play.api.libs.json.JsValue
+import play.api.libs.json.Json
+import play.api.libs.json.Writes
 import slick.basic.DatabaseConfig
 import slick.jdbc.H2Profile.api._
 import slick.jdbc.JdbcProfile
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 // TODO: Add properties like type (numeric, multi-choice, text, ...), time of asking (morning or evening) etc.
 // XXX: Maybe "text" instead of "content"?

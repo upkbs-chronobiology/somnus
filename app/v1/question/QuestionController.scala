@@ -2,14 +2,18 @@ package v1.question
 
 import javax.inject.Inject
 
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+
 import auth.DefaultEnv
 import auth.roles.ForEditors
 import com.mohiva.play.silhouette.api.Silhouette
-import models.{Question, QuestionForm, Questions}
+import models.Question
+import models.QuestionForm
+import models.Questions
 import play.api.libs.json.Json
-import v1.{RestBaseController, RestControllerComponents}
-
-import scala.concurrent.{ExecutionContext, Future}
+import v1.RestBaseController
+import v1.RestControllerComponents
 
 class QuestionController @Inject()(
   rcc: RestControllerComponents,

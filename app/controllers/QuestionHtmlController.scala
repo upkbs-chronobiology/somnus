@@ -1,14 +1,17 @@
 package controllers
 
-import javax.inject.{Inject, Singleton}
-
-import auth.DefaultEnv
-import com.mohiva.play.silhouette.api.Silhouette
-import models.{Question, QuestionForm, Questions}
-import play.api.mvc._
+import javax.inject.Inject
+import javax.inject.Singleton
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+
+import auth.DefaultEnv
+import com.mohiva.play.silhouette.api.Silhouette
+import models.Question
+import models.QuestionForm
+import models.Questions
+import play.api.mvc._
 
 @Singleton
 class QuestionHtmlController @Inject()(
