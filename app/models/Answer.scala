@@ -14,7 +14,7 @@ import slick.jdbc.H2Profile.api._
 import slick.jdbc.JdbcProfile
 
 // XXX: Should content be of type String? It may depend on the question type (number, date, choice, ...)
-case class Answer(id: Long, questionId: Long, content: String)
+case class Answer(id: Long, questionId: Long, content: String, userId: Long)
 
 object Answer {
   implicit val implicitWrites = new Writes[Answer] {
@@ -22,7 +22,8 @@ object Answer {
       Json.obj(
         "id" -> answer.id,
         "question_id" -> answer.questionId,
-        "content" -> answer.content
+        "content" -> answer.content,
+        "user_id" -> answer.userId
       )
     }
   }
@@ -30,13 +31,14 @@ object Answer {
   val tupled = (this.apply _).tupled
 }
 
-case class AnswerFormData(questionId: Long, content: String)
+case class AnswerFormData(questionId: Long, content: String, userId: Option[Long])
 
 object AnswerForm {
   val form = Form(
     mapping(
       "question_id" -> longNumber, // XXX: Can we map to existing question ids?
-      "content" -> nonEmptyText
+      "content" -> nonEmptyText,
+      "user_id" -> optional(longNumber)
     )(AnswerFormData.apply)(AnswerFormData.unapply)
   )
 }
@@ -45,9 +47,12 @@ class AnswerTable(tag: Tag) extends Table[Answer](tag, "answer") {
   def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
   def questionId = column[Long]("question_id")
   def content = column[String]("content")
-  def question = foreignKey("question", questionId, Questions.questions)(_.id)
+  def userId = column[Long]("user_id")
 
-  override def * = (id, questionId, content) <> (Answer.tupled, Answer.unapply)
+  def question = foreignKey("question", questionId, Questions.questions)(_.id)
+  def user = foreignKey("user", userId, TableQuery[UserTable])(_.id)
+
+  override def * = (id, questionId, content, userId) <> (Answer.tupled, Answer.unapply)
 }
 
 object Answers {
@@ -56,12 +61,18 @@ object Answers {
 
   def add(answer: Answer): Future[Answer] = {
     dbConfig().db.run((answers returning answers.map(_.id)) += answer)
-      // XXX: Why not just .map(_.get) on the Option?
-      // https://softwareengineering.stackexchange.com/questions/365089/is-using-optionget-really-a-bad-idea-here
       .flatMap(this.get(_).flatMap {
         case Some(a) => Future.successful(a)
         case None => Future.failed(new IllegalStateException("Failed to load answer after creation"))
       })
+  }
+
+  def addAll(newAnswers: Seq[Answer]): Future[Seq[Answer]] = {
+    dbConfig().db.run(((answers returning answers.map(_.id)) ++= newAnswers).transactionally)
+      .flatMap(createdSeq => Future.sequence(createdSeq.map(this.get(_).map {
+        case Some(a) => a
+        case None => throw new IllegalStateException("Failed to load an answer after creation")
+      })))
   }
 
   def delete(id: Long): Future[Int] = {

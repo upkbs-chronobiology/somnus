@@ -1,17 +1,6 @@
 # Add question, answer, user, password
 
 # --- !Ups
-create table question (
-  id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  content VARCHAR NOT NULL
-);
-
-create table answer (
-  id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  question_id BIGINT NOT NULL,
-  content VARCHAR NOT NULL,
-  FOREIGN KEY(question_id) REFERENCES question(id)
-);
 
 create table password (
   id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -28,8 +17,23 @@ create table user (
   FOREIGN KEY(password_id) REFERENCES password(id)
 );
 
+create table question (
+  id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  content VARCHAR NOT NULL
+);
+
+create table answer (
+  id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  question_id BIGINT NOT NULL,
+  content VARCHAR NOT NULL,
+  user_id BIGINT NOT NULL,
+  FOREIGN KEY(question_id) REFERENCES question(id),
+  FOREIGN KEY(user_id) REFERENCES user(id)
+);
+
 
 # --- !Downs
+
 drop table question;
 drop table answer;
 drop table user;

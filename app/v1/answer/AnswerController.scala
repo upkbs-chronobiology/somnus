@@ -10,6 +10,7 @@ import com.mohiva.play.silhouette.api.Silhouette
 import models.Answer
 import models.AnswerForm
 import models.Answers
+import play.api.libs.json.JsArray
 import play.api.libs.json.Json
 import v1.RestBaseController
 import v1.RestControllerComponents
@@ -31,16 +32,23 @@ class AnswerController @Inject()(
   }
 
   def add = silhouette.SecuredAction.async { implicit request =>
-    AnswerForm.form.bindFromRequest().fold(
-      badForm => Future.successful(BadRequest(badForm.errorsAsJson)),
-      formData => {
-        val answer = Answer(0, formData.questionId, formData.content)
-        Answers.add(answer).map(newAnswer => Created(Json.toJson(newAnswer)))
-          .recover {
-            case _: Exception => BadRequest("Could not create answer") // XXX: More info?
-          }
+    request.body.asJson match {
+      case Some(array: JsArray) => {
+        val newAnswers = array.value.map(item =>
+          AnswerForm.form.bind(item).fold(
+            badForm => throw new IllegalArgumentException(badForm.errorsAsJson.toString()),
+            formData => {
+              val userId = formData.userId.getOrElse(request.identity.id)
+              Answer(0, formData.questionId, formData.content, userId)
+            }
+          )
+        )
+        Answers.addAll(newAnswers).map(answers => Created(Json.toJson(answers))).recover {
+          case _: Exception => BadRequest("Could not create answer") // XXX: More info?
+        }
       }
-    )
+      case _ => Future.successful(BadRequest("Expected array of answers"))
+    }
   }
 
   def delete(id: Long) = silhouette.SecuredAction.async { implicit request =>
