@@ -36,9 +36,9 @@ case class AnswerFormData(questionId: Long, content: String, userId: Option[Long
 object AnswerForm {
   val form = Form(
     mapping(
-      "question_id" -> longNumber, // XXX: Can we map to existing question ids?
+      "questionId" -> longNumber, // XXX: Can we map to existing question ids?
       "content" -> nonEmptyText,
-      "user_id" -> optional(longNumber)
+      "userId" -> optional(longNumber)
     )(AnswerFormData.apply)(AnswerFormData.unapply)
   )
 }

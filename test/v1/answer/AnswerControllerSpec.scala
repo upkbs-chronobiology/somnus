@@ -77,7 +77,7 @@ class AnswerControllerSpec extends PlaySpec
 
   private def answerJson(questionId: Long, text: String): JsValue = {
     Json.obj(
-      "question_id" -> questionId,
+      "questionId" -> questionId,
       "content" -> text
     )
   }
