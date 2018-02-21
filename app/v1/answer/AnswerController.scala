@@ -39,7 +39,7 @@ class AnswerController @Inject()(
             badForm => throw new IllegalArgumentException(badForm.errorsAsJson.toString()),
             formData => {
               val userId = formData.userId.getOrElse(request.identity.id)
-              Answer(0, formData.questionId, formData.content, userId)
+              Answer(0, formData.questionId, formData.content, userId, null)
             }
           )
         )

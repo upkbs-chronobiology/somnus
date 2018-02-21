@@ -11,6 +11,7 @@ import scala.concurrent.Future
 import auth.AuthService
 import auth.roles.Role
 import auth.roles.Role.Role
+import models.User
 import models.UserRepository
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.TestSuite
@@ -36,6 +37,10 @@ trait Authenticated extends BeforeAndAfterAll with GuiceOneAppPerSuite with Inje
   private val authService = inject[AuthService]
   private val userRepository = inject[UserRepository]
 
+  protected var baseUser: User = _
+  protected var researchUser: User = _
+  protected var adminUser: User = _
+
   private var baseToken: String = _
   private var researcherToken: String = _
   private var adminToken: String = _
@@ -55,21 +60,28 @@ trait Authenticated extends BeforeAndAfterAll with GuiceOneAppPerSuite with Inje
     super.beforeAll()
 
     Await.result(for {
-      _ <- registerTestUser("test_base")
-      _ <- registerTestUser("test_researcher", Some(Role.Researcher))
-      _ <- registerTestUser("test_admin", Some(Role.Admin))
+      baseUser <- registerTestUser("test_base")
+      researchUser <- registerTestUser("test_researcher", Some(Role.Researcher))
+      adminUser <- registerTestUser("test_admin", Some(Role.Admin))
     } yield {
+      this.baseUser = baseUser
+      this.researchUser = researchUser
+      this.adminUser = adminUser
+
       baseToken = logInTestUser("test_base")
       researcherToken = logInTestUser("test_researcher")
       adminToken = logInTestUser("test_admin")
     }, Timeout)
   }
 
-  private def registerTestUser(name: String, role: Option[Role] = None): Future[_] = {
+  private def registerTestUser(name: String, role: Option[Role] = None): Future[User] = {
     // XXX: Unregistering in afterAll would be cleaner, but doesn't work because of threading issues
     deleteTestUser(name).flatMap({ _ =>
       authService.register(name, TestPassword)
-        .map(_ => role.map(userRepository.setRole(name, _)))
+        .map(user => {
+          role.map(userRepository.setRole(name, _))
+          user
+        })
     })
   }
 

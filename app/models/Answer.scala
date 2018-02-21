@@ -1,5 +1,7 @@
 package models
 
+import java.sql.Timestamp
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -12,9 +14,10 @@ import play.api.libs.json.Json
 import play.api.libs.json.Writes
 import slick.jdbc.H2Profile.api._
 import slick.jdbc.JdbcProfile
+import slick.sql.SqlProfile.ColumnOption.SqlType
 
 // XXX: Should content be of type String? It may depend on the question type (number, date, choice, ...)
-case class Answer(id: Long, questionId: Long, content: String, userId: Long)
+case class Answer(id: Long, questionId: Long, content: String, userId: Long, created: Timestamp)
 
 object Answer {
   implicit val implicitWrites = new Writes[Answer] {
@@ -23,7 +26,8 @@ object Answer {
         "id" -> answer.id,
         "question_id" -> answer.questionId,
         "content" -> answer.content,
-        "user_id" -> answer.userId
+        "user_id" -> answer.userId,
+        "created" -> answer.created
       )
     }
   }
@@ -48,19 +52,24 @@ class AnswerTable(tag: Tag) extends Table[Answer](tag, "answer") {
   def questionId = column[Long]("question_id")
   def content = column[String]("content")
   def userId = column[Long]("user_id")
+  def created = column[Timestamp]("created", SqlType("TIMESTAMP NOT NULL DEFAULT current_timestamp()"))
 
   def question = foreignKey("question", questionId, Questions.questions)(_.id)
   def user = foreignKey("user", userId, TableQuery[UserTable])(_.id)
 
-  override def * = (id, questionId, content, userId) <> (Answer.tupled, Answer.unapply)
+  override def * = (id, questionId, content, userId, created) <> (Answer.tupled, Answer.unapply)
 }
 
 object Answers {
   def dbConfig() = DatabaseConfigProvider.get[JdbcProfile](Play.current)
   val answers = TableQuery[AnswerTable]
 
+  // required because we don't want to insert "created", but use its default value
+  private val InsertColumnsMap = (table: AnswerTable) => (table.questionId, table.content, table.userId)
+  private val InsertValuesMap = (answer: Answer) => (answer.questionId, answer.content, answer.userId)
+
   def add(answer: Answer): Future[Answer] = {
-    dbConfig().db.run((answers returning answers.map(_.id)) += answer)
+    dbConfig().db.run((answers.map(InsertColumnsMap) returning answers.map(_.id)) += InsertValuesMap(answer))
       .flatMap(this.get(_).flatMap {
         case Some(a) => Future.successful(a)
         case None => Future.failed(new IllegalStateException("Failed to load answer after creation"))
@@ -68,7 +77,7 @@ object Answers {
   }
 
   def addAll(newAnswers: Seq[Answer]): Future[Seq[Answer]] = {
-    dbConfig().db.run(((answers returning answers.map(_.id)) ++= newAnswers).transactionally)
+    dbConfig().db.run(((answers.map(InsertColumnsMap) returning answers.map(_.id)) ++= newAnswers.map(InsertValuesMap)).transactionally)
       .flatMap(createdSeq => Future.sequence(createdSeq.map(this.get(_).map {
         case Some(a) => a
         case None => throw new IllegalStateException("Failed to load an answer after creation")

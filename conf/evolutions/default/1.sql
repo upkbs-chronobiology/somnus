@@ -14,6 +14,7 @@ create table user (
   name VARCHAR NOT NULL UNIQUE,
   password_id BIGINT UNIQUE,
   role VARCHAR,
+  created TIMESTAMP NOT NULL DEFAULT current_timestamp(),
   FOREIGN KEY(password_id) REFERENCES password(id)
 );
 
@@ -27,6 +28,7 @@ create table answer (
   question_id BIGINT NOT NULL,
   content VARCHAR NOT NULL,
   user_id BIGINT NOT NULL,
+  created TIMESTAMP NOT NULL DEFAULT current_timestamp(),
   FOREIGN KEY(question_id) REFERENCES question(id),
   FOREIGN KEY(user_id) REFERENCES user(id)
 );

@@ -34,7 +34,8 @@ libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.2.18"
 wartremoverErrors in(Compile, compile) ++= Warts.unsafe diff List(
   Wart.NonUnitStatements,
   Wart.DefaultArguments,
-  Wart.Throw
+  Wart.Throw,
+  Wart.Null
 )
 wartremoverErrors in Test ++= Warts.unsafe diff List(
   Wart.NonUnitStatements,
