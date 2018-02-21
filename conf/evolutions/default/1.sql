@@ -3,14 +3,14 @@
 # --- !Ups
 
 create table password (
-  id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  id IDENTITY PRIMARY KEY,
   hash VARCHAR NOT NULL,
   salt VARCHAR,
   hasher VARCHAR
 );
 
 create table user (
-  id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  id IDENTITY PRIMARY KEY,
   name VARCHAR NOT NULL UNIQUE,
   password_id BIGINT UNIQUE,
   role VARCHAR,
@@ -18,12 +18,12 @@ create table user (
 );
 
 create table question (
-  id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  id IDENTITY PRIMARY KEY,
   content VARCHAR NOT NULL
 );
 
 create table answer (
-  id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  id IDENTITY PRIMARY KEY,
   question_id BIGINT NOT NULL,
   content VARCHAR NOT NULL,
   user_id BIGINT NOT NULL,
