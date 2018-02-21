@@ -33,7 +33,7 @@ class AnswerController @Inject()(
 
   def add = silhouette.SecuredAction.async { implicit request =>
     request.body.asJson match {
-      case Some(array: JsArray) => {
+      case Some(array: JsArray) =>
         val newAnswers = array.value.map(item =>
           AnswerForm.form.bind(item).fold(
             badForm => throw new IllegalArgumentException(badForm.errorsAsJson.toString()),
@@ -46,7 +46,6 @@ class AnswerController @Inject()(
         Answers.addAll(newAnswers).map(answers => Created(Json.toJson(answers))).recover {
           case _: Exception => BadRequest("Could not create answer") // XXX: More info?
         }
-      }
       case _ => Future.successful(BadRequest("Expected array of answers"))
     }
   }
