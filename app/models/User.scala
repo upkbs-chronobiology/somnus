@@ -56,7 +56,7 @@ class UserRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) extends
     dbConfig.db.run((users returning users.map(_.id)) += user)
       .flatMap(this.get(_).flatMap {
         case None => Future.failed(new IllegalStateException("User could not be loaded after creation"))
-        case Some(user) => Future.successful(user)
+        case Some(u) => Future.successful(u)
       })
   }
 
