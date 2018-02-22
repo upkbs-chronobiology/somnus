@@ -24,7 +24,8 @@ object User {
   implicit val implicitWrites = new Writes[User] {
     def writes(user: User): JsValue = {
       Json.obj(
-        "name" -> user.name
+        "name" -> user.name,
+        "role" -> user.role
       )
     }
   }

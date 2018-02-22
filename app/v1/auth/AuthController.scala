@@ -76,10 +76,10 @@ class AuthController @Inject()(
         credentialsProvider.authenticate(credentials).flatMap { loginInfo =>
           userService.retrieve(loginInfo).flatMap {
             case None => Future.successful(credentialsWrong) // user not found
-            case Some(_) => for {
+            case Some(user) => for {
               authenticator <- environment.authenticatorService.create(loginInfo)
               value <- environment.authenticatorService.init(authenticator)
-              result <- environment.authenticatorService.embed(value, Ok("Login successful"))
+              result <- environment.authenticatorService.embed(value, Ok(Json.toJson(user)))
             } yield result
           }
         } recover {
