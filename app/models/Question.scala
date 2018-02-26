@@ -70,7 +70,11 @@ object Questions {
   }
 
   def delete(id: Long): Future[Int] = {
-    dbConfig().db.run(questions.filter(_.id === id).delete)
+    Answers.getByQuestion(id).flatMap {
+      case answers if answers.nonEmpty =>
+        Future.failed(new IllegalArgumentException("Already answered questions cannot be deleted"))
+      case _ => dbConfig().db.run(questions.filter(_.id === id).delete)
+    }
   }
 
   def get(id: Long): Future[Option[Question]] = {

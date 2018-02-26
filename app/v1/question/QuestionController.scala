@@ -12,6 +12,8 @@ import models.Question
 import models.QuestionForm
 import models.Questions
 import play.api.libs.json.Json
+import util.JsonError
+import util.JsonSuccess
 import v1.RestBaseController
 import v1.RestControllerComponents
 
@@ -58,6 +60,10 @@ class QuestionController @Inject()(
   }
 
   def delete(id: Long) = silhouette.SecuredAction(ForEditors).async { implicit request =>
-    Questions.delete(id) map (num => Ok(s"Deleted $num ${if (num == 1) "entry" else "entries"}")) // XXX: Respond with more information (JSON)?
+    Questions.delete(id)
+      .map(num => Ok(JsonSuccess(s"Deleted $num ${if (num == 1) "entry" else "entries"}")))
+      .recover {
+        case e: IllegalArgumentException => BadRequest(JsonError(e.getMessage))
+      }
   }
 }

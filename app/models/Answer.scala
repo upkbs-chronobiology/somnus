@@ -61,6 +61,7 @@ class AnswerTable(tag: Tag) extends Table[Answer](tag, "answer") {
 }
 
 object Answers {
+  // FIXME: Inject instead
   def dbConfig() = DatabaseConfigProvider.get[JdbcProfile](Play.current)
   val answers = TableQuery[AnswerTable]
 
@@ -90,6 +91,10 @@ object Answers {
 
   def get(id: Long): Future[Option[Answer]] = {
     dbConfig().db.run(answers.filter(_.id === id).result.headOption)
+  }
+
+  def getByQuestion(questionId: Long): Future[Seq[Answer]] = {
+    dbConfig().db.run(answers.filter(_.questionId === questionId).result)
   }
 
   def listAll(): Future[Seq[Answer]] = {
