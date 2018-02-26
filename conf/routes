@@ -24,6 +24,7 @@ POST    /v1/auth/login              v1.auth.AuthController.logIn
 GET     /v1/questions               v1.question.QuestionController.index
 GET     /v1/questions/:id           v1.question.QuestionController.get(id: Long)
 POST    /v1/questions               v1.question.QuestionController.add
+PUT     /v1/questions/:id           v1.question.QuestionController.update(id: Long)
 DELETE  /v1/questions/:id           v1.question.QuestionController.delete(id: Long)
 
 # Answers

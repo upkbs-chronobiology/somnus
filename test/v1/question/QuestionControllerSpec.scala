@@ -81,6 +81,30 @@ class QuestionControllerSpec
       val finalList = contentAsJson(finalListResult).as[JsArray].value
       finalList.size must equal(0)
     }
+
+    "reject non-editor updates" in {
+      val questionResult = postQuestion("Before?")
+      status(questionResult) must equal(201)
+      val id = contentAsJson(questionResult).apply("id").as[Long]
+
+      val putResponse = doAuthenticatedRequest(PUT, s"/v1/questions/$id", Some(questionJson("After?")), role = None)
+      status(putResponse) must equal(403)
+    }
+
+    "update existing questions" in {
+      val questionResult = postQuestion("Before?")
+      status(questionResult) must equal(201)
+      val id = contentAsJson(questionResult).apply("id").as[Long]
+
+      val jsonBefore = contentAsJson(doAuthenticatedRequest(GET, s"/v1/questions/$id"))
+      jsonBefore("content").as[String] must equal("Before?")
+
+      val putResponse = doAuthenticatedRequest(PUT, s"/v1/questions/$id", Some(questionJson("After?")), role = Some(Role.Researcher))
+      status(putResponse) must equal(200)
+
+      val jsonAfter = contentAsJson(doAuthenticatedRequest(GET, s"/v1/questions/$id"))
+      jsonAfter("content").as[String] must equal("After?")
+    }
   }
 
   private def postQuestion(text: String): Future[Result] = {

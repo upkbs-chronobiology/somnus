@@ -48,6 +48,15 @@ class QuestionController @Inject()(
     )
   }
 
+  def update(id: Long) = silhouette.SecuredAction(ForEditors).async { implicit request =>
+    QuestionForm.form.bindFromRequest().fold(
+      badForm => Future.successful(BadRequest(badForm.errorsAsJson)),
+      formData => Questions.update(Question(id, formData.content)).map { q =>
+        Ok(Json.toJson(q))
+      }
+    )
+  }
+
   def delete(id: Long) = silhouette.SecuredAction(ForEditors).async { implicit request =>
     Questions.delete(id) map (num => Ok(s"Deleted $num ${if (num == 1) "entry" else "entries"}")) // XXX: Respond with more information (JSON)?
   }

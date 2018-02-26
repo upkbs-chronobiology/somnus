@@ -62,6 +62,13 @@ object Questions {
     })
   }
 
+  def update(question: Question): Future[Question] = {
+    val query = questions.filter(_.id === question.id).update(question)
+    dbConfig().db.run(query).flatMap(_ =>
+      this.get(question.id).map(_.getOrElse(throw new IllegalStateException("Question not found after update")))
+    )
+  }
+
   def delete(id: Long): Future[Int] = {
     dbConfig().db.run(questions.filter(_.id === id).delete)
   }
