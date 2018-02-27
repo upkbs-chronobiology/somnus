@@ -4,9 +4,11 @@ import java.util.Calendar
 
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import util.Authenticated
-import util.FreshDatabase
-import util.TestUtils
+import testutil.Authenticated
+import testutil.FreshDatabase
+import testutil.TestUtils
+import testutil.FreshDatabase
+import testutil.TestUtils
 
 class AnswerSpec extends PlaySpec
   with GuiceOneAppPerSuite with FreshDatabase with TestUtils with Authenticated {

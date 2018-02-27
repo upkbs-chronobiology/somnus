@@ -1,11 +1,11 @@
-package util
+package testutil
 
 import java.util.concurrent.TimeUnit
 
-import scala.concurrent.duration.Duration
 import scala.concurrent.Await
 import scala.concurrent.Awaitable
 import scala.concurrent.Future
+import scala.concurrent.duration.Duration
 
 import org.scalatest.TestSuite
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite

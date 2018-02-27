@@ -44,7 +44,8 @@ wartremoverErrors in Test ++= Warts.unsafe diff List(
   Wart.Null,
   Wart.Throw,
   Wart.Any,
-  Wart.TraversableOps
+  Wart.TraversableOps,
+  Wart.Var
 )
 wartremoverExcluded ++= routes.in(Compile).value
 

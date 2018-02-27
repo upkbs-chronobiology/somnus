@@ -13,8 +13,9 @@ import play.api.libs.json.Json
 import play.api.mvc.Result
 import play.api.test.Helpers._
 import play.api.test._
-import util.Authenticated
-import util.FreshDatabase
+import testutil.Authenticated
+import testutil.FreshDatabase
+import testutil.FreshDatabase
 
 class QuestionControllerSpec
   extends PlaySpec with GuiceOneAppPerSuite with FreshDatabase with Injecting with Authenticated {

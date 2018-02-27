@@ -10,9 +10,11 @@ import play.api.libs.json.JsValue
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import play.api.test._
-import util.Authenticated
-import util.FreshDatabase
-import util.TestUtils
+import testutil.Authenticated
+import testutil.FreshDatabase
+import testutil.TestUtils
+import testutil.FreshDatabase
+import testutil.TestUtils
 
 class AnswerControllerSpec extends PlaySpec
   with GuiceOneAppPerSuite with FreshDatabase with Injecting with TestUtils with Authenticated {

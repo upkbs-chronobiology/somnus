@@ -1,12 +1,12 @@
-package util
+package testutil
 
 import java.security.cert.X509Certificate
 import java.util.concurrent.TimeUnit
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration.Duration
 import scala.concurrent.Await
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.concurrent.duration.Duration
 
 import auth.AuthService
 import auth.roles.Role
@@ -20,13 +20,13 @@ import play.api.http.HttpConfiguration
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json
 import play.api.libs.typedmap.TypedMap
-import play.api.mvc.request.DefaultRequestFactory
-import play.api.mvc.request.RequestFactory
 import play.api.mvc.Headers
 import play.api.mvc.Result
-import play.api.test.Helpers._
+import play.api.mvc.request.DefaultRequestFactory
+import play.api.mvc.request.RequestFactory
 import play.api.test.FakeRequest
 import play.api.test.FakeRequestFactory
+import play.api.test.Helpers._
 import play.api.test.Injecting
 
 trait Authenticated extends BeforeAndAfterAll with GuiceOneAppPerSuite with Injecting with TestUtils {

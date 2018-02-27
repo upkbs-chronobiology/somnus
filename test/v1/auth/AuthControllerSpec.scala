@@ -9,7 +9,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import play.api.test.Injecting
-import util.TestUtils
+import testutil.TestUtils
 
 class AuthControllerSpec extends PlaySpec with GuiceOneAppPerSuite with Injecting with TestUtils {
 
