@@ -4,6 +4,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 import auth.roles.Role
+import models.AnswerType
+import models.AnswerType.AnswerType
 import models.Questions
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
@@ -14,7 +16,6 @@ import play.api.mvc.Result
 import play.api.test.Helpers._
 import play.api.test._
 import testutil.Authenticated
-import testutil.FreshDatabase
 import testutil.FreshDatabase
 
 class QuestionControllerSpec
@@ -106,11 +107,30 @@ class QuestionControllerSpec
       val jsonAfter = contentAsJson(doAuthenticatedRequest(GET, s"/v1/questions/$id"))
       jsonAfter("content").as[String] must equal("After?")
     }
+
+    "refuse questions with missing answer type" in {
+      val payload = Json.obj("content" -> "foo bar baz?")
+      val request = AuthenticatedFakeRequest(Role.Researcher)(POST, "/v1/questions").withBody(payload)
+      status(route(app, request).get) must equal(400)
+    }
+
+    "refuse questions with invalid answer type" in {
+      val request = doAuthenticatedRequest(POST, "/v1/questions",
+        Some(questionJson("Nanana batman?", "non-existent-type")), role = Some(Role.Researcher))
+      println(contentAsString(request))
+      status(request) must equal(400)
+    }
+
+    "accept questions of all possible answer types" in {
+      status(postQuestion("A?", AnswerType.Text)) must equal(201)
+      status(postQuestion("B?", AnswerType.RangeContinuous)) must equal(201)
+      status(postQuestion("C?", AnswerType.RangeDiscrete5)) must equal(201)
+    }
   }
 
-  private def postQuestion(text: String): Future[Result] = {
+  private def postQuestion(text: String, answerType: AnswerType = AnswerType.Text): Future[Result] = {
     val postRequest = AuthenticatedFakeRequest(Role.Researcher)(POST, "/v1/questions")
-      .withBody(questionJson(text))
+      .withBody(questionJson(text, answerType.toString))
     route(app, postRequest).get
   }
 
@@ -119,9 +139,10 @@ class QuestionControllerSpec
     route(app, deleteRequest).get
   }
 
-  private def questionJson(text: String): JsValue = {
+  private def questionJson(text: String, answerType: String = AnswerType.Text.toString): JsValue = {
     Json.obj(
-      "content" -> text
+      "content" -> text,
+      "answerType" -> answerType
     )
   }
 }

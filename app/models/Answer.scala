@@ -69,20 +69,41 @@ object Answers {
   private val InsertColumnsMap = (table: AnswerTable) => (table.questionId, table.content, table.userId)
   private val InsertValuesMap = (answer: Answer) => (answer.questionId, answer.content, answer.userId)
 
+  /** Make sure answer content corresponds with answerType in question.
+    */
+  private def assureTypeConsistency(answer: Answer): Future[Unit] = {
+    Questions.get(answer.questionId).map {
+      case None => throw new IllegalArgumentException("Question id for answer not found")
+      case Some(question) => question.answerType match {
+        case AnswerType.RangeContinuous =>
+          val value = answer.content.toDouble
+          if (value < 0 || value > 1) throw new IllegalArgumentException("Bad number format - expected real number 0 <= x <= 1")
+        case AnswerType.RangeDiscrete5 =>
+          val value = answer.content.toLong
+          if (value < 1 || value > 5) throw new IllegalArgumentException("Bad number format - expected natural number 1 <= x <= 5")
+        case _ => Unit
+      }
+    }
+  }
+
   def add(answer: Answer): Future[Answer] = {
-    dbConfig().db.run((answers.map(InsertColumnsMap) returning answers.map(_.id)) += InsertValuesMap(answer))
-      .flatMap(this.get(_).flatMap {
-        case Some(a) => Future.successful(a)
-        case None => Future.failed(new IllegalStateException("Failed to load answer after creation"))
-      })
+    assureTypeConsistency(answer).flatMap { _ =>
+      dbConfig().db.run((answers.map(InsertColumnsMap) returning answers.map(_.id)) += InsertValuesMap(answer))
+        .flatMap(this.get(_).flatMap {
+          case Some(a) => Future.successful(a)
+          case None => Future.failed(new IllegalStateException("Failed to load answer after creation"))
+        })
+    }
   }
 
   def addAll(newAnswers: Seq[Answer]): Future[Seq[Answer]] = {
-    dbConfig().db.run(((answers.map(InsertColumnsMap) returning answers.map(_.id)) ++= newAnswers.map(InsertValuesMap)).transactionally)
-      .flatMap(createdSeq => Future.sequence(createdSeq.map(this.get(_).map {
-        case Some(a) => a
-        case None => throw new IllegalStateException("Failed to load an answer after creation")
-      })))
+    Future.sequence(newAnswers.map(answer => assureTypeConsistency(answer))).flatMap { _ =>
+      dbConfig().db.run(((answers.map(InsertColumnsMap) returning answers.map(_.id)) ++= newAnswers.map(InsertValuesMap)).transactionally)
+        .flatMap(createdSeq => Future.sequence(createdSeq.map(this.get(_).map {
+          case Some(a) => a
+          case None => throw new IllegalStateException("Failed to load an answer after creation")
+        })))
+    }
   }
 
   def delete(id: Long): Future[Int] = {

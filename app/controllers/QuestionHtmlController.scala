@@ -28,7 +28,7 @@ class QuestionHtmlController @Inject()(
         errorForm.errors map (e => s"${e.key}: ${e.message}") mkString "; "
       })),
       data => {
-        val newQuestion = Question(0, data.content)
+        val newQuestion = Question(0, data.content, data.answerType)
         Questions.add(newQuestion).map(_ =>
           Redirect(routes.QuestionHtmlController.index())
         )

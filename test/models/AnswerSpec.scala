@@ -7,8 +7,6 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import testutil.Authenticated
 import testutil.FreshDatabase
 import testutil.TestUtils
-import testutil.FreshDatabase
-import testutil.TestUtils
 
 class AnswerSpec extends PlaySpec
   with GuiceOneAppPerSuite with FreshDatabase with TestUtils with Authenticated {
@@ -17,7 +15,7 @@ class AnswerSpec extends PlaySpec
 
   "Answer" should {
     "automatically receive a close enough timestamp after single creation" in {
-      val dummyQuestion = doSync(Questions.add(Question(0, "Foobar?")))
+      val dummyQuestion = doSync(Questions.add(Question(0, "Foobar?", AnswerType.Text)))
       val answer = Answer(0, dummyQuestion.id, "Baz.", this.baseUser.id, null)
       val newAnswer = doSync(Answers.add(answer))
 
@@ -27,8 +25,8 @@ class AnswerSpec extends PlaySpec
     }
 
     "automatically receive a close enough timestamp after bulk creation" in {
-      val dummyQuestionA = doSync(Questions.add(Question(0, "Foobar A?")))
-      val dummyQuestionB = doSync(Questions.add(Question(0, "Foobar B?")))
+      val dummyQuestionA = doSync(Questions.add(Question(0, "Foobar A?", AnswerType.Text)))
+      val dummyQuestionB = doSync(Questions.add(Question(0, "Foobar B?", AnswerType.Text)))
 
       val answerA = Answer(0, dummyQuestionA.id, "Baz A.", this.baseUser.id, null)
       val answerB = Answer(0, dummyQuestionB.id, "Baz B.", this.baseUser.id, null)
@@ -40,6 +38,22 @@ class AnswerSpec extends PlaySpec
         newAnswer.created.getTime must be >= now - TimeDelta
         newAnswer.created.getTime must be <= now + TimeDelta
       })
+    }
+
+    "reject text answers to continuous-number type questions" in {
+      val question = doSync(Questions.add(Question(0, "My question X", AnswerType.RangeContinuous)))
+
+      an[IllegalArgumentException] shouldBe thrownBy {
+        doSync(Answers.add(Answer(0, question.id, "This should not be text", this.baseUser.id, null)))
+      }
+    }
+
+    "reject text answers to discrete-number type questions" in {
+      val question = doSync(Questions.add(Question(0, "My question X", AnswerType.RangeDiscrete5)))
+
+      an[IllegalArgumentException] shouldBe thrownBy {
+        doSync(Answers.add(Answer(0, question.id, "This should not be text", this.baseUser.id, null)))
+      }
     }
   }
 }

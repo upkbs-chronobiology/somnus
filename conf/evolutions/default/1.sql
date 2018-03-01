@@ -20,7 +20,9 @@ create table user (
 
 create table question (
   id IDENTITY PRIMARY KEY,
-  content VARCHAR NOT NULL
+  content VARCHAR NOT NULL,
+  /* range-continous: [0, 1] over ℝ, range-discrete-5: [1, 5] over ℕ */
+  answer_type ENUM('text', 'range-continuous', 'range-discrete-5') NOT NULL
 );
 
 create table answer (

@@ -3,6 +3,7 @@ package models
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
+import models.AnswerType.AnswerType
 import play.api.Play
 import play.api.data.Form
 import play.api.data.Forms._
@@ -13,17 +14,18 @@ import play.api.libs.json.Writes
 import slick.basic.DatabaseConfig
 import slick.jdbc.H2Profile.api._
 import slick.jdbc.JdbcProfile
+import util.PlayFormsEnum.enum
 
-// TODO: Add properties like type (numeric, multi-choice, text, ...), time of asking (morning or evening) etc.
-// XXX: Maybe "text" instead of "content"?
-case class Question(id: Long, content: String)
+// TODO: Add property like time of asking (morning or evening)
+case class Question(id: Long, content: String, answerType: AnswerType)
 
 object Question {
   implicit val implicitWrites = new Writes[Question] {
     def writes(question: Question): JsValue = {
       Json.obj(
         "id" -> question.id,
-        "content" -> question.content
+        "content" -> question.content,
+        "answerType" -> question.answerType
       )
     }
   }
@@ -31,12 +33,13 @@ object Question {
   val tupled = (this.apply _).tupled
 }
 
-case class QuestionFormData(content: String)
+case class QuestionFormData(content: String, answerType: AnswerType)
 
 object QuestionForm {
   val form = Form(
     mapping(
-      "content" -> nonEmptyText
+      "content" -> nonEmptyText,
+      "answerType" -> enum(AnswerType)
     )(QuestionFormData.apply)(QuestionFormData.unapply)
   )
 }
@@ -44,8 +47,9 @@ object QuestionForm {
 class QuestionTable(tag: Tag) extends Table[Question](tag, "question") {
   def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
   def content = column[String]("content")
+  def answerType = column[AnswerType]("answer_type")
 
-  override def * = (id, content) <> (Question.tupled, Question.unapply)
+  override def * = (id, content, answerType) <> (Question.tupled, Question.unapply)
 }
 
 object Questions {

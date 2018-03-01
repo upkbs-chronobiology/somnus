@@ -12,6 +12,7 @@ import models.AnswerForm
 import models.Answers
 import play.api.libs.json.JsArray
 import play.api.libs.json.Json
+import util.JsonError
 import v1.RestBaseController
 import v1.RestControllerComponents
 
@@ -44,9 +45,10 @@ class AnswerController @Inject()(
           )
         )
         Answers.addAll(newAnswers).map(answers => Created(Json.toJson(answers))).recover {
-          case _: Exception => BadRequest("Could not create answer") // XXX: More info?
+          case e: IllegalArgumentException => BadRequest(JsonError(e.getMessage))
+          case _: Exception => BadRequest(JsonError("Could not create answer"))
         }
-      case _ => Future.successful(BadRequest("Expected array of answers"))
+      case _ => Future.successful(BadRequest(JsonError("Expected array of answers")))
     }
   }
 
