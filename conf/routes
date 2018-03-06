@@ -32,3 +32,10 @@ GET     /v1/answers                 v1.answer.AnswerController.index
 GET     /v1/answers/:id             v1.answer.AnswerController.get(id: Long)
 POST    /v1/answers                 v1.answer.AnswerController.add
 DELETE  /v1/answers/:id             v1.answer.AnswerController.delete(id: Long)
+
+# Studies
+GET     /v1/studies                 v1.study.StudyController.index
+GET     /v1/studies/:id             v1.study.StudyController.get(id: Long)
+POST    /v1/studies                 v1.study.StudyController.add
+PUT     /v1/studies/:id             v1.study.StudyController.update(id: Long)
+DELETE  /v1/studies/:id             v1.study.StudyController.delete(id: Long)

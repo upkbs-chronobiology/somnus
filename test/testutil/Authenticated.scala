@@ -106,8 +106,8 @@ trait Authenticated extends BeforeAndAfterAll with GuiceOneAppPerSuite with Inje
     body: Option[JsValue] = None,
     headers: Headers = Headers(),
     role: Option[Role] = None
-  ): Future[Result] = {
-    doRequest(httpMethod, target, body, addToken(headers, role))
+  )(implicit implicitRole: Role = null): Future[Result] = {
+    doRequest(httpMethod, target, body, addToken(headers, if (implicitRole != null) Some(implicitRole) else role))
   }
 
   // XXX: The following is a bit hacky
