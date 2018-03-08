@@ -31,6 +31,10 @@ class StudySpec extends PlaySpec
       studyUsersLater.length must equal(2)
       studyUsersLater.map(_.name) must contain("Rebecca Sinclair")
 
+      val userStudies = doSync(studies.listForParticipant(jeff.id))
+      userStudies.length must equal(1)
+      userStudies.head.name must equal("My Study")
+
       doSync(studies.removeParticipant(study.id, jeff.id)) must equal(1)
       doSync(studies.listParticipants(study.id)).length must equal(1)
       doSync(studies.removeParticipant(study.id, rebecca.id)) must equal(1)

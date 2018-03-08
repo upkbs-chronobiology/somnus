@@ -101,4 +101,14 @@ class StudyRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) {
     val query = studyParticipants.filter(_.studyId === studyId).filter(_.userId === userId).delete
     dbConfig.db.run(query)
   }
+
+  def listForParticipant(userId: Long): Future[Seq[Study]] = {
+    val user = users.filter(_.id === userId)
+    val usersAndStudies = (user join studyParticipants on (_.id === _.userId))
+      .join(studies) on (_._2.studyId === _.id)
+    val query = for {
+      ((_, _), studies) <- usersAndStudies
+    } yield studies
+    dbConfig.db.run(query.result)
+  }
 }
