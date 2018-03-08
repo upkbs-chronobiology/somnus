@@ -53,6 +53,8 @@ class StudyTable(tag: Tag) extends Table[Study](tag, "study") {
 class StudyRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) {
 
   def studies = TableQuery[StudyTable]
+  def studyParticipants = TableQuery[StudyParticipantsTable]
+  def users = TableQuery[UserTable]
 
   def dbConfig = dbConfigProvider.get[JdbcProfile]
 
@@ -79,5 +81,24 @@ class StudyRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) {
 
   def delete(id: Long): Future[Int] = {
     dbConfig.db.run(studies.filter(_.id === id).delete)
+  }
+
+  def listParticipants(studyId: Long): Future[Seq[User]] = {
+    val study = studies.filter(_.id === studyId)
+    val studiesAndUsers = (study join studyParticipants on (_.id === _.studyId))
+      .join(users) on (_._2.userId === _.id)
+    val query = for {
+      ((_, _), participants) <- studiesAndUsers
+    } yield participants
+    dbConfig.db.run(query.result)
+  }
+
+  def addParticipant(studyId: Long, userId: Long): Future[Int] = {
+    dbConfig.db.run(studyParticipants += StudyParticipant(userId, studyId))
+  }
+
+  def removeParticipant(studyId: Long, userId: Long): Future[Int] = {
+    val query = studyParticipants.filter(_.studyId === studyId).filter(_.userId === userId).delete
+    dbConfig.db.run(query)
   }
 }
