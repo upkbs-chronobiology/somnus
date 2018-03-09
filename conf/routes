@@ -4,38 +4,41 @@
 # ~~~~
 
 # An example controller showing a sample home page
-GET           /                                   controllers.HomeController.index
+GET           /                                         controllers.HomeController.index
 
 # Questions
-GET           /questions                          controllers.QuestionHtmlController.index
-POST          /questions                          controllers.QuestionHtmlController.add
-DELETE        /questions/:id                      controllers.QuestionHtmlController.delete(id: Long)
+GET           /questions                                controllers.QuestionHtmlController.index
+POST          /questions                                controllers.QuestionHtmlController.add
+DELETE        /questions/:id                            controllers.QuestionHtmlController.delete(id: Long)
 
 # Map static resources from the /public folder to the /assets URL path
-GET           /assets/*file                       controllers.Assets.versioned(path="/public", file: Asset)
+GET           /assets/*file                             controllers.Assets.versioned(path="/public", file: Asset)
 
 # REST API
 
 # Auth
-POST          /v1/auth/signup                     v1.auth.AuthController.signUp
-POST          /v1/auth/login                      v1.auth.AuthController.logIn
+POST          /v1/auth/signup                           v1.auth.AuthController.signUp
+POST          /v1/auth/login                            v1.auth.AuthController.logIn
 
 # Questions
-GET           /v1/questions                       v1.question.QuestionController.index
-GET           /v1/questions/:id                   v1.question.QuestionController.get(id: Long)
-POST          /v1/questions                       v1.question.QuestionController.add
-PUT           /v1/questions/:id                   v1.question.QuestionController.update(id: Long)
-DELETE        /v1/questions/:id                   v1.question.QuestionController.delete(id: Long)
+GET           /v1/questions                             v1.question.QuestionController.index
+GET           /v1/questions/:id                         v1.question.QuestionController.get(id: Long)
+POST          /v1/questions                             v1.question.QuestionController.add
+PUT           /v1/questions/:id                         v1.question.QuestionController.update(id: Long)
+DELETE        /v1/questions/:id                         v1.question.QuestionController.delete(id: Long)
 
 # Answers
-GET           /v1/answers                         v1.answer.AnswerController.index
-GET           /v1/answers/:id                     v1.answer.AnswerController.get(id: Long)
-POST          /v1/answers                         v1.answer.AnswerController.add
-DELETE        /v1/answers/:id                     v1.answer.AnswerController.delete(id: Long)
+GET           /v1/answers                               v1.answer.AnswerController.index
+GET           /v1/answers/:id                           v1.answer.AnswerController.get(id: Long)
+POST          /v1/answers                               v1.answer.AnswerController.add
+DELETE        /v1/answers/:id                           v1.answer.AnswerController.delete(id: Long)
 
 # Studies
-GET           /v1/studies                         v1.study.StudyController.index
-GET           /v1/studies/:id                     v1.study.StudyController.get(id: Long)
-POST          /v1/studies                         v1.study.StudyController.add
-PUT           /v1/studies/:id                     v1.study.StudyController.update(id: Long)
-DELETE        /v1/studies/:id                     v1.study.StudyController.delete(id: Long)
+GET           /v1/studies                               v1.study.StudyController.index
+GET           /v1/studies/:id                           v1.study.StudyController.get(id: Long)
+POST          /v1/studies                               v1.study.StudyController.add
+PUT           /v1/studies/:id                           v1.study.StudyController.update(id: Long)
+DELETE        /v1/studies/:id                           v1.study.StudyController.delete(id: Long)
+GET           /v1/studies/:id/participants              v1.study.StudyController.getParticipants(id: Long)
+POST          /v1/studies/:sId/participants/:uId        v1.study.StudyController.addParticipant(sId: Long, uId: Long)
+DELETE        /v1/studies/:sId/participants/:uId        v1.study.StudyController.removeParticipant(sId: Long, uId: Long)

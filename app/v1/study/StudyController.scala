@@ -56,6 +56,26 @@ class StudyController @Inject()(
       }
   }
 
+  def getParticipants(studyId: Long) = silhouette.SecuredAction(ForEditors).async { implicit request =>
+    studyRepository.listParticipants(studyId)
+      .map(participants => Ok(Json.toJson(participants)))
+      .recover {
+        case e: IllegalArgumentException => BadRequest(JsonError(e.getMessage))
+      }
+  }
+
+  def addParticipant(studyId: Long, userId: Long) = silhouette.SecuredAction(ForEditors).async {
+    implicit request =>
+      studyRepository.addParticipant(studyId, userId)
+        .map(num => Created(JsonSuccess(s"Updated $num entr${if (num == 1) "y" else "ies"}")))
+  }
+
+  def removeParticipant(studyId: Long, userId: Long) = silhouette.SecuredAction(ForEditors).async {
+    implicit request =>
+      studyRepository.removeParticipant(studyId, userId)
+        .map(num => Ok(JsonSuccess(s"Removed $num participant${if (num != 1) "s"}")))
+  }
+
   private def digestForm(validCallback: StudyFormData => Future[Result])(
     implicit request: SecuredRequest[DefaultEnv, AnyContent]
   ): Future[Result] = {

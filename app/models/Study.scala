@@ -84,6 +84,7 @@ class StudyRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) {
   }
 
   def listParticipants(studyId: Long): Future[Seq[User]] = {
+    // XXX: Check if study actually exists? Currently, an empty seq will be returned.
     val study = studies.filter(_.id === studyId)
     val studiesAndUsers = (study join studyParticipants on (_.id === _.studyId))
       .join(users) on (_._2.userId === _.id)

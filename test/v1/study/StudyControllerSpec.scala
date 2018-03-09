@@ -1,5 +1,6 @@
 package v1.study
 
+import auth.AuthService
 import auth.roles.Role
 import models.Study
 import models.StudyRepository
@@ -73,6 +74,26 @@ class StudyControllerSpec extends PlaySpec
 
       "reject updates with non-existent ids" in {
         status(doAuthenticatedRequest(PUT, "/v1/studies/666", Some(studyJson("Out Of Ideas")))) must equal(400)
+      }
+
+      "list correct participants after adding and removing" in {
+        val creationResult = doAuthenticatedRequest(POST, "/v1/studies", Some(studyJson("Heavy Light Study")))
+        status(creationResult) must equal(201)
+        val createdId = contentAsJson(creationResult).apply("id").as[Long]
+
+        val authService = inject[AuthService]
+        val george = doSync(authService.register("George Wilson", "iamgeorge"))
+
+        status(doAuthenticatedRequest(POST, s"/v1/studies/$createdId/participants/${george.id}")) must equal(201)
+
+        val list = contentAsJson(doAuthenticatedRequest(GET, s"/v1/studies/$createdId/participants")).as[JsArray].value
+        list.length must equal(1)
+        list.head.apply("name").as[String] must equal("George Wilson")
+
+        status(doAuthenticatedRequest(DELETE, s"/v1/studies/$createdId/participants/${george.id}")) must equal(200)
+
+        val finalList = contentAsJson(doAuthenticatedRequest(GET, s"/v1/studies/$createdId/participants")).as[JsArray].value
+        finalList.length must equal(0)
       }
     }
   }
