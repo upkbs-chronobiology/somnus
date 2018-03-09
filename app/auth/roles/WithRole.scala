@@ -1,5 +1,6 @@
 package auth.roles
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scalaz.Scalaz._
 
@@ -22,4 +23,20 @@ case class WithRole(roles: Role*) extends Authorization[User, BearerTokenAuthent
   }
 }
 
-object ForEditors extends WithRole(Role.Admin, Role.Researcher)
+class WithEditorRole extends WithRole(Role.Admin, Role.Researcher)
+
+class ForAnyEditorOrUser(userId: Long) extends WithEditorRole {
+
+  override def isAuthorized[B](identity: User, authenticator: BearerTokenAuthenticator)
+    (implicit request: Request[B]): Future[Boolean] = {
+    super.isAuthorized[B](identity, authenticator).map(authorized => authorized || identity.id === userId)
+  }
+}
+
+object ForAnyEditorOrUser {
+  def apply(userId: Long): ForAnyEditorOrUser = new ForAnyEditorOrUser(userId)
+}
+
+object ForEditors extends WithEditorRole
+
+object ForCurrentUserOrEditors extends WithEditorRole
