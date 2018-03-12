@@ -9,6 +9,7 @@ import auth.DefaultEnv
 import auth.roles.ForEditors
 import com.mohiva.play.silhouette.api.Silhouette
 import com.mohiva.play.silhouette.api.actions.SecuredRequest
+import models.Questions
 import models.Study
 import models.StudyForm
 import models.StudyFormData
@@ -74,6 +75,14 @@ class StudyController @Inject()(
     implicit request =>
       studyRepository.removeParticipant(studyId, userId)
         .map(num => Ok(JsonSuccess(s"Removed $num participant${if (num != 1) "s"}")))
+  }
+
+  def getQuestions(studyId: Long) = silhouette.SecuredAction.async { implicit request =>
+    Questions.listByStudy(studyId)
+      .map(questions => Ok(Json.toJson(questions)))
+      .recover {
+        case e: IllegalArgumentException => NotFound(JsonError(e.getMessage))
+      }
   }
 
   private def digestForm(validCallback: StudyFormData => Future[Result])(

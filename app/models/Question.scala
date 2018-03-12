@@ -17,7 +17,7 @@ import slick.jdbc.JdbcProfile
 import util.PlayFormsEnum.enum
 
 // TODO: Add property like time of asking (morning or evening)
-case class Question(id: Long, content: String, answerType: AnswerType)
+case class Question(id: Long, content: String, answerType: AnswerType, studyId: Option[Long] = None)
 
 object Question {
   implicit val implicitWrites = new Writes[Question] {
@@ -25,7 +25,8 @@ object Question {
       Json.obj(
         "id" -> question.id,
         "content" -> question.content,
-        "answerType" -> question.answerType
+        "answerType" -> question.answerType,
+        "studyId" -> question.studyId
       )
     }
   }
@@ -33,13 +34,14 @@ object Question {
   val tupled = (this.apply _).tupled
 }
 
-case class QuestionFormData(content: String, answerType: AnswerType)
+case class QuestionFormData(content: String, answerType: AnswerType, studyId: Option[Long])
 
 object QuestionForm {
   val form = Form(
     mapping(
       "content" -> nonEmptyText,
-      "answerType" -> enum(AnswerType)
+      "answerType" -> enum(AnswerType),
+      "studyId" -> optional(longNumber)
     )(QuestionFormData.apply)(QuestionFormData.unapply)
   )
 }
@@ -48,8 +50,9 @@ class QuestionTable(tag: Tag) extends Table[Question](tag, "question") {
   def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
   def content = column[String]("content")
   def answerType = column[AnswerType]("answer_type")
+  def studyId = column[Long]("study_id")
 
-  override def * = (id, content, answerType) <> (Question.tupled, Question.unapply)
+  override def * = (id, content, answerType, studyId.?) <> (Question.tupled, Question.unapply)
 }
 
 object Questions {
@@ -87,5 +90,9 @@ object Questions {
 
   def listAll: Future[Seq[Question]] = {
     dbConfig().db.run(questions.result)
+  }
+
+  def listByStudy(studyId: Long): Future[Seq[Question]] = {
+    dbConfig().db.run(questions.filter(_.studyId === studyId).result)
   }
 }

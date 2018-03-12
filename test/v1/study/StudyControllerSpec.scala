@@ -2,6 +2,9 @@ package v1.study
 
 import auth.AuthService
 import auth.roles.Role
+import models.AnswerType
+import models.Question
+import models.Questions
 import models.Study
 import models.StudyRepository
 import org.scalatestplus.play.PlaySpec
@@ -47,6 +50,25 @@ class StudyControllerSpec extends PlaySpec
         status(doAuthenticatedRequest(POST, "/v1/studies", Some(studyJson("Blabla Study")))) must equal(403)
         status(doAuthenticatedRequest(PUT, "/v1/studies/88", Some(studyJson("Yada Study")))) must equal(403)
         status(doAuthenticatedRequest(DELETE, "/v1/studies/77")) must equal(403)
+      }
+
+      "deliver questions for a study" in {
+        val studyRepository = inject[StudyRepository]
+        val study = doSync(studyRepository.create(Study(0, "Xyz Study")))
+
+        val questionA = doSync(Questions.add(Question(0, "Question A", AnswerType.Text, Some(study.id))))
+        val questionB = doSync(Questions.add(Question(0, "Question B", AnswerType.Text, Some(study.id))))
+
+        val response = doAuthenticatedRequest(GET, s"/v1/studies/${study.id}/questions")
+        status(response) must equal(200)
+
+        val list = contentAsJson(response).as[JsArray].value
+        list.length must equal(2)
+        list.map(item => item("content").as[String]) must contain allOf("Question A", "Question B")
+
+        doSync(Questions.delete(questionA.id))
+        doSync(Questions.delete(questionB.id))
+        doSync(studyRepository.delete(study.id))
       }
     }
 

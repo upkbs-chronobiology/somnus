@@ -46,3 +46,4 @@ DELETE        /v1/studies/:id                           v1.study.StudyController
 GET           /v1/studies/:id/participants              v1.study.StudyController.getParticipants(id: Long)
 POST          /v1/studies/:sId/participants/:uId        v1.study.StudyController.addParticipant(sId: Long, uId: Long)
 DELETE        /v1/studies/:sId/participants/:uId        v1.study.StudyController.removeParticipant(sId: Long, uId: Long)
+GET           /v1/studies/:id/questions                 v1.study.StudyController.getQuestions(id: Long)
