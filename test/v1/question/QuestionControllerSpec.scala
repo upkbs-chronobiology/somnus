@@ -7,9 +7,12 @@ import auth.roles.Role
 import models.AnswerType
 import models.AnswerType.AnswerType
 import models.Questions
+import models.Study
+import models.StudyRepository
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.libs.json.JsArray
+import play.api.libs.json.JsObject
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json
 import play.api.mvc.Result
@@ -94,6 +97,8 @@ class QuestionControllerSpec
     }
 
     "update existing questions" in {
+      val study = doSync(inject[StudyRepository].create(Study(0, "Test Study")))
+
       val questionResult = postQuestion("Before?")
       status(questionResult) must equal(201)
       val id = contentAsJson(questionResult).apply("id").as[Long]
@@ -101,8 +106,10 @@ class QuestionControllerSpec
       val jsonBefore = contentAsJson(doAuthenticatedRequest(GET, s"/v1/questions/$id"))
       jsonBefore("content").as[String] must equal("Before?")
 
-      val putResponse = doAuthenticatedRequest(PUT, s"/v1/questions/$id", Some(questionJson("After?")), role = Some(Role.Researcher))
+      val putResponse = doAuthenticatedRequest(PUT, s"/v1/questions/$id", Some(questionJson("After?", studyId = Some(study.id))), role = Some(Role.Researcher))
       status(putResponse) must equal(200)
+      contentAsJson(putResponse).apply("content").as[String] must equal("After?")
+      contentAsJson(putResponse).apply("studyId").as[Long] must equal(study.id)
 
       val jsonAfter = contentAsJson(doAuthenticatedRequest(GET, s"/v1/questions/$id"))
       jsonAfter("content").as[String] must equal("After?")
@@ -117,7 +124,6 @@ class QuestionControllerSpec
     "refuse questions with invalid answer type" in {
       val request = doAuthenticatedRequest(POST, "/v1/questions",
         Some(questionJson("Nanana batman?", "non-existent-type")), role = Some(Role.Researcher))
-      println(contentAsString(request))
       status(request) must equal(400)
     }
 
@@ -139,10 +145,11 @@ class QuestionControllerSpec
     route(app, deleteRequest).get
   }
 
-  private def questionJson(text: String, answerType: String = AnswerType.Text.toString): JsValue = {
-    Json.obj(
+  private def questionJson(text: String, answerType: String = AnswerType.Text.toString, studyId: Option[Long] = None): JsValue = {
+    val obj: JsObject = Json.obj(
       "content" -> text,
       "answerType" -> answerType
     )
+    if (studyId.isDefined) obj + ("studyId" -> Json.toJson(studyId.get)) else obj
   }
 }

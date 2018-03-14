@@ -41,7 +41,7 @@ class QuestionController @Inject()(
       badForm => Future.successful(BadRequest(badForm.errorsAsJson)),
       formData => {
         // XXX: Should question instantiation really be done here?
-        Questions.add(Question(0, formData.content, formData.answerType)) map { newQuestion =>
+        Questions.add(Question(0, formData.content, formData.answerType, formData.studyId)) map { newQuestion =>
           Created(Json.toJson(newQuestion)) // XXX: And location header?
         } recover {
           case _: Exception => BadRequest("Could not create question.") // XXX: More info? JSON?
@@ -53,7 +53,7 @@ class QuestionController @Inject()(
   def update(id: Long) = silhouette.SecuredAction(ForEditors).async { implicit request =>
     QuestionForm.form.bindFromRequest().fold(
       badForm => Future.successful(BadRequest(badForm.errorsAsJson)),
-      formData => Questions.update(Question(id, formData.content, formData.answerType)).map { q =>
+      formData => Questions.update(Question(id, formData.content, formData.answerType, formData.studyId)).map { q =>
         Ok(Json.toJson(q))
       }
     )
