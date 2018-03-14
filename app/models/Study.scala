@@ -80,7 +80,17 @@ class StudyRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) {
   }
 
   def delete(id: Long): Future[Int] = {
-    dbConfig.db.run(studies.filter(_.id === id).delete)
+    for {
+      participants <- listParticipants(id)
+      questions <- Questions.listByStudy(id)
+      result <-
+        if (questions.nonEmpty)
+          Future.failed(new IllegalArgumentException(s"Cannot delete study with id $id because it contains questions"))
+        else if (participants.nonEmpty)
+          Future.failed(new IllegalArgumentException(s"Cannot delete study with id $id because it contains participants"))
+        else
+          dbConfig.db.run(studies.filter(_.id === id).delete)
+    } yield result
   }
 
   def listParticipants(studyId: Long): Future[Seq[User]] = {
