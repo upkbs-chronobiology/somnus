@@ -25,7 +25,8 @@ object User {
     def writes(user: User): JsValue = {
       Json.obj(
         "name" -> user.name,
-        "role" -> user.role
+        "role" -> user.role,
+        "id" -> user.id
       )
     }
   }
