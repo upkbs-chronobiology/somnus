@@ -106,7 +106,7 @@ class StudyControllerSpec extends PlaySpec
         val authService = inject[AuthService]
         val george = doSync(authService.register("George Wilson", "iamgeorge"))
 
-        status(doAuthenticatedRequest(POST, s"/v1/studies/$createdId/participants/${george.id}")) must equal(201)
+        status(doAuthenticatedRequest(PUT, s"/v1/studies/$createdId/participants/${george.id}")) must equal(201)
 
         val list = contentAsJson(doAuthenticatedRequest(GET, s"/v1/studies/$createdId/participants")).as[JsArray].value
         list.length must equal(1)
