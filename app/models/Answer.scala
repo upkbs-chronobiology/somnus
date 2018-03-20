@@ -24,9 +24,9 @@ object Answer {
     def writes(answer: Answer): JsValue = {
       Json.obj(
         "id" -> answer.id,
-        "question_id" -> answer.questionId,
+        "questionId" -> answer.questionId,
         "content" -> answer.content,
-        "user_id" -> answer.userId,
+        "userId" -> answer.userId,
         "created" -> answer.created
       )
     }
