@@ -57,8 +57,14 @@ class UserController @Inject()(
   def update(id: Long) = silhouette.SecuredAction(ForAdmins).async { implicit request =>
     UserUpdateForm.form.bindFromRequest().fold(
       badForm => Future.successful(BadRequest(badForm.errorsAsJson)),
-      formData => userRepository.setRole(id, formData.role.map(r => Role.withName(r)))
-        .map(num => Ok(JsonSuccess(s"Updated $num user(s)")))
+      formData => {
+        // prevent admins from un-admining themselves (don't shoot yourself in the foot)
+        if (request.identity.id == id && formData.role != request.identity.role)
+          Future.successful(BadRequest(JsonError("Refusing to reduce current user's own rights (by altering role)")))
+        else
+          userRepository.setRole(id, formData.role.map(r => Role.withName(r)))
+            .map(num => Ok(JsonSuccess(s"Updated $num user(s)")))
+      }
     )
   }
 }

@@ -111,6 +111,14 @@ class UserControllerSpec extends PlaySpec
         status(response) must equal(200)
         doSync(inject[UserRepository].get(donald.id)).get.role must equal(None)
       }
+
+      "reject removing own admin rights" in {
+        val response = doAuthenticatedRequest(
+            PUT, s"/v1/users/${adminUser.id}", Some(userUpdateJson(null)), role = Some(Role.Admin))
+
+        status(response) must equal(400)
+        doSync(inject[UserRepository].get(adminUser.id)).get.role must equal(Some(Role.Admin.toString))
+      }
     }
   }
 
