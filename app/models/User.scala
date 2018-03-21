@@ -94,6 +94,11 @@ class UserRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) extends
     dbConfig.db.run(users.filter(_.name === name).delete)
   }
 
+  def setRole(id: Long, role: Role): Future[Int] = {
+    val query = users.filter(_.id === id).map(_.role.?).update(Option(role).map(_.toString))
+    dbConfig.db.run(query)
+  }
+
   def setRole(name: String, role: Role): Future[Int] = {
     val query = users.filter(_.name === name).map(_.role.?).update(Option(role).map(_.toString))
     dbConfig.db.run(query)

@@ -25,6 +25,8 @@ case class WithRole(roles: Role*) extends Authorization[User, BearerTokenAuthent
 
 class WithEditorRole extends WithRole(Role.Admin, Role.Researcher)
 
+class WithAdminRole extends WithRole(Role.Admin)
+
 class ForAnyEditorOrUser(userId: Long) extends WithEditorRole {
 
   override def isAuthorized[B](identity: User, authenticator: BearerTokenAuthenticator)
@@ -39,4 +41,4 @@ object ForAnyEditorOrUser {
 
 object ForEditors extends WithEditorRole
 
-object ForCurrentUserOrEditors extends WithEditorRole
+object ForAdmins extends WithAdminRole

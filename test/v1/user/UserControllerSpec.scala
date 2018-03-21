@@ -8,6 +8,8 @@ import org.scalatest.BeforeAndAfterAll
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.libs.json.JsArray
+import play.api.libs.json.JsObject
+import play.api.libs.json.Json
 import play.api.test.Helpers._
 import play.api.test.Injecting
 import testutil.Authenticated
@@ -76,6 +78,35 @@ class UserControllerSpec extends PlaySpec
         list.length must equal(1)
         list.head.apply("name").as[String] must equal("Test Study")
       }
+
+      "reject updating users" in {
+        val response = doAuthenticatedRequest(
+          PUT, s"/v1/users/${donald.id}", Some(userUpdateJson(Role.Researcher.toString)))
+
+        status(response) must equal(403)
+      }
     }
+
+    "logged in as admin" should {
+      "reject invalid roles" in {
+        val response = doAuthenticatedRequest(
+          PUT, s"/v1/users/${donald.id}", Some(userUpdateJson("fooRole")), role = Some(Role.Admin))
+
+        status(response) must equal(400)
+      }
+
+      "allow updating users" in {
+        val response = doAuthenticatedRequest(
+          PUT, s"/v1/users/${donald.id}", Some(userUpdateJson(Role.Researcher.toString)), role = Some(Role.Admin))
+
+        status(response) must equal(200)
+      }
+    }
+  }
+
+  def userUpdateJson(role: String): JsObject = {
+    Json.obj(
+      "role" -> role
+    )
   }
 }
