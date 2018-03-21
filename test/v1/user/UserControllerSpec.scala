@@ -4,6 +4,7 @@ import auth.AuthService
 import auth.roles.Role
 import models.Study
 import models.StudyRepository
+import models.UserRepository
 import org.scalatest.BeforeAndAfterAll
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
@@ -100,6 +101,15 @@ class UserControllerSpec extends PlaySpec
           PUT, s"/v1/users/${donald.id}", Some(userUpdateJson(Role.Researcher.toString)), role = Some(Role.Admin))
 
         status(response) must equal(200)
+        doSync(inject[UserRepository].get(donald.id)).get.role must equal(Some(Role.Researcher.toString))
+      }
+
+      "accept user updates with null-role" in {
+        val response = doAuthenticatedRequest(
+            PUT, s"/v1/users/${donald.id}", Some(userUpdateJson(null)), role = Some(Role.Admin))
+
+        status(response) must equal(200)
+        doSync(inject[UserRepository].get(donald.id)).get.role must equal(None)
       }
     }
   }

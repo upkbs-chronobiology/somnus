@@ -15,8 +15,7 @@ import com.mohiva.play.silhouette.api.Silhouette
 import models.StudyRepository
 import models.UserRepository
 import play.api.data.Form
-import play.api.data.Forms.mapping
-import play.api.data.Forms.nonEmptyText
+import play.api.data.Forms._
 import play.api.data.validation.Constraints.pattern
 import play.api.libs.json.Json
 import util.JsonError
@@ -24,14 +23,14 @@ import util.JsonSuccess
 import v1.RestBaseController
 import v1.RestControllerComponents
 
-case class UserUpdateFormData(role: String)
+case class UserUpdateFormData(role: Option[String])
 
 object UserUpdateForm {
   private val RolePattern: Regex = new Regex(s"^(${Role.values.mkString("|")})$$")
 
   val form = Form(
     mapping(
-      "role" -> nonEmptyText.verifying(pattern(RolePattern))
+      "role" -> optional(nonEmptyText.verifying(pattern(RolePattern)))
     )(UserUpdateFormData.apply)(UserUpdateFormData.unapply)
   )
 }
@@ -58,7 +57,7 @@ class UserController @Inject()(
   def update(id: Long) = silhouette.SecuredAction(ForAdmins).async { implicit request =>
     UserUpdateForm.form.bindFromRequest().fold(
       badForm => Future.successful(BadRequest(badForm.errorsAsJson)),
-      formData => userRepository.setRole(id, Role.withName(formData.role))
+      formData => userRepository.setRole(id, formData.role.map(r => Role.withName(r)))
         .map(num => Ok(JsonSuccess(s"Updated $num user(s)")))
     )
   }

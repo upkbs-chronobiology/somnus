@@ -79,7 +79,7 @@ trait Authenticated extends BeforeAndAfterAll with GuiceOneAppPerSuite with Inje
     deleteTestUser(name).flatMap({ _ =>
       authService.register(name, TestPassword)
         .map(user => {
-          role.map(userRepository.setRole(name, _))
+          userRepository.setRole(name, role)
           user
         })
     })
