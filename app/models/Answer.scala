@@ -1,6 +1,8 @@
 package models
 
 import java.sql.Timestamp
+import javax.inject.Inject
+import javax.inject.Singleton
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -54,16 +56,19 @@ class AnswerTable(tag: Tag) extends Table[Answer](tag, "answer") {
   def userId = column[Long]("user_id")
   def created = column[Timestamp]("created", SqlType("TIMESTAMP NOT NULL DEFAULT current_timestamp()"))
 
-  def question = foreignKey("question", questionId, Questions.questions)(_.id)
+  def question = foreignKey("question", questionId, TableQuery[QuestionTable])(_.id)
   def user = foreignKey("user", userId, TableQuery[UserTable])(_.id)
 
   override def * = (id, questionId, content, userId, created) <> (Answer.tupled, Answer.unapply)
 }
 
-object Answers {
-  // FIXME: Inject instead
-  def dbConfig() = DatabaseConfigProvider.get[JdbcProfile](Play.current)
+@Singleton
+class AnswersRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) {
+
+  def dbConfig() = dbConfigProvider.get[JdbcProfile]
+
   val answers = TableQuery[AnswerTable]
+  val questions = TableQuery[QuestionTable]
 
   // required because we don't want to insert "created", but use its default value
   private val InsertColumnsMap = (table: AnswerTable) => (table.questionId, table.content, table.userId)
@@ -72,7 +77,8 @@ object Answers {
   /** Make sure answer content corresponds with answerType in question.
     */
   private def assureTypeConsistency(answer: Answer): Future[Unit] = {
-    Questions.get(answer.questionId).map {
+    val query = questions.filter(_.id === answer.questionId).result.headOption
+    dbConfig().db.run(query).map {
       case None => throw new IllegalArgumentException("Question id for answer not found")
       case Some(question) => question.answerType match {
         case AnswerType.RangeContinuous =>

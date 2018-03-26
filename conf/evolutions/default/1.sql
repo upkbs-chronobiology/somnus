@@ -30,13 +30,20 @@ create table study_participants (
   FOREIGN KEY(study_id) REFERENCES study(id)
 );
 
+create table questionnaire (
+  id IDENTITY PRIMARY KEY,
+  name VARCHAR NOT NULL,
+  study_id BIGINT,
+  FOREIGN KEY(study_id) REFERENCES study(id)
+);
+
 create table question (
   id IDENTITY PRIMARY KEY,
   content VARCHAR NOT NULL,
   /* range-continous: [0, 1] over ℝ, range-discrete-5: [1, 5] over ℕ */
   answer_type ENUM('text', 'range-continuous', 'range-discrete-5') NOT NULL,
-  study_id BIGINT,
-  FOREIGN KEY(study_id) REFERENCES study(id)
+  questionnaire_id BIGINT,
+  FOREIGN KEY(questionnaire_id) REFERENCES questionnaire(id)
 );
 
 create table answer (

@@ -1,15 +1,14 @@
 package v1.answer
 
-import javax.inject.Inject
-
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
 import auth.DefaultEnv
 import com.mohiva.play.silhouette.api.Silhouette
+import javax.inject.Inject
 import models.Answer
 import models.AnswerForm
-import models.Answers
+import models.AnswersRepository
 import play.api.libs.json.JsArray
 import play.api.libs.json.Json
 import util.JsonError
@@ -18,16 +17,17 @@ import v1.RestControllerComponents
 
 class AnswerController @Inject()(
   rcc: RestControllerComponents,
-  silhouette: Silhouette[DefaultEnv]
+  silhouette: Silhouette[DefaultEnv],
+  answersRepo: AnswersRepository
 )(implicit ec: ExecutionContext)
   extends RestBaseController(rcc) {
 
   def index = silhouette.SecuredAction.async { implicit request =>
-    Answers.listAll().map(answers => Ok(Json.toJson(answers)))
+    answersRepo.listAll().map(answers => Ok(Json.toJson(answers)))
   }
 
   def get(id: Long) = silhouette.SecuredAction.async { implicit request =>
-    Answers.get(id).map(answer => Ok(Json.toJson(answer))) recover {
+    answersRepo.get(id).map(answer => Ok(Json.toJson(answer))) recover {
       case _: Exception => BadRequest("Cannot serve that answer")
     }
   }
@@ -44,7 +44,7 @@ class AnswerController @Inject()(
             }
           )
         )
-        Answers.addAll(newAnswers).map(answers => Created(Json.toJson(answers))).recover {
+        answersRepo.addAll(newAnswers).map(answers => Created(Json.toJson(answers))).recover {
           case e: IllegalArgumentException => BadRequest(JsonError(e.getMessage))
           case _: Exception => BadRequest(JsonError("Could not create answer"))
         }
@@ -53,7 +53,7 @@ class AnswerController @Inject()(
   }
 
   def delete(id: Long) = silhouette.SecuredAction.async { implicit request =>
-    Answers.delete(id).map {
+    answersRepo.delete(id).map {
       num => Ok(s"Deleted $num answer${if (num != 1) "s"}")
     }
   }

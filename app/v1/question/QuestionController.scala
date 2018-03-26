@@ -10,7 +10,7 @@ import auth.roles.ForEditors
 import com.mohiva.play.silhouette.api.Silhouette
 import models.Question
 import models.QuestionForm
-import models.Questions
+import models.QuestionsRepository
 import play.api.libs.json.Json
 import util.JsonError
 import util.JsonSuccess
@@ -19,16 +19,17 @@ import v1.RestControllerComponents
 
 class QuestionController @Inject()(
   rcc: RestControllerComponents,
-  silhouette: Silhouette[DefaultEnv]
+  silhouette: Silhouette[DefaultEnv],
+  questionsRepo: QuestionsRepository
 )(implicit ec: ExecutionContext)
   extends RestBaseController(rcc) {
 
   def index = silhouette.SecuredAction.async { implicit request =>
-    Questions.listAll.map(questions => Ok(Json.toJson(questions)))
+    questionsRepo.listAll.map(questions => Ok(Json.toJson(questions)))
   }
 
   def get(id: Long) = silhouette.SecuredAction.async { implicit request =>
-    Questions.get(id) map {
+    questionsRepo.get(id) map {
       case None => BadRequest("Question not found")
       case Some(question) => Ok(Json.toJson(question))
     } recover {
@@ -41,7 +42,7 @@ class QuestionController @Inject()(
       badForm => Future.successful(BadRequest(badForm.errorsAsJson)),
       formData => {
         // XXX: Should question instantiation really be done here?
-        Questions.add(Question(0, formData.content, formData.answerType, formData.studyId)) map { newQuestion =>
+        questionsRepo.add(Question(0, formData.content, formData.answerType, formData.questionnaireId)) map { newQuestion =>
           Created(Json.toJson(newQuestion)) // XXX: And location header?
         } recover {
           case _: Exception => BadRequest("Could not create question.") // XXX: More info? JSON?
@@ -53,14 +54,14 @@ class QuestionController @Inject()(
   def update(id: Long) = silhouette.SecuredAction(ForEditors).async { implicit request =>
     QuestionForm.form.bindFromRequest().fold(
       badForm => Future.successful(BadRequest(badForm.errorsAsJson)),
-      formData => Questions.update(Question(id, formData.content, formData.answerType, formData.studyId)).map { q =>
+      formData => questionsRepo.update(Question(id, formData.content, formData.answerType, formData.questionnaireId)).map { q =>
         Ok(Json.toJson(q))
       }
     )
   }
 
   def delete(id: Long) = silhouette.SecuredAction(ForEditors).async { implicit request =>
-    Questions.delete(id)
+    questionsRepo.delete(id)
       .map(num => Ok(JsonSuccess(s"Deleted $num ${if (num == 1) "entry" else "entries"}")))
       .recover {
         case e: IllegalArgumentException => BadRequest(JsonError(e.getMessage))

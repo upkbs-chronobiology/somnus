@@ -6,11 +6,6 @@
 # An example controller showing a sample home page
 GET           /                                         controllers.HomeController.index
 
-# Questions
-GET           /questions                                controllers.QuestionHtmlController.index
-POST          /questions                                controllers.QuestionHtmlController.add
-DELETE        /questions/:id                            controllers.QuestionHtmlController.delete(id: Long)
-
 # Map static resources from the /public folder to the /assets URL path
 GET           /assets/*file                             controllers.Assets.versioned(path="/public", file: Asset)
 
@@ -47,4 +42,7 @@ DELETE        /v1/studies/:id                           v1.study.StudyController
 GET           /v1/studies/:id/participants              v1.study.StudyController.getParticipants(id: Long)
 PUT           /v1/studies/:sId/participants/:uId        v1.study.StudyController.addParticipant(sId: Long, uId: Long)
 DELETE        /v1/studies/:sId/participants/:uId        v1.study.StudyController.removeParticipant(sId: Long, uId: Long)
-GET           /v1/studies/:id/questions                 v1.study.StudyController.getQuestions(id: Long)
+GET           /v1/studies/:id/questionnaires            v1.study.StudyController.getQuestionnaires(id: Long)
+
+# Questionnaires
+GET           /v1/questionnaires/:id/questions          v1.questionnaire.QuestionnaireController.getQuestions(id: Long)

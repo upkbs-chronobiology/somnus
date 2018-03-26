@@ -2,9 +2,8 @@ package v1.study
 
 import auth.AuthService
 import auth.roles.Role
-import models.AnswerType
-import models.Question
-import models.Questions
+import models.Questionnaire
+import models.QuestionnaireRepository
 import models.Study
 import models.StudyRepository
 import org.scalatestplus.play.PlaySpec
@@ -33,6 +32,27 @@ class StudyControllerSpec extends PlaySpec
     }
 
     "logged in as basic user" should {
+      "reject reading" in {
+        val studyRepository = inject[StudyRepository]
+        val study = doSync(studyRepository.create(Study(0, "test study")))
+
+        status(doAuthenticatedRequest(GET, "/v1/studies")) must equal(FORBIDDEN)
+        status(doAuthenticatedRequest(GET, s"/v1/studies/${study.id}")) must equal(FORBIDDEN)
+        status(doAuthenticatedRequest(GET, s"/v1/studies/${study.id}/questionnaires")) must equal(FORBIDDEN)
+
+        doSync(studyRepository.delete(study.id))
+      }
+
+      "reject altering" in {
+        status(doAuthenticatedRequest(POST, "/v1/studies", Some(studyJson("Blabla Study")))) must equal(403)
+        status(doAuthenticatedRequest(PUT, "/v1/studies/88", Some(studyJson("Yada Study")))) must equal(403)
+        status(doAuthenticatedRequest(DELETE, "/v1/studies/77")) must equal(403)
+      }
+    }
+
+    "logged in as researcher" should {
+      implicit val _ = Role.Researcher
+
       "allow reading" in {
         val studyRepository = inject[StudyRepository]
         val study = doSync(studyRepository.create(Study(0, "test study")))
@@ -46,34 +66,26 @@ class StudyControllerSpec extends PlaySpec
         doSync(studyRepository.delete(study.id))
       }
 
-      "reject altering" in {
-        status(doAuthenticatedRequest(POST, "/v1/studies", Some(studyJson("Blabla Study")))) must equal(403)
-        status(doAuthenticatedRequest(PUT, "/v1/studies/88", Some(studyJson("Yada Study")))) must equal(403)
-        status(doAuthenticatedRequest(DELETE, "/v1/studies/77")) must equal(403)
-      }
+      "deliver questionnaires for a study" in {
+        val questionnaires = inject[QuestionnaireRepository]
 
-      "deliver questions for a study" in {
         val studyRepository = inject[StudyRepository]
         val study = doSync(studyRepository.create(Study(0, "Xyz Study")))
 
-        val questionA = doSync(Questions.add(Question(0, "Question A", AnswerType.Text, Some(study.id))))
-        val questionB = doSync(Questions.add(Question(0, "Question B", AnswerType.Text, Some(study.id))))
+        val questionnaireA = doSync(questionnaires.create(Questionnaire(0, "Questionnaire A", Some(study.id))))
+        val questionnaireB = doSync(questionnaires.create(Questionnaire(0, "Questionnaire B", Some(study.id))))
 
-        val response = doAuthenticatedRequest(GET, s"/v1/studies/${study.id}/questions")
+        val response = doAuthenticatedRequest(GET, s"/v1/studies/${study.id}/questionnaires")
         status(response) must equal(200)
 
         val list = contentAsJson(response).as[JsArray].value
         list.length must equal(2)
-        list.map(item => item("content").as[String]) must contain allOf("Question A", "Question B")
+        list.map(item => item("name").as[String]) must contain allOf("Questionnaire A", "Questionnaire B")
 
-        doSync(Questions.delete(questionA.id))
-        doSync(Questions.delete(questionB.id))
+        doSync(questionnaires.delete(questionnaireA.id))
+        doSync(questionnaires.delete(questionnaireB.id))
         doSync(studyRepository.delete(study.id))
       }
-    }
-
-    "logged in as researcher" should {
-      implicit val _ = Role.Researcher
 
       "allow all CRUD operations" in {
         contentAsJson(doAuthenticatedRequest(GET, "/v1/studies")).as[JsArray].value.length must equal(0)

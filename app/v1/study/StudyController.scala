@@ -9,7 +9,7 @@ import auth.DefaultEnv
 import auth.roles.ForEditors
 import com.mohiva.play.silhouette.api.Silhouette
 import com.mohiva.play.silhouette.api.actions.SecuredRequest
-import models.Questions
+import models.QuestionnaireRepository
 import models.Study
 import models.StudyForm
 import models.StudyFormData
@@ -25,14 +25,15 @@ import v1.RestControllerComponents
 class StudyController @Inject()(
   rcc: RestControllerComponents,
   silhouette: Silhouette[DefaultEnv],
-  studyRepository: StudyRepository
+  studyRepository: StudyRepository,
+  questionnaires: QuestionnaireRepository
 )(implicit ec: ExecutionContext) extends RestBaseController(rcc) {
 
-  def index = silhouette.SecuredAction.async { implicit request =>
+  def index = silhouette.SecuredAction(ForEditors).async { implicit request =>
     studyRepository.listAll().map(studies => Ok(Json.toJson(studies)))
   }
 
-  def get(id: Long) = silhouette.SecuredAction.async { implicit request =>
+  def get(id: Long) = silhouette.SecuredAction(ForEditors).async { implicit request =>
     studyRepository.read(id).map {
       case None => BadRequest(JsonError(s"Study with id $id not found"))
       case Some(study) => Ok(Json.toJson(study))
@@ -77,8 +78,8 @@ class StudyController @Inject()(
         .map(num => Ok(JsonSuccess(s"Removed $num participant${if (num != 1) "s"}")))
   }
 
-  def getQuestions(studyId: Long) = silhouette.SecuredAction.async { implicit request =>
-    Questions.listByStudy(studyId)
+  def getQuestionnaires(studyId: Long) = silhouette.SecuredAction(ForEditors).async { implicit request =>
+    questionnaires.listByStudy(studyId)
       .map(questions => Ok(Json.toJson(questions)))
       .recover {
         case e: IllegalArgumentException => NotFound(JsonError(e.getMessage))

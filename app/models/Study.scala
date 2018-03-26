@@ -50,7 +50,7 @@ class StudyTable(tag: Tag) extends Table[Study](tag, "study") {
 }
 
 @Singleton
-class StudyRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) {
+class StudyRepository @Inject()(dbConfigProvider: DatabaseConfigProvider, questionnaires: QuestionnaireRepository) {
 
   def studies = TableQuery[StudyTable]
   def studyParticipants = TableQuery[StudyParticipantsTable]
@@ -82,10 +82,10 @@ class StudyRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) {
   def delete(id: Long): Future[Int] = {
     for {
       participants <- listParticipants(id)
-      questions <- Questions.listByStudy(id)
+      questionnaires <- questionnaires.listByStudy(id)
       result <-
-        if (questions.nonEmpty)
-          Future.failed(new IllegalArgumentException(s"Cannot delete study with id $id because it contains questions"))
+        if (questionnaires.nonEmpty)
+          Future.failed(new IllegalArgumentException(s"Cannot delete study with id $id because it contains questionnaires"))
         else if (participants.nonEmpty)
           Future.failed(new IllegalArgumentException(s"Cannot delete study with id $id because it contains participants"))
         else
