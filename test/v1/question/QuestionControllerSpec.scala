@@ -98,6 +98,13 @@ class QuestionControllerSpec
       status(putResponse) must equal(403)
     }
 
+    "reject questions with non-existent questionnaire id" in {
+      implicit val _ = Role.Researcher
+
+      val response = doAuthenticatedRequest(POST, "/v1/questions", Some(questionJson("Foo bar?", questionnaireId = Some(666))))
+      status(response) must equal(BAD_REQUEST)
+    }
+
     "update existing questions" in {
       val questionnaire = doSync(inject[QuestionnaireRepository].create(Questionnaire(0, "Test Questionnaire", None)))
 
