@@ -1,7 +1,5 @@
 package v1.auth
 
-import javax.inject.Inject
-
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
@@ -11,6 +9,7 @@ import com.mohiva.play.silhouette.api.Environment
 import com.mohiva.play.silhouette.api.Silhouette
 import com.mohiva.play.silhouette.api.util.Credentials
 import com.mohiva.play.silhouette.impl.providers.CredentialsProvider
+import javax.inject.Inject
 import models.UserService
 import play.api.data.Form
 import play.api.data.Forms._

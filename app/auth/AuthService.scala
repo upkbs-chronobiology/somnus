@@ -1,7 +1,5 @@
 package auth
 
-import javax.inject.Inject
-
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -9,6 +7,7 @@ import com.mohiva.play.silhouette.api.LoginInfo
 import com.mohiva.play.silhouette.api.repositories.AuthInfoRepository
 import com.mohiva.play.silhouette.api.util.PasswordHasher
 import com.mohiva.play.silhouette.impl.providers.CredentialsProvider
+import javax.inject.Inject
 import models.User
 import models.UserRepository
 import models.UserService

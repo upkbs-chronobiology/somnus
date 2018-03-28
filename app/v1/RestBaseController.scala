@@ -1,7 +1,6 @@
 package v1
 
 import javax.inject.Inject
-
 import play.api.http.FileMimeTypes
 import play.api.i18n.I18nSupport
 import play.api.i18n.Langs

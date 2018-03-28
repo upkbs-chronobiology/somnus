@@ -1,13 +1,12 @@
 package models
 
 import java.sql.Timestamp
-import javax.inject.Inject
-import javax.inject.Singleton
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-import play.api.Play
+import javax.inject.Inject
+import javax.inject.Singleton
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.db.slick.DatabaseConfigProvider

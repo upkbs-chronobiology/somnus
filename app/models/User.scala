@@ -1,8 +1,5 @@
 package models
 
-import javax.inject.Inject
-import javax.inject.Singleton
-
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -10,6 +7,8 @@ import auth.roles.Role.Role
 import com.mohiva.play.silhouette.api.Identity
 import com.mohiva.play.silhouette.api.LoginInfo
 import com.mohiva.play.silhouette.api.services.IdentityService
+import javax.inject.Inject
+import javax.inject.Singleton
 import play.api.db.slick.DatabaseConfigProvider
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json

@@ -1,12 +1,11 @@
 package v1.questionnaire
 
-import javax.inject.Inject
-
 import scala.concurrent.ExecutionContext
 
 import auth.DefaultEnv
 import auth.roles.ForEditors
 import com.mohiva.play.silhouette.api.Silhouette
+import javax.inject.Inject
 import models.Questionnaire
 import models.QuestionnaireRepository
 import models.QuestionsRepository

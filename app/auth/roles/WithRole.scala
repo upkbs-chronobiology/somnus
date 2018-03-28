@@ -2,13 +2,13 @@ package auth.roles
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scalaz.Scalaz._
 
 import auth.roles.Role.Role
 import com.mohiva.play.silhouette.api.Authorization
 import com.mohiva.play.silhouette.impl.authenticators.BearerTokenAuthenticator
 import models.User
 import play.api.mvc.Request
+import scalaz.Scalaz._
 
 /** Authorization implementation restricting based on roles.
   *

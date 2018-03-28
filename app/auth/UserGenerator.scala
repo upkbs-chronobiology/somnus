@@ -1,12 +1,11 @@
 package auth
 
-import javax.inject.Inject
-import javax.inject.Singleton
-
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Random
 
 import auth.roles.Role
+import javax.inject.Inject
+import javax.inject.Singleton
 import models.UserRepository
 
 /** Generator for default users, like the initial admin.

@@ -1,7 +1,5 @@
 package v1.study
 
-import javax.inject.Inject
-
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
@@ -9,6 +7,7 @@ import auth.DefaultEnv
 import auth.roles.ForEditors
 import com.mohiva.play.silhouette.api.Silhouette
 import com.mohiva.play.silhouette.api.actions.SecuredRequest
+import javax.inject.Inject
 import models.QuestionnaireRepository
 import models.Study
 import models.StudyForm

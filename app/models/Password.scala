@@ -1,11 +1,10 @@
 package models
 
-import javax.inject.Inject
-import javax.inject.Singleton
-
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
+import javax.inject.Inject
+import javax.inject.Singleton
 import play.api.db.slick.DatabaseConfigProvider
 import slick.jdbc.H2Profile.api._
 import slick.jdbc.JdbcProfile
