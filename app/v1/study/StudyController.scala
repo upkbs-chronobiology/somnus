@@ -1,12 +1,10 @@
 package v1.study
 
 import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
 
 import auth.DefaultEnv
 import auth.roles.ForEditors
 import com.mohiva.play.silhouette.api.Silhouette
-import com.mohiva.play.silhouette.api.actions.SecuredRequest
 import javax.inject.Inject
 import models.QuestionnaireRepository
 import models.Study
@@ -14,8 +12,6 @@ import models.StudyForm
 import models.StudyFormData
 import models.StudyRepository
 import play.api.libs.json.Json
-import play.api.mvc.AnyContent
-import play.api.mvc.Result
 import util.JsonError
 import util.JsonSuccess
 import v1.RestBaseController
@@ -40,12 +36,12 @@ class StudyController @Inject()(
   }
 
   def add = silhouette.SecuredAction(ForEditors).async { implicit request =>
-    digestForm(formData => studyRepository.create(Study(0, formData.name))
+    digestForm[StudyFormData](StudyForm.form, formData => studyRepository.create(Study(0, formData.name))
       .map(study => Created(Json.toJson(study))))
   }
 
   def update(id: Long) = silhouette.SecuredAction(ForEditors).async { implicit request =>
-    digestForm(formData => studyRepository.update(Study(id, formData.name))
+    digestForm[StudyFormData](StudyForm.form, formData => studyRepository.update(Study(id, formData.name))
       .map(study => Ok(Json.toJson(study))))
   }
 
@@ -83,16 +79,5 @@ class StudyController @Inject()(
       .recover {
         case e: IllegalArgumentException => NotFound(JsonError(e.getMessage))
       }
-  }
-
-  private def digestForm(validCallback: StudyFormData => Future[Result])(
-    implicit request: SecuredRequest[DefaultEnv, AnyContent]
-  ): Future[Result] = {
-    StudyForm.form.bindFromRequest.fold(
-      badForm => Future.successful(BadRequest(badForm.errorsAsJson)),
-      formData => validCallback(formData).recover {
-        case e: IllegalArgumentException => BadRequest(JsonError(e.getMessage))
-      }
-    )
   }
 }

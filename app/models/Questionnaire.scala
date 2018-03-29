@@ -57,6 +57,10 @@ class QuestionnaireRepository @Inject()(dbConfigProvider: DatabaseConfigProvider
 
   private def dbConfig() = dbConfigProvider.get[JdbcProfile]
 
+  def listAll(): Future[Seq[Questionnaire]] = {
+    dbConfig().db.run(questionnaires.result)
+  }
+
   def read(id: Long): Future[Option[Questionnaire]] = {
     dbConfig().db.run(questionnaires.filter(_.id === id).result.headOption)
   }

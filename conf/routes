@@ -45,4 +45,8 @@ DELETE        /v1/studies/:sId/participants/:uId        v1.study.StudyController
 GET           /v1/studies/:id/questionnaires            v1.study.StudyController.getQuestionnaires(id: Long)
 
 # Questionnaires
+GET           /v1/questionnaires                        v1.questionnaire.QuestionnaireController.index
+POST          /v1/questionnaires                        v1.questionnaire.QuestionnaireController.add
+PUT           /v1/questionnaires/:id                    v1.questionnaire.QuestionnaireController.update(id: Long)
+DELETE        /v1/questionnaires/:id                    v1.questionnaire.QuestionnaireController.delete(id: Long)
 GET           /v1/questionnaires/:id/questions          v1.questionnaire.QuestionnaireController.getQuestions(id: Long)
