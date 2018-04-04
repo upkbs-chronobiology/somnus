@@ -54,6 +54,7 @@ class QuestionnaireTable(tag: Tag) extends Table[Questionnaire](tag, "questionna
 class QuestionnaireRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) {
 
   private def questionnaires = TableQuery[QuestionnaireTable]
+  private def questions = TableQuery[QuestionTable]
 
   private def dbConfig() = dbConfigProvider.get[JdbcProfile]
 
@@ -81,7 +82,10 @@ class QuestionnaireRepository @Inject()(dbConfigProvider: DatabaseConfigProvider
   }
 
   def delete(id: Long): Future[Int] = {
-    dbConfig().db.run(questionnaires.filter(_.id === id).delete)
+    dbConfig().db.run(questions.filter(_.questionnaireId === id).result).map(_.size).flatMap {
+      case 0 => dbConfig().db.run(questionnaires.filter(_.id === id).delete)
+      case _ => Future.failed(new IllegalArgumentException(s"Cannot delete questionnaire $id because it contains questions"))
+    }
   }
 
   def listByStudy(studyId: Long): Future[Seq[Questionnaire]] = {

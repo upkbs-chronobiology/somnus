@@ -41,10 +41,13 @@ class QuestionnaireController @Inject()(
   }
 
   def delete(id: Long) = silhouette.SecuredAction(ForEditors).async { implicit request =>
-    questionnaires.delete(id).map(num => Ok(JsonSuccess(s"Deleted $num questionnaire(s)")))
-      .recover {
-        case e: IllegalArgumentException => NotFound(JsonError(e.getMessage))
-      }
+    questionnaires.delete(id).map {
+      case 0 => NotFound(JsonError(s"Failed to delete questionnaire with id $id"))
+      case 1 => Ok(JsonSuccess(s"Successfully deleted questionnaire with id $id"))
+      case 2 => throw new IllegalStateException("Deleted more than one questionaire by id, but ids should be unique")
+    }.recover {
+      case e: IllegalArgumentException => BadRequest(JsonError(e.getMessage))
+    }
   }
 
   def getQuestions(questionnaireId: Long) = silhouette.SecuredAction(ForEditors).async { implicit request =>

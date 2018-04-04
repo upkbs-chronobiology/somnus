@@ -93,6 +93,14 @@ class QuestionnaireControllerSpec extends PlaySpec
         listAfterDelete.map(q => q.name) mustNot contain("Bar foo")
         listAfterDelete.map(q => q.name) mustNot contain("Bar foo 2")
       }
+
+      "give error status when trying to delete non-existent questionnaire" in {
+        status(doAuthenticatedRequest(DELETE, "/v1/questionnaires/999")) must equal(NOT_FOUND)
+      }
+
+      "reject deleting questionnaires containing questions" in {
+        status(doAuthenticatedRequest(DELETE, s"/v1/questionnaires/${questionnaire.id}")) must equal(BAD_REQUEST)
+      }
     }
   }
 
