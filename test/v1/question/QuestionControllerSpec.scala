@@ -141,6 +141,7 @@ class QuestionControllerSpec
       status(postQuestion("A?", AnswerType.Text)) must equal(201)
       status(postQuestion("B?", AnswerType.RangeContinuous)) must equal(201)
       status(postQuestion("C?", AnswerType.RangeDiscrete5)) must equal(201)
+      status(postQuestion("C?", AnswerType.MultipleChoice)) must equal(201)
     }
 
     "accept questions with correct answer labels" in {
@@ -155,6 +156,12 @@ class QuestionControllerSpec
       val listB = contentAsJson(responseB).apply("answerLabels").as[JsArray].value.map(_.as[String])
       listB.length must equal(5)
       listB must contain allOf("a", "b", "c", "d", "e")
+
+      val responseC = postQuestion("Baz?", AnswerType.MultipleChoice, Some(Seq("I", "II", "III")))
+      status(responseC) must equal(CREATED)
+      val listC = contentAsJson(responseC).apply("answerLabels").as[JsArray].value.map(_.as[String])
+      listC.length must equal(3)
+      listC must contain allOf("I", "II", "III")
     }
   }
 

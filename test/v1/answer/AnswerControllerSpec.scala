@@ -90,6 +90,12 @@ class AnswerControllerSpec extends PlaySpec
         status(postAnswer(question.id, "0.1337")) must equal(201)
       }
 
+      "accept multiple-choice answers" in {
+        val question = doSync(questionsRepo.add(Question(0, "My question X", AnswerType.MultipleChoice, Some("a,b,c"))))
+        status(postAnswer(question.id, "0")) must equal(CREATED)
+        status(postAnswer(question.id, "2")) must equal(CREATED)
+      }
+
       "reject text answers to continuous-number type questions" in {
         val question = doSync(questionsRepo.add(Question(0, "My question X", AnswerType.RangeContinuous)))
         status(postAnswer(question.id, "This should not be text")) must equal(400)
@@ -113,6 +119,18 @@ class AnswerControllerSpec extends PlaySpec
       "reject continuous number answers to discrete-number type questions" in {
         val question = doSync(questionsRepo.add(Question(0, "My question Z", AnswerType.RangeDiscrete5)))
         status(postAnswer(question.id, "2.5")) must equal(400)
+      }
+
+      "reject multiple-choice answers out of range" in {
+        val question = doSync(questionsRepo.add(Question(0, "My question X", AnswerType.MultipleChoice, Some("a,b,c"))))
+        status(postAnswer(question.id, "-1")) must equal(BAD_REQUEST)
+        status(postAnswer(question.id, "3")) must equal(BAD_REQUEST)
+      }
+
+      "reject multiple-choice answers other than integers" in {
+        val question = doSync(questionsRepo.add(Question(0, "My question X", AnswerType.MultipleChoice, Some("a,b,c"))))
+        status(postAnswer(question.id, "1.2")) must equal(BAD_REQUEST)
+        status(postAnswer(question.id, "foobar")) must equal(BAD_REQUEST)
       }
     }
   }

@@ -9,6 +9,7 @@ object AnswerType extends Enumeration {
   val RangeContinuous = Value("range-continuous")
   // [1, 5] over ℕ
   val RangeDiscrete5 = Value("range-discrete-5")
+  val MultipleChoice = Value("multiple-choice")
 
   implicit val answerTypeMapper = MappedColumnType.base[AnswerType, String](
     answerType => answerType.toString,

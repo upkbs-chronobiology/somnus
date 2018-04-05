@@ -16,6 +16,7 @@ import play.api.libs.json.Writes
 import slick.jdbc.H2Profile.api._
 import slick.jdbc.JdbcProfile
 import slick.sql.SqlProfile.ColumnOption.SqlType
+import util.Serialization
 
 // XXX: Should content be of type String? It may depend on the question type (number, date, choice, ...)
 case class Answer(id: Long, questionId: Long, content: String, userId: Long, created: Timestamp)
@@ -86,6 +87,10 @@ class AnswersRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) {
         case AnswerType.RangeDiscrete5 =>
           val value = answer.content.toLong
           if (value < 1 || value > 5) throw new IllegalArgumentException("Bad number format - expected natural number 1 <= x <= 5")
+        case AnswerType.MultipleChoice =>
+          val value = answer.content.toLong
+          val numOptions = question.answerLabels.map(Serialization.parseList(_).length).getOrElse(-1)
+          if (value < 0 || value >= numOptions) throw new IllegalArgumentException("Answer option index doesn't match answer options")
         case _ => Unit
       }
     }

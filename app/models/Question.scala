@@ -124,6 +124,7 @@ class QuestionsRepository @Inject()(dbConfigProvider: DatabaseConfigProvider, an
           case AnswerType.Text =>
           case AnswerType.RangeDiscrete5 if labels.length == 5 =>
           case AnswerType.RangeContinuous if labels.length == 2 =>
+          case AnswerType.MultipleChoice if labels.nonEmpty =>
           case _ => throw new IllegalArgumentException("Number of answer labels doesn't match answer type")
         }
       }
