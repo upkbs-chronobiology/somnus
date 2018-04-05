@@ -13,6 +13,7 @@ import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.libs.json.JsArray
 import play.api.libs.json.JsObject
+import play.api.libs.json.JsString
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json
 import play.api.mvc.Result
@@ -141,11 +142,25 @@ class QuestionControllerSpec
       status(postQuestion("B?", AnswerType.RangeContinuous)) must equal(201)
       status(postQuestion("C?", AnswerType.RangeDiscrete5)) must equal(201)
     }
+
+    "accept questions with correct answer labels" in {
+      val responseA = postQuestion("Foo?", AnswerType.RangeContinuous, Some(Seq("this is min", "this is max")))
+      status(responseA) must equal(CREATED)
+      val listA = contentAsJson(responseA).apply("answerLabels").as[JsArray].value.map(_.as[String])
+      listA.length must equal(2)
+      listA must contain allOf("this is min", "this is max")
+
+      val responseB = postQuestion("Bar?", AnswerType.RangeDiscrete5, Some(Seq("a", "b", "c", "d", "e")))
+      status(responseB) must equal(CREATED)
+      val listB = contentAsJson(responseB).apply("answerLabels").as[JsArray].value.map(_.as[String])
+      listB.length must equal(5)
+      listB must contain allOf("a", "b", "c", "d", "e")
+    }
   }
 
-  private def postQuestion(text: String, answerType: AnswerType = AnswerType.Text): Future[Result] = {
+  private def postQuestion(text: String, answerType: AnswerType = AnswerType.Text, answerLabels: Option[Seq[String]] = None): Future[Result] = {
     val postRequest = AuthenticatedFakeRequest(Role.Researcher)(POST, "/v1/questions")
-      .withBody(questionJson(text, answerType.toString))
+      .withBody(questionJson(text, answerType.toString, answerLabels))
     route(app, postRequest).get
   }
 
@@ -154,11 +169,18 @@ class QuestionControllerSpec
     route(app, deleteRequest).get
   }
 
-  private def questionJson(text: String, answerType: String = AnswerType.Text.toString, questionnaireId: Option[Long] = None): JsValue = {
-    val obj: JsObject = Json.obj(
+  private def questionJson(
+    text: String,
+    answerType: String = AnswerType.Text.toString,
+    answerLabels: Option[Seq[String]] = None,
+    questionnaireId: Option[Long] = None
+  ): JsValue = {
+    var obj: JsObject = Json.obj(
       "content" -> text,
       "answerType" -> answerType
     )
-    if (questionnaireId.isDefined) obj + ("questionnaireId" -> Json.toJson(questionnaireId.get)) else obj
+    obj = if (answerLabels.isDefined) obj + ("answerLabels" -> JsArray(answerLabels.get.map(JsString))) else obj
+    obj = if (questionnaireId.isDefined) obj + ("questionnaireId" -> Json.toJson(questionnaireId.get)) else obj
+    obj
   }
 }

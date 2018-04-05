@@ -13,6 +13,7 @@ import models.QuestionsRepository
 import play.api.libs.json.Json
 import util.JsonError
 import util.JsonSuccess
+import util.Serialization
 import v1.RestBaseController
 import v1.RestControllerComponents
 
@@ -32,7 +33,7 @@ class QuestionController @Inject()(
       case None => BadRequest("Question not found")
       case Some(question) => Ok(Json.toJson(question))
     } recover {
-      case _: Exception => BadRequest("Cannot serve that question") // XXX: More info? JSON?
+      case _: IllegalArgumentException => NotFound(JsonError(s"No question with id: $id"))
     }
   }
 
@@ -40,11 +41,11 @@ class QuestionController @Inject()(
     QuestionForm.form.bindFromRequest().fold(
       badForm => Future.successful(BadRequest(badForm.errorsAsJson)),
       formData => {
-        // XXX: Should question instantiation really be done here?
-        questionsRepo.add(Question(0, formData.content, formData.answerType, formData.questionnaireId)) map { newQuestion =>
+        val answerLabels = formData.answerLabels.map(Serialization.serialize)
+        questionsRepo.add(Question(0, formData.content, formData.answerType, answerLabels, formData.questionnaireId)) map { newQuestion =>
           Created(Json.toJson(newQuestion)) // XXX: And location header?
         } recover {
-          case _: Exception => BadRequest("Could not create question.") // XXX: More info? JSON?
+          case e: IllegalArgumentException => BadRequest(JsonError(s"Could not create question: ${e.getMessage}"))
         }
       }
     )
@@ -53,8 +54,13 @@ class QuestionController @Inject()(
   def update(id: Long) = silhouette.SecuredAction(ForEditors).async { implicit request =>
     QuestionForm.form.bindFromRequest().fold(
       badForm => Future.successful(BadRequest(badForm.errorsAsJson)),
-      formData => questionsRepo.update(Question(id, formData.content, formData.answerType, formData.questionnaireId)).map { q =>
-        Ok(Json.toJson(q))
+      formData => {
+        val answerLabels = formData.answerLabels.map(Serialization.serialize)
+        questionsRepo.update(Question(id, formData.content, formData.answerType, answerLabels, formData.questionnaireId)).map { q =>
+          Ok(Json.toJson(q))
+        } recover {
+          case e: IllegalArgumentException => BadRequest(JsonError(s"Could not update question: ${e.getMessage}"))
+        }
       }
     )
   }
