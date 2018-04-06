@@ -40,9 +40,10 @@ create table questionnaire (
 create table question (
   id IDENTITY PRIMARY KEY,
   content VARCHAR NOT NULL,
-  /* range-continous: [0, 1] over ℝ, range-discrete-5: [1, 5] over ℕ */
-  answer_type ENUM('text', 'range-continuous', 'range-discrete-5', 'multiple-choice') NOT NULL,
+  answer_type ENUM('text', 'range-continuous', 'range-discrete', 'multiple-choice') NOT NULL,
   answer_labels VARCHAR,
+  /* "<min>,<max>", inclusive */
+  answer_range VARCHAR,
   questionnaire_id BIGINT,
   FOREIGN KEY(questionnaire_id) REFERENCES questionnaire(id)
 );

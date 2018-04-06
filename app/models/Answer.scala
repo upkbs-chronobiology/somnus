@@ -84,7 +84,7 @@ class AnswersRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) {
         case AnswerType.RangeContinuous =>
           val value = answer.content.toDouble
           if (value < 0 || value > 1) throw new IllegalArgumentException("Bad number format - expected real number 0 <= x <= 1")
-        case AnswerType.RangeDiscrete5 =>
+        case AnswerType.RangeDiscrete =>
           val value = answer.content.toLong
           if (value < 1 || value > 5) throw new IllegalArgumentException("Bad number format - expected natural number 1 <= x <= 5")
         case AnswerType.MultipleChoice =>

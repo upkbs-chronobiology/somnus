@@ -21,6 +21,7 @@ import play.api.test.Helpers._
 import play.api.test._
 import testutil.Authenticated
 import testutil.FreshDatabase
+import util.InclusiveRange
 
 class QuestionControllerSpec
   extends PlaySpec with GuiceOneAppPerSuite with FreshDatabase with Injecting with Authenticated {
@@ -137,11 +138,22 @@ class QuestionControllerSpec
       status(request) must equal(400)
     }
 
+    "refuse discrete-range questions missing range" in {
+      val questionResult = postQuestion("Test?", AnswerType.RangeDiscrete)
+      status(questionResult) must equal(BAD_REQUEST)
+    }
+
+    "refuse discrete-range questions with wrong number of labels" in {
+      val questionResult = postQuestion("Test?", AnswerType.RangeDiscrete, Some(Seq("a", "b", "c")), Some(InclusiveRange(1, 10)))
+      status(questionResult) must equal(BAD_REQUEST)
+    }
+
     "accept questions of all possible answer types" in {
       status(postQuestion("A?", AnswerType.Text)) must equal(201)
-      status(postQuestion("B?", AnswerType.RangeContinuous)) must equal(201)
-      status(postQuestion("C?", AnswerType.RangeDiscrete5)) must equal(201)
-      status(postQuestion("C?", AnswerType.MultipleChoice)) must equal(201)
+      status(postQuestion("B1?", AnswerType.RangeContinuous)) must equal(201)
+      status(postQuestion("B2?", AnswerType.RangeContinuous, answerRange = Some(InclusiveRange(0.2, 3.5)))) must equal(201)
+      status(postQuestion("C?", AnswerType.RangeDiscrete, answerRange = Some(InclusiveRange(1, 5)))) must equal(201)
+      status(postQuestion("D?", AnswerType.MultipleChoice)) must equal(201)
     }
 
     "accept questions with correct answer labels" in {
@@ -151,7 +163,7 @@ class QuestionControllerSpec
       listA.length must equal(2)
       listA must contain allOf("this is min", "this is max")
 
-      val responseB = postQuestion("Bar?", AnswerType.RangeDiscrete5, Some(Seq("a", "b", "c", "d", "e")))
+      val responseB = postQuestion("Bar?", AnswerType.RangeDiscrete, Some(Seq("a", "b", "c", "d", "e")), Some(InclusiveRange(3, 7)))
       status(responseB) must equal(CREATED)
       val listB = contentAsJson(responseB).apply("answerLabels").as[JsArray].value.map(_.as[String])
       listB.length must equal(5)
@@ -165,9 +177,14 @@ class QuestionControllerSpec
     }
   }
 
-  private def postQuestion(text: String, answerType: AnswerType = AnswerType.Text, answerLabels: Option[Seq[String]] = None): Future[Result] = {
+  private def postQuestion(
+    text: String,
+    answerType: AnswerType = AnswerType.Text,
+    answerLabels: Option[Seq[String]] = None,
+    answerRange: Option[InclusiveRange[BigDecimal]] = None
+  ): Future[Result] = {
     val postRequest = AuthenticatedFakeRequest(Role.Researcher)(POST, "/v1/questions")
-      .withBody(questionJson(text, answerType.toString, answerLabels))
+      .withBody(questionJson(text, answerType.toString, answerLabels, answerRange))
     route(app, postRequest).get
   }
 
@@ -180,6 +197,7 @@ class QuestionControllerSpec
     text: String,
     answerType: String = AnswerType.Text.toString,
     answerLabels: Option[Seq[String]] = None,
+    answerRange: Option[InclusiveRange[BigDecimal]] = None,
     questionnaireId: Option[Long] = None
   ): JsValue = {
     var obj: JsObject = Json.obj(
@@ -188,6 +206,7 @@ class QuestionControllerSpec
     )
     obj = if (answerLabels.isDefined) obj + ("answerLabels" -> JsArray(answerLabels.get.map(JsString))) else obj
     obj = if (questionnaireId.isDefined) obj + ("questionnaireId" -> Json.toJson(questionnaireId.get)) else obj
+    obj = if (answerRange.isDefined) obj + ("answerRange" -> Json.toJson(answerRange.get)) else obj
     obj
   }
 }

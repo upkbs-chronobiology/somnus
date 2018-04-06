@@ -25,7 +25,7 @@ class QuestionnaireControllerSpec extends PlaySpec
 
   val study = doSync(inject[StudyRepository].create(Study(0, "Sample Study")))
   val questionnaire = doSync(inject[QuestionnaireRepository].create(Questionnaire(0, "Sample Questionnaire", Some(study.id))))
-  val question = doSync(inject[QuestionsRepository].add(Question(0, "Sample Question", AnswerType.RangeDiscrete5, None, Some(questionnaire.id))))
+  val question = doSync(inject[QuestionsRepository].add(Question(0, "Sample Question", AnswerType.RangeDiscrete, None, Some("1,5"), Some(questionnaire.id))))
 
   "QuestionnaireController" when {
     "not logged in" should {

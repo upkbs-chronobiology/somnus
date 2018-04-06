@@ -81,7 +81,7 @@ class AnswerControllerSpec extends PlaySpec
       }
 
       "accept discrete-number answers" in {
-        val question = doSync(questionsRepo.add(Question(0, "My question X", AnswerType.RangeDiscrete5)))
+        val question = doSync(questionsRepo.add(Question(0, "My question X", AnswerType.RangeDiscrete, None, Some("1,5"))))
         status(postAnswer(question.id, "4")) must equal(201)
       }
 
@@ -102,7 +102,7 @@ class AnswerControllerSpec extends PlaySpec
       }
 
       "reject text answers to discrete-number type questions" in {
-        val question = doSync(questionsRepo.add(Question(0, "My question Y", AnswerType.RangeDiscrete5)))
+        val question = doSync(questionsRepo.add(Question(0, "My question Y", AnswerType.RangeDiscrete, None, Some("1,5"))))
         status(postAnswer(question.id, "This should not be text")) must equal(400)
       }
 
@@ -112,12 +112,12 @@ class AnswerControllerSpec extends PlaySpec
       }
 
       "reject discrete-number type answers out of range" in {
-        val question = doSync(questionsRepo.add(Question(0, "My question W", AnswerType.RangeDiscrete5)))
+        val question = doSync(questionsRepo.add(Question(0, "My question W", AnswerType.RangeDiscrete, None, Some("2,6"))))
         status(postAnswer(question.id, "7")) must equal(400)
       }
 
       "reject continuous number answers to discrete-number type questions" in {
-        val question = doSync(questionsRepo.add(Question(0, "My question Z", AnswerType.RangeDiscrete5)))
+        val question = doSync(questionsRepo.add(Question(0, "My question Z", AnswerType.RangeDiscrete, None, Some("1,5"))))
         status(postAnswer(question.id, "2.5")) must equal(400)
       }
 

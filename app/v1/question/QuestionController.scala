@@ -11,6 +11,7 @@ import models.Question
 import models.QuestionForm
 import models.QuestionsRepository
 import play.api.libs.json.Json
+import util.InclusiveRange
 import util.JsonError
 import util.JsonSuccess
 import util.Serialization
@@ -42,7 +43,8 @@ class QuestionController @Inject()(
       badForm => Future.successful(BadRequest(badForm.errorsAsJson)),
       formData => {
         val answerLabels = formData.answerLabels.map(Serialization.serialize)
-        questionsRepo.add(Question(0, formData.content, formData.answerType, answerLabels, formData.questionnaireId)) map { newQuestion =>
+        val answerRange = formData.answerRange.map(range => Serialization.serialize(InclusiveRange(range.min, range.max)))
+        questionsRepo.add(Question(0, formData.content, formData.answerType, answerLabels, answerRange, formData.questionnaireId)) map { newQuestion =>
           Created(Json.toJson(newQuestion)) // XXX: And location header?
         } recover {
           case e: IllegalArgumentException => BadRequest(JsonError(s"Could not create question: ${e.getMessage}"))
@@ -56,7 +58,8 @@ class QuestionController @Inject()(
       badForm => Future.successful(BadRequest(badForm.errorsAsJson)),
       formData => {
         val answerLabels = formData.answerLabels.map(Serialization.serialize)
-        questionsRepo.update(Question(id, formData.content, formData.answerType, answerLabels, formData.questionnaireId)).map { q =>
+        val answerRange = formData.answerRange.map(range => Serialization.serialize(InclusiveRange(range.min, range.max)))
+        questionsRepo.update(Question(id, formData.content, formData.answerType, answerLabels, answerRange, formData.questionnaireId)).map { q =>
           Ok(Json.toJson(q))
         } recover {
           case e: IllegalArgumentException => BadRequest(JsonError(s"Could not update question: ${e.getMessage}"))

@@ -53,7 +53,7 @@ class AnswerSpec extends PlaySpec
     }
 
     "reject text answers to discrete-number type questions" in {
-      val question = doSync(questionsRepo.add(Question(0, "My question X", AnswerType.RangeDiscrete5)))
+      val question = doSync(questionsRepo.add(Question(0, "My question X", AnswerType.RangeDiscrete, answerRange = Some("1,3"))))
 
       an[IllegalArgumentException] shouldBe thrownBy {
         doSync(answersRepo.add(Answer(0, question.id, "This should not be text", this.baseUser.id, null)))
