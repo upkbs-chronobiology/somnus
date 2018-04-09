@@ -9,7 +9,7 @@ object Serialization {
 
   def serialize(list: Seq[String]): String = {
     if (list.isEmpty)
-      null
+      null // scalastyle:ignore null
     else
       list.map(_.replaceAllLiterally("\\", "\\\\").replaceAllLiterally(",", "\\,")).mkString(",")
   }

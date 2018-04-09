@@ -134,9 +134,22 @@ class QuestionsRepository @Inject()(dbConfigProvider: DatabaseConfigProvider, an
     dbConfig.db.run(questions.filter(_.questionnaireId === questionnaireId).result)
   }
 
-  @SuppressWarnings(Array("org.wartremover.warts.Any"))
   private def validate(question: Question): Future[Unit] = {
-    val answerTypeCheck: Future[Unit] = Future {
+    val answerTypeCheck = validateAnswerType(question)
+
+    val questionnaireCheck = question.questionnaireId.map { id =>
+      dbConfig.db.run(questionnaires.filter(_.id === id).result).map(r => r.length).map {
+        case 0 => throw new IllegalArgumentException(s"Referenced questionnaire with id $id does not exist")
+        case _ =>
+      }
+    } getOrElse Future.unit
+
+    Future.sequence(Seq(answerTypeCheck.map(_ => {}), questionnaireCheck)).map(_ => {})
+  }
+
+  @SuppressWarnings(Array("org.wartremover.warts.Any"))
+  private def validateAnswerType(question: Question): Future[Unit] = {
+    Future {
       if (question.answerRange.isEmpty && question.answerType == AnswerType.RangeDiscrete)
         throw new IllegalArgumentException("Answer range for discrete-type question is missing")
       question.answerRange map { range =>
@@ -160,14 +173,5 @@ class QuestionsRepository @Inject()(dbConfigProvider: DatabaseConfigProvider, an
         }
       }
     }
-
-    val questionnaireCheck = question.questionnaireId.map { id =>
-      dbConfig.db.run(questionnaires.filter(_.id === id).result).map(r => r.length).map {
-        case 0 => throw new IllegalArgumentException(s"Referenced questionnaire with id $id does not exist")
-        case _ =>
-      }
-    } getOrElse Future.unit
-
-    Future.sequence(Seq(answerTypeCheck.map(_ => {}), questionnaireCheck)).map(_ => {})
   }
 }

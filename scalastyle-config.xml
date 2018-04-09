@@ -7,9 +7,16 @@
 
     &baseRules;
 
+    <check level="warning" class="org.scalastyle.scalariform.NullChecker" enabled="true"/>
     <check level="warning" class="org.scalastyle.scalariform.MagicNumberChecker" enabled="true">
         <parameters>
             <parameter name="ignore"><![CDATA[-1,0,1,2,3]]></parameter>
+        </parameters>
+    </check>
+    <check level="warning" class="org.scalastyle.file.FileLineLengthChecker" enabled="true">
+        <parameters>
+            <parameter name="maxLineLength"><![CDATA[160]]></parameter>
+            <parameter name="tabSize"><![CDATA[4]]></parameter>
         </parameters>
     </check>
 </scalastyle>

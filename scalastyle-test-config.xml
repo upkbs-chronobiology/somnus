@@ -6,4 +6,11 @@
     <name>Scalastyle test configuration</name>
 
     &baseRules;
+
+    <check level="warning" class="org.scalastyle.file.FileLineLengthChecker" enabled="true">
+        <parameters>
+            <parameter name="maxLineLength"><![CDATA[200]]></parameter>
+            <parameter name="tabSize"><![CDATA[4]]></parameter>
+        </parameters>
+    </check>
 </scalastyle>
