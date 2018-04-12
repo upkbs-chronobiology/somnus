@@ -175,6 +175,16 @@ class QuestionControllerSpec
       listC.length must equal(3)
       listC must contain allOf("I", "II", "III")
     }
+
+    "preserve empty answer labels" in {
+      val responseA = postQuestion("Foo?", AnswerType.RangeContinuous, Some(Seq("", "")))
+      status(responseA) must equal(CREATED)
+
+      val listA = contentAsJson(responseA).apply("answerLabels").as[JsArray].value.map(_.as[String])
+      listA.length must equal(2)
+      listA(0) must equal("")
+      listA(1) must equal("")
+    }
   }
 
   private def postQuestion(

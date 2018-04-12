@@ -9,8 +9,10 @@ import com.mohiva.play.silhouette.api.Silhouette
 import javax.inject.Inject
 import models.Question
 import models.QuestionForm
+import models.QuestionFormData
 import models.QuestionsRepository
 import play.api.libs.json.Json
+import util.EmptyPreservingReads
 import util.InclusiveRange
 import util.JsonError
 import util.JsonSuccess
@@ -24,6 +26,9 @@ class QuestionController @Inject()(
   questionsRepo: QuestionsRepository
 )(implicit ec: ExecutionContext)
   extends RestBaseController(rcc) {
+
+  implicit val _ = EmptyPreservingReads.readsStringSeq
+//  implicit val _ = Json.reads[QuestionForm]
 
   def index = silhouette.SecuredAction.async { implicit request =>
     questionsRepo.listAll.map(questions => Ok(Json.toJson(questions)))

@@ -15,6 +15,7 @@ import play.api.libs.json.Json
 import play.api.libs.json.Writes
 import slick.jdbc.H2Profile.api._
 import slick.jdbc.JdbcProfile
+import util.CustomForms._
 import util.PlayFormsEnum.enum
 import util.Serialization
 
@@ -65,7 +66,7 @@ object QuestionForm {
     mapping(
       "content" -> nonEmptyText,
       "answerType" -> enum(AnswerType),
-      "answerLabels" -> optional(seq(text)),
+      "answerLabels" -> emptyPreservingOptional(seq(text)),
       "answerRange" -> optional(mapping(
         "min" -> of(bigDecimalFormat),
         "max" -> of(bigDecimalFormat)
