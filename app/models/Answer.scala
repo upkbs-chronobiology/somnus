@@ -82,11 +82,15 @@ class AnswersRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) {
       case None => throw new IllegalArgumentException("Question id for answer not found")
       case Some(question) => question.answerType match {
         case AnswerType.RangeContinuous =>
+          val range = Serialization.parseFloatRange(
+            question.answerRange.getOrElse(throw new IllegalArgumentException("Range is missing on continuous-range question")))
           val value = answer.content.toDouble
-          if (value < 0 || value > 1) throw new IllegalArgumentException("Bad number format - expected real number 0 <= x <= 1")
+          if (value < range.min || value > range.max) throw new IllegalArgumentException(s"Bad number format - expected real number ${range.min} <= x <= ${range.max}")
         case AnswerType.RangeDiscrete =>
+          val range = Serialization.parseIntRange(
+            question.answerRange.getOrElse(throw new IllegalArgumentException("Range is missing on discrete-range question")))
           val value = answer.content.toLong
-          if (value < 1 || value > 5) throw new IllegalArgumentException("Bad number format - expected natural number 1 <= x <= 5")
+          if (value < range.min || value > range.max) throw new IllegalArgumentException(s"Bad number format - expected natural number ${range.min} <= x <= ${range.max}")
         case AnswerType.MultipleChoice =>
           val value = answer.content.toLong
           val numOptions = question.answerLabels.map(Serialization.parseList(_).length).getOrElse(-1)

@@ -86,8 +86,14 @@ class AnswerControllerSpec extends PlaySpec
       }
 
       "accept continuous-number answers" in {
-        val question = doSync(questionsRepo.add(Question(0, "My question X", AnswerType.RangeContinuous)))
+        val question = doSync(questionsRepo.add(Question(0, "My question X", AnswerType.RangeContinuous, None, Some("0,1"))))
         status(postAnswer(question.id, "0.1337")) must equal(201)
+      }
+
+      "accept continuous-number answers within custom range" in {
+        val question = doSync(questionsRepo.add(Question(0, "My question X", AnswerType.RangeContinuous, answerRange = Some("-2,5"))))
+        status(postAnswer(question.id, "4.44")) must equal(201)
+        status(postAnswer(question.id, "-0.1")) must equal(201)
       }
 
       "accept multiple-choice answers" in {
@@ -109,6 +115,11 @@ class AnswerControllerSpec extends PlaySpec
       "reject continuous-number type answers out of range" in {
         val question = doSync(questionsRepo.add(Question(0, "My question Z", AnswerType.RangeContinuous)))
         status(postAnswer(question.id, "1.5")) must equal(400)
+      }
+
+      "reject continuous-number type answers out of custom range" in {
+        val question = doSync(questionsRepo.add(Question(0, "My question Z", AnswerType.RangeContinuous, answerRange = Some("13,177"))))
+        status(postAnswer(question.id, "0.5")) must equal(400)
       }
 
       "reject discrete-number type answers out of range" in {
