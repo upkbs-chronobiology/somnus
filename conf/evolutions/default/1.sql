@@ -37,6 +37,19 @@ create table questionnaire (
   FOREIGN KEY(study_id) REFERENCES study(id)
 );
 
+create table schedule (
+  id IDENTITY PRIMARY KEY,
+  questionnaire_id BIGINT NOT NULL,
+  user_id BIGINT NOT NULL,
+  start_date DATE NOT NULL,
+  end_date DATE NOT NULL,
+  start_time TIME NOT NULL,
+  end_time TIME NOT NULL,
+  frequency INT NOT NULL CHECK(frequency >= 0),
+  FOREIGN KEY(questionnaire_id) REFERENCES questionnaire(id),
+  FOREIGN KEY(user_id) REFERENCES user(id)
+);
+
 create table question (
   id IDENTITY PRIMARY KEY,
   content VARCHAR NOT NULL,
@@ -61,7 +74,11 @@ create table answer (
 
 # --- !Downs
 
-drop table question;
 drop table answer;
+drop table question;
+drop table schedule;
+drop table questionnaire;
+drop table study_participants;
+drop table study;
 drop table user;
 drop table password;

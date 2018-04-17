@@ -19,6 +19,8 @@ POST          /v1/auth/login                            v1.auth.AuthController.l
 GET           /v1/users                                 v1.user.UserController.index
 GET           /v1/users/:id/studies                     v1.user.UserController.getStudies(id: Long)
 PUT           /v1/users/:id                             v1.user.UserController.update(id: Long)
+GET           /v1/users/me/schedules                    v1.schedule.ScheduleController.listForCurrentUser
+GET           /v1/users/:id/schedules                   v1.schedule.ScheduleController.listByUser(id: Long)
 
 # Questions
 GET           /v1/questions                             v1.question.QuestionController.index
@@ -50,3 +52,9 @@ POST          /v1/questionnaires                        v1.questionnaire.Questio
 PUT           /v1/questionnaires/:id                    v1.questionnaire.QuestionnaireController.update(id: Long)
 DELETE        /v1/questionnaires/:id                    v1.questionnaire.QuestionnaireController.delete(id: Long)
 GET           /v1/questionnaires/:id/questions          v1.questionnaire.QuestionnaireController.getQuestions(id: Long)
+GET           /v1/questionnaires/:id/schedules          v1.schedule.ScheduleController.listByQuestionnaire(id: Long)
+
+# Schedules
+POST          /v1/schedules                             v1.schedule.ScheduleController.add
+PUT           /v1/schedules/:id                         v1.schedule.ScheduleController.update(id: Long)
+DELETE        /v1/schedules/:id                         v1.schedule.ScheduleController.delete(id: Long)

@@ -74,7 +74,7 @@ class QuestionnaireControllerSpec extends PlaySpec
         val questionnaireRepo = inject[QuestionnaireRepository]
 
         val postResult = doAuthenticatedRequest(POST, s"/v1/questionnaires", Some(qJson("Bar foo", None)))
-        status(postResult) must equal(OK)
+        status(postResult) must equal(CREATED)
         val listAfterPost = doSync(questionnaireRepo.listAll())
         listAfterPost.length must equal(2)
         listAfterPost.map(q => q.name) must contain("Bar foo")

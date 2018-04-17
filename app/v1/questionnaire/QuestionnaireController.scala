@@ -30,7 +30,7 @@ class QuestionnaireController @Inject()(
 
   def add() = silhouette.SecuredAction(ForEditors).async { implicit request =>
     digestForm[QuestionnaireFormData](QuestionnaireForm.form, formData => {
-      questionnaires.create(Questionnaire(0, formData.name, formData.studyId)).map(q => Ok(Json.toJson(q)))
+      questionnaires.create(Questionnaire(0, formData.name, formData.studyId)).map(q => Created(Json.toJson(q)))
     })
   }
 
