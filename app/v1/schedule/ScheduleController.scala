@@ -12,6 +12,7 @@ import models.ScheduleFormData
 import models.SchedulesRepository
 import play.api.libs.json.Json
 import util.JsonError
+import util.JsonSuccess
 import v1.RestBaseController
 import v1.RestControllerComponents
 
@@ -60,6 +61,6 @@ class ScheduleController @Inject()(
   }
 
   def delete(id: Long) = silhouette.SecuredAction(ForEditors).async { implicit request =>
-    schedulesRepo.delete(id).map(num => Ok(s"Deleted $num schedule(s)"))
+    schedulesRepo.delete(id).map(num => Ok(JsonSuccess(s"Deleted $num schedule(s)")))
   }
 }
