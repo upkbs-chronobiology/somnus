@@ -12,6 +12,7 @@ import testutil.TestUtils
 class AnswerSpec extends PlaySpec
   with GuiceOneAppPerSuite with Injecting with FreshDatabase with TestUtils with Authenticated {
 
+  val questionnairesRepo = inject[QuestionnaireRepository]
   val questionsRepo = inject[QuestionsRepository]
   val answersRepo = inject[AnswersRepository]
 
@@ -58,6 +59,38 @@ class AnswerSpec extends PlaySpec
       an[IllegalArgumentException] shouldBe thrownBy {
         doSync(answersRepo.add(Answer(0, question.id, "This should not be text", this.baseUser.id, null)))
       }
+    }
+
+    "list by user and questionnaire" in {
+      val questionnaire1 = doSync(questionnairesRepo.create(Questionnaire(0, "Questionnnaire 1", None)))
+      val questionnaire2 = doSync(questionnairesRepo.create(Questionnaire(0, "Questionnnaire 2", None)))
+
+      val question1 = doSync(questionsRepo.add(Question(0, "Question 1", AnswerType.Text, questionnaireId = Some(questionnaire1.id))))
+      val question2 = doSync(questionsRepo.add(Question(0, "Question 2", AnswerType.Text, questionnaireId = Some(questionnaire2.id))))
+      val dummyQuestion = doSync(questionsRepo.add(Question(0, "Dummy", AnswerType.Text)))
+
+      doSync(answersRepo.add(Answer(0, question1.id, "Answer 1 base", baseUser.id, null)))
+      doSync(answersRepo.add(Answer(0, question2.id, "Answer 2 base", baseUser.id, null)))
+      doSync(answersRepo.add(Answer(0, question1.id, "Answer 1 researcher", researchUser.id, null)))
+      doSync(answersRepo.add(Answer(0, question2.id, "Answer 2 researcher", researchUser.id, null)))
+      doSync(answersRepo.add(Answer(0, question1.id, "Dummy", adminUser.id, null)))
+      doSync(answersRepo.add(Answer(0, dummyQuestion.id, "Dummy", baseUser.id, null)))
+
+      val answersBase1 = doSync(answersRepo.listByUserAndQuestionnaire(baseUser.id, questionnaire1.id)).map(_.content)
+      answersBase1.length must equal(1)
+      answersBase1.head must equal("Answer 1 base")
+
+      val answersBase2 = doSync(answersRepo.listByUserAndQuestionnaire(baseUser.id, questionnaire2.id)).map(_.content)
+      answersBase2.length must equal(1)
+      answersBase2.head must equal("Answer 2 base")
+
+      val answersResearch1 = doSync(answersRepo.listByUserAndQuestionnaire(researchUser.id, questionnaire1.id)).map(_.content)
+      answersResearch1.length must equal(1)
+      answersResearch1.head must equal("Answer 1 researcher")
+
+      val answersResearch2 = doSync(answersRepo.listByUserAndQuestionnaire(researchUser.id, questionnaire2.id)).map(_.content)
+      answersResearch2.length must equal(1)
+      answersResearch2.head must equal("Answer 2 researcher")
     }
   }
 }

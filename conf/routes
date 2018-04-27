@@ -4,57 +4,58 @@
 # ~~~~
 
 # An example controller showing a sample home page
-GET           /                                         controllers.HomeController.index
+GET           /                                          controllers.HomeController.index
 
 # Map static resources from the /public folder to the /assets URL path
-GET           /assets/*file                             controllers.Assets.versioned(path="/public", file: Asset)
+GET           /assets/*file                              controllers.Assets.versioned(path="/public", file: Asset)
 
 # REST API
 
 # Auth
-POST          /v1/auth/signup                           v1.auth.AuthController.signUp
-POST          /v1/auth/login                            v1.auth.AuthController.logIn
+POST          /v1/auth/signup                            v1.auth.AuthController.signUp
+POST          /v1/auth/login                             v1.auth.AuthController.logIn
 
 # Users
-GET           /v1/users                                 v1.user.UserController.index
-GET           /v1/users/:id/studies                     v1.user.UserController.getStudies(id: Long)
-PUT           /v1/users/:id                             v1.user.UserController.update(id: Long)
-GET           /v1/users/me/schedules                    v1.schedule.ScheduleController.listForCurrentUser
-GET           /v1/users/:id/schedules                   v1.schedule.ScheduleController.listByUser(id: Long)
+GET           /v1/users                                  v1.user.UserController.index
+GET           /v1/users/:id/studies                      v1.user.UserController.getStudies(id: Long)
+PUT           /v1/users/:id                              v1.user.UserController.update(id: Long)
+GET           /v1/users/me/schedules                     v1.schedule.ScheduleController.listForCurrentUser
+GET           /v1/users/:id/schedules                    v1.schedule.ScheduleController.listByUser(id: Long)
 
 # Questions
-GET           /v1/questions                             v1.question.QuestionController.index
-GET           /v1/questions/:id                         v1.question.QuestionController.get(id: Long)
-POST          /v1/questions                             v1.question.QuestionController.add
-PUT           /v1/questions/:id                         v1.question.QuestionController.update(id: Long)
-DELETE        /v1/questions/:id                         v1.question.QuestionController.delete(id: Long)
+GET           /v1/questions                              v1.question.QuestionController.index
+GET           /v1/questions/:id                          v1.question.QuestionController.get(id: Long)
+POST          /v1/questions                              v1.question.QuestionController.add
+PUT           /v1/questions/:id                          v1.question.QuestionController.update(id: Long)
+DELETE        /v1/questions/:id                          v1.question.QuestionController.delete(id: Long)
 
 # Answers
-GET           /v1/answers                               v1.answer.AnswerController.index
-GET           /v1/answers/:id                           v1.answer.AnswerController.get(id: Long)
-POST          /v1/answers                               v1.answer.AnswerController.add
-DELETE        /v1/answers/:id                           v1.answer.AnswerController.delete(id: Long)
+GET           /v1/answers                                v1.answer.AnswerController.index
+GET           /v1/answers/:id                            v1.answer.AnswerController.get(id: Long)
+POST          /v1/answers                                v1.answer.AnswerController.add
+DELETE        /v1/answers/:id                            v1.answer.AnswerController.delete(id: Long)
 
 # Studies
-GET           /v1/studies                               v1.study.StudyController.index
-GET           /v1/studies/:id                           v1.study.StudyController.get(id: Long)
-POST          /v1/studies                               v1.study.StudyController.add
-PUT           /v1/studies/:id                           v1.study.StudyController.update(id: Long)
-DELETE        /v1/studies/:id                           v1.study.StudyController.delete(id: Long)
-GET           /v1/studies/:id/participants              v1.study.StudyController.getParticipants(id: Long)
-PUT           /v1/studies/:sId/participants/:uId        v1.study.StudyController.addParticipant(sId: Long, uId: Long)
-DELETE        /v1/studies/:sId/participants/:uId        v1.study.StudyController.removeParticipant(sId: Long, uId: Long)
-GET           /v1/studies/:id/questionnaires            v1.study.StudyController.getQuestionnaires(id: Long)
+GET           /v1/studies                                v1.study.StudyController.index
+GET           /v1/studies/:id                            v1.study.StudyController.get(id: Long)
+POST          /v1/studies                                v1.study.StudyController.add
+PUT           /v1/studies/:id                            v1.study.StudyController.update(id: Long)
+DELETE        /v1/studies/:id                            v1.study.StudyController.delete(id: Long)
+GET           /v1/studies/:id/participants               v1.study.StudyController.getParticipants(id: Long)
+PUT           /v1/studies/:sId/participants/:uId         v1.study.StudyController.addParticipant(sId: Long, uId: Long)
+DELETE        /v1/studies/:sId/participants/:uId         v1.study.StudyController.removeParticipant(sId: Long, uId: Long)
+GET           /v1/studies/:id/questionnaires             v1.study.StudyController.getQuestionnaires(id: Long)
 
 # Questionnaires
-GET           /v1/questionnaires                        v1.questionnaire.QuestionnaireController.index
-POST          /v1/questionnaires                        v1.questionnaire.QuestionnaireController.add
-PUT           /v1/questionnaires/:id                    v1.questionnaire.QuestionnaireController.update(id: Long)
-DELETE        /v1/questionnaires/:id                    v1.questionnaire.QuestionnaireController.delete(id: Long)
-GET           /v1/questionnaires/:id/questions          v1.questionnaire.QuestionnaireController.getQuestions(id: Long)
-GET           /v1/questionnaires/:id/schedules          v1.schedule.ScheduleController.listByQuestionnaire(id: Long)
+GET           /v1/questionnaires                         v1.questionnaire.QuestionnaireController.index
+POST          /v1/questionnaires                         v1.questionnaire.QuestionnaireController.add
+PUT           /v1/questionnaires/:id                     v1.questionnaire.QuestionnaireController.update(id: Long)
+DELETE        /v1/questionnaires/:id                     v1.questionnaire.QuestionnaireController.delete(id: Long)
+GET           /v1/questionnaires/:id/questions           v1.questionnaire.QuestionnaireController.getQuestions(id: Long)
+GET           /v1/questionnaires/:id/schedules           v1.schedule.ScheduleController.listByQuestionnaire(id: Long)
+GET           /v1/questionnaires/:id/answers/mine        v1.answer.AnswerController.listMineByQuestionnaire(id: Long)
 
 # Schedules
-POST          /v1/schedules                             v1.schedule.ScheduleController.add
-PUT           /v1/schedules/:id                         v1.schedule.ScheduleController.update(id: Long)
-DELETE        /v1/schedules/:id                         v1.schedule.ScheduleController.delete(id: Long)
+POST          /v1/schedules                              v1.schedule.ScheduleController.add
+PUT           /v1/schedules/:id                          v1.schedule.ScheduleController.update(id: Long)
+DELETE        /v1/schedules/:id                          v1.schedule.ScheduleController.delete(id: Long)

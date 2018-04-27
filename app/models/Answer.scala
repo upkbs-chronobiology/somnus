@@ -18,7 +18,6 @@ import slick.jdbc.JdbcProfile
 import slick.sql.SqlProfile.ColumnOption.SqlType
 import util.Serialization
 
-// XXX: Should content be of type String? It may depend on the question type (number, date, choice, ...)
 case class Answer(id: Long, questionId: Long, content: String, userId: Long, created: Timestamp)
 
 object Answer {
@@ -134,5 +133,12 @@ class AnswersRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) {
 
   def listAll(): Future[Seq[Answer]] = {
     dbConfig().db.run(answers.result)
+  }
+
+  def listByUserAndQuestionnaire(userId: Long, questionnaireId: Long): Future[Seq[Answer]] = {
+    val filteredAnswers = answers.filter(_.userId === userId)
+    val filteredQuestions = questions.filter(_.questionnaireId === questionnaireId)
+    val query = filteredAnswers join filteredQuestions on (_.questionId === _.id) map (_._1)
+    dbConfig().db.run(query.result)
   }
 }

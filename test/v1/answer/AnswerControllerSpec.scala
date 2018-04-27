@@ -2,6 +2,7 @@ package v1.answer
 
 import scala.concurrent.Future
 
+import auth.roles.Role
 import models.AnswerType
 import models.AnswersRepository
 import models.Question
@@ -54,6 +55,8 @@ class AnswerControllerSpec extends PlaySpec
       }
 
       "accept, then serve and delete answers with valid question ids" in {
+        implicit val _ = Role.Researcher
+
         val questionX = doSync(questionsRepo.add(Question(0, "My question X", AnswerType.Text)))
         val questionY = doSync(questionsRepo.add(Question(0, "My question Y", AnswerType.Text)))
 

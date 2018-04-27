@@ -4,6 +4,7 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
 import auth.DefaultEnv
+import auth.roles.ForEditors
 import com.mohiva.play.silhouette.api.Silhouette
 import javax.inject.Inject
 import models.Answer
@@ -22,11 +23,15 @@ class AnswerController @Inject()(
 )(implicit ec: ExecutionContext)
   extends RestBaseController(rcc) {
 
-  def index = silhouette.SecuredAction.async { implicit request =>
+  def index = silhouette.SecuredAction(ForEditors).async { implicit request =>
     answersRepo.listAll().map(answers => Ok(Json.toJson(answers)))
   }
 
-  def get(id: Long) = silhouette.SecuredAction.async { implicit request =>
+  def listMineByQuestionnaire(questionnaireId: Long) = silhouette.SecuredAction.async { implicit request =>
+    answersRepo.listByUserAndQuestionnaire(request.identity.id, questionnaireId).map(answers => Ok(Json.toJson(answers)))
+  }
+
+  def get(id: Long) = silhouette.SecuredAction(ForEditors).async { implicit request =>
     answersRepo.get(id).map(answer => Ok(Json.toJson(answer))) recover {
       case _: Exception => BadRequest("Cannot serve that answer")
     }
@@ -52,7 +57,7 @@ class AnswerController @Inject()(
     }
   }
 
-  def delete(id: Long) = silhouette.SecuredAction.async { implicit request =>
+  def delete(id: Long) = silhouette.SecuredAction(ForEditors).async { implicit request =>
     answersRepo.delete(id).map {
       num => Ok(s"Deleted $num answer${if (num != 1) "s"}")
     }
