@@ -4,7 +4,7 @@ import auth.roles.Role
 import models.AnswerType
 import models.Question
 import models.Questionnaire
-import models.QuestionnaireRepository
+import models.QuestionnairesRepository
 import models.QuestionsRepository
 import models.Study
 import models.StudyRepository
@@ -24,7 +24,7 @@ class QuestionnaireControllerSpec extends PlaySpec
   with GuiceOneAppPerSuite with Injecting with FreshDatabase with TestUtils with Authenticated {
 
   val study = doSync(inject[StudyRepository].create(Study(0, "Sample Study")))
-  val questionnaire = doSync(inject[QuestionnaireRepository].create(Questionnaire(0, "Sample Questionnaire", Some(study.id))))
+  val questionnaire = doSync(inject[QuestionnairesRepository].create(Questionnaire(0, "Sample Questionnaire", Some(study.id))))
   val question = doSync(inject[QuestionsRepository].add(Question(0, "Sample Question", AnswerType.RangeDiscrete, None, Some("1,5"), Some(questionnaire.id))))
 
   "QuestionnaireController" when {
@@ -71,7 +71,7 @@ class QuestionnaireControllerSpec extends PlaySpec
       }
 
       "create, update and delete questionnaires" in {
-        val questionnaireRepo = inject[QuestionnaireRepository]
+        val questionnaireRepo = inject[QuestionnairesRepository]
 
         val postResult = doAuthenticatedRequest(POST, s"/v1/questionnaires", Some(qJson("Bar foo", None)))
         status(postResult) must equal(CREATED)

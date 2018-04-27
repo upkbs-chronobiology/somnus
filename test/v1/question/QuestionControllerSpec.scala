@@ -7,7 +7,7 @@ import auth.roles.Role
 import models.AnswerType
 import models.AnswerType.AnswerType
 import models.Questionnaire
-import models.QuestionnaireRepository
+import models.QuestionnairesRepository
 import models.QuestionsRepository
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
@@ -108,7 +108,7 @@ class QuestionControllerSpec
     }
 
     "update existing questions" in {
-      val questionnaire = doSync(inject[QuestionnaireRepository].create(Questionnaire(0, "Test Questionnaire", None)))
+      val questionnaire = doSync(inject[QuestionnairesRepository].create(Questionnaire(0, "Test Questionnaire", None)))
 
       val questionResult = postQuestion("Before?")
       status(questionResult) must equal(201)

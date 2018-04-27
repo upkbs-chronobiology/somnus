@@ -5,7 +5,7 @@ import java.time.LocalTime
 
 import auth.roles.Role
 import models.Questionnaire
-import models.QuestionnaireRepository
+import models.QuestionnairesRepository
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.libs.json.JsArray
@@ -20,7 +20,7 @@ import play.api.test.Helpers._
 class ScheduleControllerSpec extends PlaySpec
   with GuiceOneAppPerSuite with Injecting with FreshDatabase with TestUtils with Authenticated {
 
-  private val questionnaire = doSync(inject[QuestionnaireRepository].create(Questionnaire(0, "Testionnaire", None)))
+  private val questionnaire = doSync(inject[QuestionnairesRepository].create(Questionnaire(0, "Testionnaire", None)))
 
   "ScheduleController" should {
     "create, update and delete items" in {

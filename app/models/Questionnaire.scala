@@ -51,7 +51,7 @@ class QuestionnaireTable(tag: Tag) extends Table[Questionnaire](tag, "questionna
 }
 
 @Singleton
-class QuestionnaireRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) {
+class QuestionnairesRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) {
 
   private def questionnaires = TableQuery[QuestionnaireTable]
   private def questions = TableQuery[QuestionTable]

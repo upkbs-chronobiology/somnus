@@ -49,7 +49,7 @@ class StudyTable(tag: Tag) extends Table[Study](tag, "study") {
 }
 
 @Singleton
-class StudyRepository @Inject()(dbConfigProvider: DatabaseConfigProvider, questionnaires: QuestionnaireRepository) {
+class StudyRepository @Inject()(dbConfigProvider: DatabaseConfigProvider, questionnaires: QuestionnairesRepository) {
 
   def studies = TableQuery[StudyTable]
   def studyParticipants = TableQuery[StudyParticipantsTable]

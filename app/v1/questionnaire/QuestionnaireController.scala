@@ -9,7 +9,7 @@ import javax.inject.Inject
 import models.Questionnaire
 import models.QuestionnaireForm
 import models.QuestionnaireFormData
-import models.QuestionnaireRepository
+import models.QuestionnairesRepository
 import models.QuestionsRepository
 import play.api.libs.json.Json
 import util.JsonError
@@ -20,7 +20,7 @@ import v1.RestControllerComponents
 class QuestionnaireController @Inject()(
   rcc: RestControllerComponents,
   silhouette: Silhouette[DefaultEnv],
-  questionnaires: QuestionnaireRepository,
+  questionnaires: QuestionnairesRepository,
   questionsRepo: QuestionsRepository
 )(implicit ec: ExecutionContext) extends RestBaseController(rcc) {
 

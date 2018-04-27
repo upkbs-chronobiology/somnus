@@ -12,7 +12,7 @@ import testutil.TestUtils
 class AnswerSpec extends PlaySpec
   with GuiceOneAppPerSuite with Injecting with FreshDatabase with TestUtils with Authenticated {
 
-  val questionnairesRepo = inject[QuestionnaireRepository]
+  val questionnairesRepo = inject[QuestionnairesRepository]
   val questionsRepo = inject[QuestionsRepository]
   val answersRepo = inject[AnswersRepository]
 

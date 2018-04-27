@@ -3,7 +3,7 @@ package v1.study
 import auth.AuthService
 import auth.roles.Role
 import models.Questionnaire
-import models.QuestionnaireRepository
+import models.QuestionnairesRepository
 import models.Study
 import models.StudyRepository
 import org.scalatestplus.play.PlaySpec
@@ -67,7 +67,7 @@ class StudyControllerSpec extends PlaySpec
       }
 
       "deliver questionnaires for a study" in {
-        val questionnaires = inject[QuestionnaireRepository]
+        val questionnaires = inject[QuestionnairesRepository]
 
         val studyRepository = inject[StudyRepository]
         val study = doSync(studyRepository.create(Study(0, "Xyz Study")))

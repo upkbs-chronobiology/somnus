@@ -6,7 +6,7 @@ import auth.DefaultEnv
 import auth.roles.ForEditors
 import com.mohiva.play.silhouette.api.Silhouette
 import javax.inject.Inject
-import models.QuestionnaireRepository
+import models.QuestionnairesRepository
 import models.Study
 import models.StudyForm
 import models.StudyFormData
@@ -21,7 +21,7 @@ class StudyController @Inject()(
   rcc: RestControllerComponents,
   silhouette: Silhouette[DefaultEnv],
   studyRepository: StudyRepository,
-  questionnaires: QuestionnaireRepository
+  questionnaires: QuestionnairesRepository
 )(implicit ec: ExecutionContext) extends RestBaseController(rcc) {
 
   def index = silhouette.SecuredAction(ForEditors).async { implicit request =>

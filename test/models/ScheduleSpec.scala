@@ -14,7 +14,7 @@ class ScheduleSpec extends PlaySpec
   with GuiceOneAppPerSuite with Injecting with FreshDatabase with TestUtils with Authenticated {
 
   val schedules = inject[SchedulesRepository]
-  val questionnaires = inject[QuestionnaireRepository]
+  val questionnaires = inject[QuestionnairesRepository]
 
   val questionnaire = doSync(questionnaires.create(Questionnaire(0, "Testionnaire", None)))
 
