@@ -37,7 +37,7 @@ class AnswerController @Inject()(
     }
   }
 
-  def add = silhouette.SecuredAction.async { implicit request =>
+  def add = silhouette.SecuredAction(ForEditors).async { implicit request =>
     request.body.asJson match {
       case Some(array: JsArray) =>
         val newAnswers = array.value.map(item =>

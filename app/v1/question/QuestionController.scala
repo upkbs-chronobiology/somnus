@@ -9,7 +9,6 @@ import com.mohiva.play.silhouette.api.Silhouette
 import javax.inject.Inject
 import models.Question
 import models.QuestionForm
-import models.QuestionFormData
 import models.QuestionsRepository
 import play.api.libs.json.Json
 import util.EmptyPreservingReads
@@ -30,11 +29,11 @@ class QuestionController @Inject()(
   implicit val _ = EmptyPreservingReads.readsStringSeq
 //  implicit val _ = Json.reads[QuestionForm]
 
-  def index = silhouette.SecuredAction.async { implicit request =>
+  def index = silhouette.SecuredAction(ForEditors).async { implicit request =>
     questionsRepo.listAll.map(questions => Ok(Json.toJson(questions)))
   }
 
-  def get(id: Long) = silhouette.SecuredAction.async { implicit request =>
+  def get(id: Long) = silhouette.SecuredAction(ForEditors).async { implicit request =>
     questionsRepo.get(id) map {
       case None => BadRequest("Question not found")
       case Some(question) => Ok(Json.toJson(question))

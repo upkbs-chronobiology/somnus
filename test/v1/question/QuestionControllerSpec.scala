@@ -34,9 +34,13 @@ class QuestionControllerSpec
       status(result) must equal(UNAUTHORIZED)
     }
 
+    "reject base users" in {
+      val result = doAuthenticatedRequest(GET, "/v1/questions")
+      status(result) must equal(FORBIDDEN)
+    }
+
     "initially serve an empty JSON array" in {
-      val request = AuthenticatedFakeRequest(GET, "/v1/questions")
-      val list = route(app, request).get
+      val list = doAuthenticatedRequest(GET, "/v1/questions", role = Some(Role.Researcher))
 
       contentAsString(list) must equal("[]")
     }
@@ -55,21 +59,22 @@ class QuestionControllerSpec
 
     // XXX: Split into multiple tests? Would order be guaranteed?
     "create, serve and delete questions" in {
+      implicit val _ = Role.Researcher
+
       status(postQuestion("Huh A?")) must equal(201)
       val secondQuestionResult = postQuestion("Huh B?")
       status(secondQuestionResult) must equal(201)
       status(postQuestion("Huh C?")) must equal(201)
 
       val secondId = (contentAsJson(secondQuestionResult) \ "id").result.as[Long]
-      val getRequest = AuthenticatedFakeRequest(GET, s"/v1/questions/$secondId")
-      val getResult = route(app, getRequest).get
+      val getResult = doAuthenticatedRequest(GET, s"/v1/questions/$secondId")
       status(getResult) must equal(200)
 
       val foundObj = contentAsJson(getResult)
       foundObj("id").as[Long] must equal(secondId)
       foundObj("content").as[String] must equal("Huh B?")
 
-      val listResult = route(app, AuthenticatedFakeRequest(GET, "/v1/questions")).get
+      val listResult = doAuthenticatedRequest(GET, "/v1/questions")
       status(listResult) must equal(200)
 
       val foundList = contentAsJson(listResult).as[JsArray].value
@@ -80,13 +85,13 @@ class QuestionControllerSpec
       status(deleteQuestion(secondId - 1)) must equal(200)
       status(deleteQuestion(secondId)) must equal(200)
 
-      val secondListResult = route(app, AuthenticatedFakeRequest(GET, "/v1/questions")).get
+      val secondListResult = doAuthenticatedRequest(GET, "/v1/questions")
       val secondList = contentAsJson(secondListResult).as[JsArray].value
       secondList.size must equal(1)
       secondList.head("id").as[Long] must equal(secondId + 1)
 
       status(deleteQuestion(secondId + 1)) must equal(200)
-      val finalListResult = route(app, AuthenticatedFakeRequest(GET, "/v1/questions")).get
+      val finalListResult = doAuthenticatedRequest(GET, "/v1/questions")
       val finalList = contentAsJson(finalListResult).as[JsArray].value
       finalList.size must equal(0)
     }
@@ -108,6 +113,8 @@ class QuestionControllerSpec
     }
 
     "update existing questions" in {
+      implicit val _ = Role.Researcher
+
       val questionnaire = doSync(inject[QuestionnairesRepository].create(Questionnaire(0, "Test Questionnaire", None)))
 
       val questionResult = postQuestion("Before?")

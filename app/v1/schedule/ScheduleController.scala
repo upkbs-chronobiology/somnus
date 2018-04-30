@@ -22,7 +22,7 @@ class ScheduleController @Inject()(
   schedulesRepo: SchedulesRepository
 )(implicit ec: ExecutionContext) extends RestBaseController(rcc) {
 
-  def listByQuestionnaire(questionnaireId: Long) = silhouette.SecuredAction.async { implicit request =>
+  def listByQuestionnaire(questionnaireId: Long) = silhouette.SecuredAction(ForEditors).async { implicit request =>
     schedulesRepo.getByQuestionnaire(questionnaireId).map(schedules => Ok(Json.toJson(schedules)))
       .recover {
         case e: IllegalArgumentException => NotFound(JsonError(e.getMessage))

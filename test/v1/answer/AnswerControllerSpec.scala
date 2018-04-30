@@ -3,6 +3,7 @@ package v1.answer
 import scala.concurrent.Future
 
 import auth.roles.Role
+import auth.roles.Role.Role
 import models.AnswerType
 import models.AnswersRepository
 import models.Question
@@ -27,13 +28,26 @@ class AnswerControllerSpec extends PlaySpec
 
   "AnswerController" when {
     "unauthorized" should {
-      "reject requests index requests" in {
+      "reject index requests" in {
         val response = doRequest(GET, "/v1/answers")
         status(response) must equal(UNAUTHORIZED)
       }
     }
 
-    "logged in" should {
+    "logged in as base user" should {
+      "reject indexing and CRUD requests" in {
+        val createResponse = doAuthenticatedRequest(POST, "/v1/answers", Some(Json.arr(answerJson(1, "Some answer A"))))
+        status(createResponse) must equal(FORBIDDEN)
+
+        status(doAuthenticatedRequest(GET, "/v1/answers")) must equal(FORBIDDEN)
+        status(doAuthenticatedRequest(GET, "/v1/answers/1")) must equal(FORBIDDEN)
+        status(doAuthenticatedRequest(DELETE, "/v1/answers/1")) must equal(FORBIDDEN)
+      }
+    }
+
+    "logged in as researcher" should {
+
+      implicit val _ = Role.Researcher
       "reject single answer with invalid question id" in {
         val response = doAuthenticatedRequest(POST, "/v1/answers", Some(Json.arr(answerJson(999, "Some answer A"))))
         status(response) must equal(BAD_REQUEST)
@@ -149,7 +163,7 @@ class AnswerControllerSpec extends PlaySpec
     }
   }
 
-  def postAnswer(questionId: Long, content: String): Future[Result] = {
+  def postAnswer(questionId: Long, content: String)(implicit role: Role): Future[Result] = {
     val payload = Json.arr(answerJson(questionId, content))
     doAuthenticatedRequest(POST, "/v1/answers", Some(payload))
   }
