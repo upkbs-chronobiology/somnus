@@ -27,7 +27,6 @@ class QuestionController @Inject()(
   extends RestBaseController(rcc) {
 
   implicit val _ = EmptyPreservingReads.readsStringSeq
-//  implicit val _ = Json.reads[QuestionForm]
 
   def index = silhouette.SecuredAction(ForEditors).async { implicit request =>
     questionsRepo.listAll.map(questions => Ok(Json.toJson(questions)))
