@@ -53,6 +53,37 @@ class AnswerSpec extends PlaySpec
       }
     }
 
+    "reject list answers to single-select multiple-choice questions" in {
+      val question = doSync(questionsRepo.add(Question(0, "My question X", AnswerType.MultipleChoiceSingle, Some("A,B,C"))))
+
+      an[IllegalArgumentException] shouldBe thrownBy {
+        doSync(answersRepo.add(Answer(0, question.id, "1,2", this.baseUser.id, null)))
+      }
+    }
+
+    "accept list answers to many-select multiple-choice questions" in {
+      val question = doSync(questionsRepo.add(Question(0, "My question X", AnswerType.MultipleChoiceMany, Some("A,B,C"))))
+
+      val answer = doSync(answersRepo.add(Answer(0, question.id, "0,1,2", this.baseUser.id, null)))
+      answer.id must be >= 0L
+    }
+
+    "reject out-of-range answers to many-select multiple-choice questions" in {
+      val question = doSync(questionsRepo.add(Question(0, "My question X", AnswerType.MultipleChoiceMany, Some("A,B,C"))))
+
+      an[IllegalArgumentException] shouldBe thrownBy {
+        doSync(answersRepo.add(Answer(0, question.id, "2,3", this.baseUser.id, null)))
+      }
+    }
+
+    "reject duplicate answers to many-select multiple-choice questions" in {
+      val question = doSync(questionsRepo.add(Question(0, "My question X", AnswerType.MultipleChoiceMany, Some("A,B,C"))))
+
+      an[IllegalArgumentException] shouldBe thrownBy {
+        doSync(answersRepo.add(Answer(0, question.id, "1,1", this.baseUser.id, null)))
+      }
+    }
+
     "reject text answers to discrete-number type questions" in {
       val question = doSync(questionsRepo.add(Question(0, "My question X", AnswerType.RangeDiscrete, answerRange = Some("1,3"))))
 

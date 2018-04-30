@@ -113,10 +113,17 @@ class AnswerControllerSpec extends PlaySpec
         status(postAnswer(question.id, "-0.1")) must equal(201)
       }
 
-      "accept multiple-choice answers" in {
-        val question = doSync(questionsRepo.add(Question(0, "My question X", AnswerType.MultipleChoice, Some("a,b,c"))))
+      "accept single-select multiple-choice answers" in {
+        val question = doSync(questionsRepo.add(Question(0, "My question X", AnswerType.MultipleChoiceSingle, Some("a,b,c"))))
         status(postAnswer(question.id, "0")) must equal(CREATED)
         status(postAnswer(question.id, "2")) must equal(CREATED)
+      }
+
+      "accept many-select multiple-choice answers" in {
+        val question = doSync(questionsRepo.add(Question(0, "My question X", AnswerType.MultipleChoiceMany, Some("a,b,c"))))
+        status(postAnswer(question.id, "0")) must equal(CREATED)
+        status(postAnswer(question.id, "2")) must equal(CREATED)
+        status(postAnswer(question.id, "0,1,2")) must equal(CREATED)
       }
 
       "reject text answers to continuous-number type questions" in {
@@ -149,16 +156,32 @@ class AnswerControllerSpec extends PlaySpec
         status(postAnswer(question.id, "2.5")) must equal(400)
       }
 
-      "reject multiple-choice answers out of range" in {
-        val question = doSync(questionsRepo.add(Question(0, "My question X", AnswerType.MultipleChoice, Some("a,b,c"))))
+      "reject single-select multiple-choice answers out of range" in {
+        val question = doSync(questionsRepo.add(Question(0, "My question X", AnswerType.MultipleChoiceSingle, Some("a,b,c"))))
         status(postAnswer(question.id, "-1")) must equal(BAD_REQUEST)
         status(postAnswer(question.id, "3")) must equal(BAD_REQUEST)
       }
 
-      "reject multiple-choice answers other than integers" in {
-        val question = doSync(questionsRepo.add(Question(0, "My question X", AnswerType.MultipleChoice, Some("a,b,c"))))
+      "reject many-select multiple-choice answers out of range" in {
+        val question = doSync(questionsRepo.add(Question(0, "My question X", AnswerType.MultipleChoiceMany, Some("a,b,c"))))
+        status(postAnswer(question.id, "-1")) must equal(BAD_REQUEST)
+        status(postAnswer(question.id, "3")) must equal(BAD_REQUEST)
+        status(postAnswer(question.id, "-1,2")) must equal(BAD_REQUEST)
+        status(postAnswer(question.id, "2,4,3")) must equal(BAD_REQUEST)
+      }
+
+      "reject single-select multiple-choice answers other than integers" in {
+        val question = doSync(questionsRepo.add(Question(0, "My question X", AnswerType.MultipleChoiceSingle, Some("a,b,c"))))
         status(postAnswer(question.id, "1.2")) must equal(BAD_REQUEST)
         status(postAnswer(question.id, "foobar")) must equal(BAD_REQUEST)
+      }
+
+      "reject many-select multiple-choice answers other than integers" in {
+        val question = doSync(questionsRepo.add(Question(0, "My question X", AnswerType.MultipleChoiceMany, Some("a,b,c"))))
+        status(postAnswer(question.id, "1.2")) must equal(BAD_REQUEST)
+        status(postAnswer(question.id, "foobar")) must equal(BAD_REQUEST)
+        status(postAnswer(question.id, "0,1.2")) must equal(BAD_REQUEST)
+        status(postAnswer(question.id, "foobar,1")) must equal(BAD_REQUEST)
       }
     }
   }

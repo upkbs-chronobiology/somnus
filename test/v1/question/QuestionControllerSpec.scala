@@ -160,7 +160,8 @@ class QuestionControllerSpec
       status(postQuestion("B1?", AnswerType.RangeContinuous)) must equal(201)
       status(postQuestion("B2?", AnswerType.RangeContinuous, answerRange = Some(InclusiveRange(0.2, 3.5)))) must equal(201)
       status(postQuestion("C?", AnswerType.RangeDiscrete, answerRange = Some(InclusiveRange(1, 5)))) must equal(201)
-      status(postQuestion("D?", AnswerType.MultipleChoice)) must equal(201)
+      status(postQuestion("D?", AnswerType.MultipleChoiceSingle)) must equal(201)
+      status(postQuestion("D?", AnswerType.MultipleChoiceMany)) must equal(201)
     }
 
     "accept questions with correct answer labels" in {
@@ -176,11 +177,17 @@ class QuestionControllerSpec
       listB.length must equal(5)
       listB must contain allOf("a", "b", "c", "d", "e")
 
-      val responseC = postQuestion("Baz?", AnswerType.MultipleChoice, Some(Seq("I", "II", "III")))
+      val responseC = postQuestion("Baz?", AnswerType.MultipleChoiceSingle, Some(Seq("I", "II", "III")))
       status(responseC) must equal(CREATED)
       val listC = contentAsJson(responseC).apply("answerLabels").as[JsArray].value.map(_.as[String])
       listC.length must equal(3)
       listC must contain allOf("I", "II", "III")
+
+      val responseD = postQuestion("Baz?", AnswerType.MultipleChoiceMany, Some(Seq("I", "II", "III")))
+      status(responseD) must equal(CREATED)
+      val listD = contentAsJson(responseD).apply("answerLabels").as[JsArray].value.map(_.as[String])
+      listD.length must equal(3)
+      listD must contain allOf("I", "II", "III")
     }
 
     "preserve empty answer labels" in {

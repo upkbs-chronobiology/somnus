@@ -158,7 +158,8 @@ class QuestionsRepository @Inject()(dbConfigProvider: DatabaseConfigProvider, an
           case AnswerType.Text =>
           case AnswerType.RangeDiscrete => Serialization.parseIntRange(range)
           case AnswerType.RangeContinuous => Serialization.parseFloatRange(range)
-          case AnswerType.MultipleChoice =>
+          case AnswerType.MultipleChoiceSingle =>
+          case AnswerType.MultipleChoiceMany =>
         }
       }
 
@@ -169,7 +170,8 @@ class QuestionsRepository @Inject()(dbConfigProvider: DatabaseConfigProvider, an
           case AnswerType.Text =>
           case AnswerType.RangeDiscrete if labels.length == intRangePoints.getOrElse(-1) =>
           case AnswerType.RangeContinuous if labels.length == 2 =>
-          case AnswerType.MultipleChoice if labels.nonEmpty =>
+          case AnswerType.MultipleChoiceSingle if labels.nonEmpty =>
+          case AnswerType.MultipleChoiceMany if labels.nonEmpty =>
           case _ => throw new IllegalArgumentException("Number of answer labels doesn't match answer type")
         }
       }

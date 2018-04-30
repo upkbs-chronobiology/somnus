@@ -53,7 +53,7 @@ create table schedule (
 create table question (
   id IDENTITY PRIMARY KEY,
   content VARCHAR NOT NULL,
-  answer_type ENUM('text', 'range-continuous', 'range-discrete', 'multiple-choice') NOT NULL,
+  answer_type ENUM('text', 'range-continuous', 'range-discrete', 'multiple-choice-single', 'multiple-choice-many') NOT NULL,
   answer_labels VARCHAR,
   /* "<min>,<max>", inclusive */
   answer_range VARCHAR,
