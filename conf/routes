@@ -59,3 +59,6 @@ GET           /v1/questionnaires/:id/answers/mine        v1.answer.AnswerControl
 POST          /v1/schedules                              v1.schedule.ScheduleController.add
 PUT           /v1/schedules/:id                          v1.schedule.ScheduleController.update(id: Long)
 DELETE        /v1/schedules/:id                          v1.schedule.ScheduleController.delete(id: Long)
+
+# Data export
+GET           /v1/data/studies/:sId/csv/zip              v1.data.DataController.getCsvZipped(sId: Long)

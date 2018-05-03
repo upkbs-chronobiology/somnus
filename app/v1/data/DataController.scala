@@ -1,0 +1,62 @@
+package v1.data
+
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+
+import auth.DefaultEnv
+import auth.roles.ForEditors
+import com.mohiva.play.silhouette.api.Silhouette
+import javax.inject.Inject
+import models.AnswersRepository
+import models.QuestionnairesRepository
+import models.QuestionsRepository
+import models.SchedulesRepository
+import models.StudyRepository
+import util.Export
+import util.JsonError
+import v1.RestBaseController
+import v1.RestControllerComponents
+
+class DataController @Inject()(
+  rcc: RestControllerComponents,
+  silhouette: Silhouette[DefaultEnv],
+  studiesRepo: StudyRepository,
+  questionnairesRepo: QuestionnairesRepository,
+  questionsRepo: QuestionsRepository,
+  answersRepo: AnswersRepository,
+  schedulesRepo: SchedulesRepository
+)(implicit ec: ExecutionContext)
+  extends RestBaseController(rcc) {
+
+  def getCsvZipped(studyId: Long) = silhouette.SecuredAction(ForEditors).async {
+    for {
+      studyOption <- studiesRepo.read(studyId)
+      questionnaires <- questionnairesRepo.listByStudy(studyId)
+      questions <- Future.sequence(questionnaires.map(q => questionsRepo.listByQuestionnaire(q.id))).map(_.flatten)
+      answers <- Future.sequence(questionnaires.map(q => answersRepo.listByQuestionnaire(q.id))).map(_.flatten)
+      users <- studiesRepo.listParticipants(studyId)
+      schedules <- Future.sequence(questionnaires.map(q => schedulesRepo.getByQuestionnaire(q.id))).map(_.flatten)
+    } yield {
+      studyOption match {
+        case None => NotFound(JsonError(s"No study with id $studyId"))
+        case Some(study) =>
+          val studyCsv = Export.asCsv(Seq(study))
+          val questionnairesCsv = Export.asCsv(questionnaires)
+          val questionsCsv = Export.asCsv(questions)
+          val answersCsv = Export.asCsv(answers)
+          val usersCsv = Export.asCsv(users)
+          val schedulesCsv = Export.asCsv(schedules)
+
+          val files = Map(
+            "studies.csv" -> studyCsv,
+            "questionnaires.csv" -> questionnairesCsv,
+            "questions.csv" -> questionsCsv,
+            "answers.csv" -> answersCsv,
+            "users.csv" -> usersCsv,
+            "schedules.csv" -> schedulesCsv
+          )
+          Ok(Export.zip(files))
+      }
+    }
+  }
+}

@@ -31,6 +31,8 @@ libraryDependencies += "net.codingwell" %% "scala-guice" % "4.1.1"
 
 libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.2.18"
 
+libraryDependencies += "com.opencsv" % "opencsv" % "4.1"
+
 wartremoverErrors in(Compile, compile) ++= Warts.unsafe diff List(
   Wart.NonUnitStatements,
   Wart.DefaultArguments,

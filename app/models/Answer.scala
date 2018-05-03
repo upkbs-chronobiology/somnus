@@ -143,6 +143,12 @@ class AnswersRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) {
     dbConfig().db.run(answers.result)
   }
 
+  def listByQuestionnaire(questionnaireId: Long): Future[Seq[Answer]] = {
+    val filteredQuestions = questions.filter(_.questionnaireId === questionnaireId)
+    val query = answers join filteredQuestions on (_.questionId === _.id) map (_._1)
+    dbConfig().db.run(query.result)
+  }
+
   def listByUserAndQuestionnaire(userId: Long, questionnaireId: Long): Future[Seq[Answer]] = {
     val filteredAnswers = answers.filter(_.userId === userId)
     val filteredQuestions = questions.filter(_.questionnaireId === questionnaireId)
