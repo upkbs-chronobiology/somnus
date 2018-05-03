@@ -84,23 +84,27 @@ class AnswersRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) {
           val range = Serialization.parseFloatRange(
             question.answerRange.getOrElse(throw new IllegalArgumentException("Range is missing on continuous-range question")))
           val value = answer.content.toDouble
-          if (value < range.min || value > range.max) throw new IllegalArgumentException(s"Bad number format - expected real number ${range.min} <= x <= ${range.max}")
+          if (value < range.min || value > range.max)
+            throw new IllegalArgumentException(s"Bad number format - expected real number ${range.min} <= x <= ${range.max}")
         case AnswerType.RangeDiscrete =>
           val range = Serialization.parseIntRange(
             question.answerRange.getOrElse(throw new IllegalArgumentException("Range is missing on discrete-range question")))
           val value = answer.content.toLong
-          if (value < range.min || value > range.max) throw new IllegalArgumentException(s"Bad number format - expected natural number ${range.min} <= x <= ${range.max}")
+          if (value < range.min || value > range.max)
+            throw new IllegalArgumentException(s"Bad number format - expected natural number ${range.min} <= x <= ${range.max}")
         case AnswerType.MultipleChoiceSingle =>
           val value = answer.content.toLong
           val numOptions = question.answerLabels.map(Serialization.parseList(_).length).getOrElse(-1)
-          if (value < 0 || value >= numOptions) throw new IllegalArgumentException("Answer option index doesn't match answer options")
+          if (value < 0 || value >= numOptions)
+            throw new IllegalArgumentException("Answer option index doesn't match answer options")
         case AnswerType.MultipleChoiceMany =>
           val numOptions = question.answerLabels.map(Serialization.parseList(_).length).getOrElse(-1)
           val values = Serialization.parseList(answer.content).map(_.toLong)
           if (values.distinct.length < values.length)
             throw new IllegalArgumentException("There are duplicate answer option indices")
           values foreach { value =>
-            if (value < 0 || value >= numOptions) throw new IllegalArgumentException("At least one answer option index doesn't match answer options")
+            if (value < 0 || value >= numOptions)
+              throw new IllegalArgumentException("At least one answer option index doesn't match answer options")
           }
         case _ => Unit
       }
