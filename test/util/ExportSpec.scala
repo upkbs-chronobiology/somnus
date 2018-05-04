@@ -15,9 +15,9 @@ class ExportSpec extends PlaySpec {
         Answer(6, 7, "What are those \"quotes\"?", 8, new Timestamp(0))
       ))
       csv must equal(
-        """"0","1","Foo bar","2","1970-01-01 01:00:00.0"
-          |"3","4","Foo, bar; and baz.","5","1970-01-01 01:00:00.0"
-          |"6","7","What are those ""quotes""?","8","1970-01-01 01:00:00.0"
+        """"0","1","Foo bar","2","1970-01-01T00:00:00Z"
+          |"3","4","Foo, bar; and baz.","5","1970-01-01T00:00:00Z"
+          |"6","7","What are those ""quotes""?","8","1970-01-01T00:00:00Z"
           |""".stripMargin)
     }
   }
