@@ -15,22 +15,29 @@ object Export {
 
   val CHARSET = StandardCharsets.UTF_8
 
-  def asCsv(tuples: Seq[Product]): String = {
+  @SuppressWarnings(Array("org.wartremover.warts.Product"))
+  def asCsv(headers: Seq[String], tuples: Seq[Product]): String = {
+    if (tuples.headOption.map(_.productIterator.length).getOrElse(headers.length) != headers.length)
+      throw new IllegalArgumentException("Headers shape doesn't match data")
+
     val stringWriter = new StringWriter()
     val writer = new CSVWriter(stringWriter)
 
-    // XXX: Are nulls (or Options) handled correctly here?
+    writer.writeNext(headers.toArray)
+
     @SuppressWarnings(Array("org.wartremover.warts.Any"))
-    @SuppressWarnings(Array("org.wartremover.warts.Product"))
     val data = tuples.map(_.productIterator.toSeq.map(serialize).toArray)
     writer.writeAll(JavaConverters.seqAsJavaList(data))
 
     stringWriter.toString
   }
 
+  @SuppressWarnings(Array("org.wartremover.warts.Any"))
   private def serialize(obj: Any): String = {
     obj match {
-      case o: Timestamp => o.toInstant.toString
+      case timestamp: Timestamp => timestamp.toInstant.toString
+      case option: Option[Any] => serialize(option.orNull)
+      case null => null
       case o => o.toString
     }
   }
