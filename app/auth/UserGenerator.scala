@@ -7,11 +7,12 @@ import auth.roles.Role
 import javax.inject.Inject
 import javax.inject.Singleton
 import models.UserRepository
+import util.Logging
 
 /** Generator for default users, like the initial admin.
   */
 @Singleton
-class UserGenerator @Inject()(userRepository: UserRepository, authService: AuthService) {
+class UserGenerator @Inject()(userRepository: UserRepository, authService: AuthService) extends Logging {
 
   private val AdminName = "somnus"
   private val PasswordLength = 10
@@ -25,6 +26,6 @@ class UserGenerator @Inject()(userRepository: UserRepository, authService: AuthS
     for {
       _ <- authService.register(AdminName, password)
       _ <- userRepository.setRole(AdminName, Some(Role.Admin))
-    } yield println(s"Created admin user '$AdminName' with password: $password\nChange it ASAP!")
+    } yield logger.warn(s"Created admin user '$AdminName' with password: $password\nChange it ASAP!")
   }
 }
