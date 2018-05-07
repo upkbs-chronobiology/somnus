@@ -27,6 +27,6 @@ object TokenRepository extends AuthenticatorRepository[BearerTokenAuthenticator]
 
   override def remove(id: String): Future[Unit] = {
     authenticators.find(_.id == id).forall(authenticators.remove)
-    Future.successful()
+    Future.unit
   }
 }

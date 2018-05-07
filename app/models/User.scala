@@ -37,7 +37,7 @@ class UserTable(tag: Tag) extends Table[User](tag, "user") {
   def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
   def name = column[String]("name", O.Unique)
   def passwordId = column[Long]("password_id", O.Unique)
-  def password = foreignKey("password", passwordId.?, TableQuery[PasswordTable])(_.id)
+  def password = foreignKey("password", passwordId.?, TableQuery[PasswordTable])(_.id.?)
   def role = column[String]("role")
 
   override def * = (id, name, passwordId.?, role.?) <> (User.tupled, User.unapply)

@@ -31,7 +31,7 @@ object InclusiveRange {
 
   implicit val implicitWritesFloat = new Writes[InclusiveRange[Float]] {
     def writes(range: InclusiveRange[Float]): JsValue = {
-      buildJson(BigDecimal(range.min), BigDecimal(range.max))
+      buildJson(range.min.toDouble, range.max.toDouble)
     }
   }
 }

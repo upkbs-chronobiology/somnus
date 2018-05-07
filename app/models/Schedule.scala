@@ -136,6 +136,6 @@ class SchedulesRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) {
       case None => throw new IllegalArgumentException(s"User with id ${schedule.userId} does not exist")
     }
 
-    Future.sequence(Seq(questionnaireCheck, userCheck)).map(_ => Future.unit)
+    Future.sequence(Seq(questionnaireCheck, userCheck)).flatMap(_ => Future.unit)
   }
 }

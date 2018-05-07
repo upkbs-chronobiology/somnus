@@ -1,6 +1,7 @@
 package auth
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 import scala.util.Random
 
 import auth.roles.Role
@@ -17,8 +18,10 @@ class UserGenerator @Inject()(userRepository: UserRepository, authService: AuthS
   private val AdminName = "somnus"
   private val PasswordLength = 10
 
-  userRepository.get(AdminName).map {
+  userRepository.get(AdminName).foreach {
     case None => createAdmin()
+    // XXX: This is ridiculous; just here to avoid compiler/linter warnings
+    case Some(_) => Future.unit
   }
 
   private def createAdmin() = {
