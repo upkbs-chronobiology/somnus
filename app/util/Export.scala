@@ -33,6 +33,7 @@ object Export {
   }
 
   @SuppressWarnings(Array("org.wartremover.warts.Any"))
+  // scalastyle:off null
   private def serialize(obj: Any): String = {
     obj match {
       case timestamp: Timestamp => timestamp.toInstant.toString
