@@ -1,20 +1,31 @@
 package v1.auth
 
+import java.sql.Timestamp
+import java.time.Duration
+import java.time.Instant
+
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
 import auth.AuthService
 import auth.DefaultEnv
+import auth.roles.ForEditors
 import com.mohiva.play.silhouette.api.Environment
 import com.mohiva.play.silhouette.api.Silhouette
 import com.mohiva.play.silhouette.api.util.Credentials
 import com.mohiva.play.silhouette.impl.providers.CredentialsProvider
+import exceptions.ItemNotFoundException
 import javax.inject.Inject
+import models.PwResetsRepository
+import models.UserRepository
 import models.UserService
 import play.api.data.Form
 import play.api.data.Forms._
+import play.api.data.Mapping
 import play.api.data.validation.Constraints._
 import play.api.libs.json.Json
+import util.JsonError
+import util.JsonSuccess
 import v1.RestBaseController
 import v1.RestControllerComponents
 
@@ -22,11 +33,12 @@ case class SignUpFormData(name: String, password: String)
 
 object SignUpForm {
   private val PasswordMinLength = 8
+  val passwordField: Mapping[String] = nonEmptyText.verifying(minLength(PasswordMinLength))
 
   val form = Form(
     mapping(
       "name" -> nonEmptyText,
-      "password" -> nonEmptyText.verifying(minLength(PasswordMinLength))
+      "password" -> passwordField
     )(SignUpFormData.apply)(SignUpFormData.unapply)
   )
 }
@@ -37,8 +49,18 @@ object LoginForm {
   val form = Form(
     mapping(
       "name" -> nonEmptyText,
-      "password" -> nonEmptyText
+      "password" -> SignUpForm.passwordField
     )(SignUpFormData.apply)(SignUpFormData.unapply)
+  )
+}
+
+case class PwResetFormData(password: String)
+
+object PwResetForm {
+  val form = Form(
+    mapping(
+      "password" -> nonEmptyText
+    )(PwResetFormData.apply)(PwResetFormData.unapply)
   )
 }
 
@@ -48,7 +70,9 @@ class AuthController @Inject()(
   userService: UserService,
   credentialsProvider: CredentialsProvider,
   silhouette: Silhouette[DefaultEnv],
-  authService: AuthService
+  authService: AuthService,
+  pwResetsRepo: PwResetsRepository,
+  userRepo: UserRepository
 )(implicit ec: ExecutionContext)
   extends RestBaseController(rcc) {
 
@@ -86,6 +110,30 @@ class AuthController @Inject()(
           case _: Exception => credentialsWrong
         }
       }
+    )
+  }
+
+  def createResetToken(userId: Long) = silhouette.SecuredAction(ForEditors).async {
+    val tomorrow = Timestamp.from(Instant.now().plus(Duration.ofDays(1)))
+    authService.generateResetToken(userId, tomorrow)
+      .map(pwReset => Created(Json.toJson(pwReset)))
+      .recover {
+        case e: ItemNotFoundException => NotFound(JsonError(e.getMessage))
+      }
+  }
+
+  def resetPassword(token: String) = Action.async { implicit request =>
+    PwResetForm.form.bindFromRequest().fold(
+      badForm => Future.successful(BadRequest(badForm.errorsAsJson)),
+      formData =>
+        authService.resetPassword(token, formData.password)
+          .map(_ => Ok(JsonSuccess("Password successfully reset")))
+          .recover {
+            case e: ItemNotFoundException =>
+              NotFound(JsonError(e.getMessage))
+            case e: IllegalArgumentException =>
+              BadRequest(JsonError(e.getMessage))
+          }
     )
   }
 }

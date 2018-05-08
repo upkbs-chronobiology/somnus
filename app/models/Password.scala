@@ -39,8 +39,8 @@ class PasswordRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) {
     dbConfig.db.run(passwords.filter(_.id === id).result.headOption)
   }
 
-  def update(id: Long, password: Password): Future[Int] = {
-    dbConfig.db.run(passwords.filter(_.id === id).update(password))
+  def update(password: Password): Future[Int] = {
+    dbConfig.db.run(passwords.filter(_.id === password.id).update(password))
   }
 
   def delete(id: Long): Future[Int] = {

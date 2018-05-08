@@ -47,7 +47,7 @@ class PasswordAuthInfoDAO @Inject()(
     this.findPasswordId(loginInfo).flatMap {
       case None => Future.failed(new IllegalArgumentException(s"Password for loginInfo $loginInfo not found"))
       case Some(pwId) =>
-        passwordRepository.update(pwId, Password(0, authInfo.password, authInfo.salt, authInfo.hasher)).flatMap {
+        passwordRepository.update(Password(pwId, authInfo.password, authInfo.salt, authInfo.hasher)).flatMap {
           case 0 => Future.failed(new IllegalStateException("User or password not found; update failed"))
           case _ => Future.successful(authInfo)
         }

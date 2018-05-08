@@ -18,6 +18,14 @@ create table user (
   FOREIGN KEY(password_id) REFERENCES password(id)
 );
 
+create table pw_reset (
+  id IDENTITY PRIMARY KEY,
+  token VARCHAR NOT NULL UNIQUE,
+  expiry TIMESTAMP NOT NULL,
+  user_id BIGINT NOT NULL,
+  FOREIGN KEY(user_id) REFERENCES user(id)
+);
+
 create table study (
   id IDENTITY PRIMARY KEY,
   name VARCHAR NOT NULL UNIQUE
@@ -80,5 +88,6 @@ drop table schedule;
 drop table questionnaire;
 drop table study_participants;
 drop table study;
+drop table pw_reset;
 drop table user;
 drop table password;
