@@ -50,8 +50,7 @@ class AuthService @Inject()(
 
   def unregister(username: String): Future[Unit] = {
     (for {
-      // FIXME: removing password entry doesn't work - throws weird exception
-      // _ <- authInfoRepository.remove(LoginInfo(credentialsProvider.id, username))
+      _ <- authInfoRepository.remove[PasswordInfo](LoginInfo(credentialsProvider.id, username))
       _ <- userRepository.delete(username)
     } yield {}) recoverWith {
       case e: Exception => Future.failed(new IllegalStateException("Failed to unregister user", e))
