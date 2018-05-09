@@ -64,7 +64,6 @@ class SilhouetteModule extends AbstractModule with ScalaModule {
   @Provides
   def provideAuthenticatorService(
     idGenerator: IDGenerator,
-    configuration: Configuration,
     clock: Clock): AuthenticatorService[BearerTokenAuthenticator] = {
 
     // no custom config at the moment - otherwise, read from configuration here

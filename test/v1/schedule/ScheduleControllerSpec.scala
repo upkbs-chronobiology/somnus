@@ -1,8 +1,5 @@
 package v1.schedule
 
-import java.time.LocalDate
-import java.time.LocalTime
-
 import auth.roles.Role
 import models.Questionnaire
 import models.QuestionnairesRepository
@@ -11,11 +8,11 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.libs.json.JsArray
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json
+import play.api.test.Helpers._
 import play.api.test.Injecting
 import testutil.Authenticated
 import testutil.FreshDatabase
 import testutil.TestUtils
-import play.api.test.Helpers._
 
 class ScheduleControllerSpec extends PlaySpec
   with GuiceOneAppPerSuite with Injecting with FreshDatabase with TestUtils with Authenticated {

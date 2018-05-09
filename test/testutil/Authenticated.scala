@@ -50,6 +50,8 @@ trait Authenticated extends BeforeAndAfterAll with GuiceOneAppPerSuite with Inje
       case None => baseToken
       case Some(Role.Admin) => adminToken
       case Some(Role.Researcher) => researcherToken
+      case Some(r) =>
+        throw new IllegalArgumentException(s"Unknown role $r; no corresponding auth token available")
     }))
   }
 

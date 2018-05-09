@@ -16,8 +16,6 @@ import com.mohiva.play.silhouette.api.util.Credentials
 import com.mohiva.play.silhouette.impl.providers.CredentialsProvider
 import exceptions.ItemNotFoundException
 import javax.inject.Inject
-import models.PwResetsRepository
-import models.UserRepository
 import models.UserService
 import play.api.data.Form
 import play.api.data.Forms._
@@ -70,9 +68,7 @@ class AuthController @Inject()(
   userService: UserService,
   credentialsProvider: CredentialsProvider,
   silhouette: Silhouette[DefaultEnv],
-  authService: AuthService,
-  pwResetsRepo: PwResetsRepository,
-  userRepo: UserRepository
+  authService: AuthService
 )(implicit ec: ExecutionContext)
   extends RestBaseController(rcc) {
 
