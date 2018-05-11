@@ -79,7 +79,7 @@ trait Authenticated extends BeforeAndAfterAll with GuiceOneAppPerSuite with Inje
   private def registerTestUser(name: String, role: Option[Role] = None): Future[User] = {
     // XXX: Unregistering in afterAll would be cleaner, but doesn't work because of threading issues
     assureDeletionOfTestUser(name).flatMap({ _ =>
-      authService.register(name, TestPassword)
+      authService.register(name, Some(TestPassword))
         .map(user => {
           userRepository.setRole(name, role)
           user

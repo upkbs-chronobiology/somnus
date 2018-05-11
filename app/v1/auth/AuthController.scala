@@ -76,7 +76,7 @@ class AuthController @Inject()(
     SignUpForm.form.bindFromRequest.fold(
       badForm => Future.successful(BadRequest(badForm.errorsAsJson)), // XXX: More info?
       formData => {
-        authService.register(formData.name, formData.password)
+        authService.register(formData.name, Some(formData.password))
           .map(user => Created(Json.toJson(user)))
           .recover {
             case e: Exception => BadRequest(e.getMessage)

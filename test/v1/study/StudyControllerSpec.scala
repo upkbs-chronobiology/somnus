@@ -116,7 +116,7 @@ class StudyControllerSpec extends PlaySpec
         val createdId = contentAsJson(creationResult).apply("id").as[Long]
 
         val authService = inject[AuthService]
-        val george = doSync(authService.register("George Wilson", "iamgeorge"))
+        val george = doSync(authService.register("George Wilson", Some("iamgeorge")))
 
         status(doAuthenticatedRequest(PUT, s"/v1/studies/$createdId/participants/${george.id}")) must equal(201)
 

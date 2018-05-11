@@ -19,6 +19,7 @@ import models.PwResetsRepository
 import models.User
 import models.UserRepository
 import models.UserService
+import util.Futures
 
 class AuthService @Inject()(
   userService: UserService,
@@ -31,14 +32,14 @@ class AuthService @Inject()(
 
   private val TokenLength = 12
 
-  def register(username: String, password: String): Future[User] = {
+  def register(username: String, password: Option[String]): Future[User] = {
     val loginInfo = LoginInfo(credentialsProvider.id, username)
     userService.retrieve(loginInfo).flatMap {
       case Some(_) => Future.failed(new IllegalArgumentException("user already exists"))
       case None =>
         for {
           user <- userRepository.create(User(0, loginInfo.providerKey, None))
-          _ <- authInfoRepository.add(loginInfo, passwordHasher.hash(password))
+          _ <- Futures.swapOption(password.map(pw => authInfoRepository.add(loginInfo, passwordHasher.hash(pw))))
         } yield
           // TODO: Log in?
           user

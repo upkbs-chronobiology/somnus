@@ -12,9 +12,9 @@ class StudySpec extends PlaySpec
   val authService = inject[AuthService]
   val studies = inject[StudyRepository]
 
-  val jeff: User = doSync(authService.register("Jeff Tuttle", "12345678"))
-  val rebecca: User = doSync(authService.register("Rebecca Sinclair", "87654321"))
-  val maria: User = doSync(authService.register("Maria Theresa Short", "00001111"))
+  val jeff: User = doSync(authService.register("Jeff Tuttle", Some("12345678")))
+  val rebecca: User = doSync(authService.register("Rebecca Sinclair", Some("87654321")))
+  val maria: User = doSync(authService.register("Maria Theresa Short", Some("00001111")))
   val study: Study = doSync(studies.create(Study(0, "My Study")))
 
   "Study" should {

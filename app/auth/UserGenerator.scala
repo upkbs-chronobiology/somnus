@@ -27,7 +27,7 @@ class UserGenerator @Inject()(userRepository: UserRepository, authService: AuthS
   private def createAdmin() = {
     val password = Random.alphanumeric.take(PasswordLength).mkString
     for {
-      _ <- authService.register(AdminName, password)
+      _ <- authService.register(AdminName, Some(password))
       _ <- userRepository.setRole(AdminName, Some(Role.Admin))
     } yield logger.warn(s"Created admin user '$AdminName' with password: $password\nChange it ASAP!")
   }

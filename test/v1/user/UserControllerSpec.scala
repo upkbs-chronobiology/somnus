@@ -18,7 +18,7 @@ import testutil.Authenticated
 class UserControllerSpec extends PlaySpec
   with GuiceOneAppPerSuite with Injecting with BeforeAndAfterAll with Authenticated {
 
-  val donald = doSync(inject[AuthService].register("Donald Duck", "00112233"))
+  val donald = doSync(inject[AuthService].register("Donald Duck", Some("00112233")))
 
   override def beforeAll(): Unit = {
     super.beforeAll()
@@ -34,6 +34,10 @@ class UserControllerSpec extends PlaySpec
     "not logged in" should {
       "reject listing users" in {
         status(doRequest(GET, "/v1/users")) must equal(401)
+      }
+
+      "reject creating users" in {
+        status(doRequest(POST, "/v1/users", Some(userCreationJson("Dagobert Duck")))) must equal(UNAUTHORIZED)
       }
     }
 
@@ -54,6 +58,10 @@ class UserControllerSpec extends PlaySpec
         val list = contentAsJson(response).as[JsArray].value
         list.length must equal(1)
         list.head.apply("name").as[String] must equal("Test Study")
+      }
+
+      "reject creating users" in {
+        status(doAuthenticatedRequest(POST, "/v1/users", Some(userCreationJson("Dagobert Duck")))) must equal(FORBIDDEN)
       }
     }
 
@@ -89,6 +97,8 @@ class UserControllerSpec extends PlaySpec
     }
 
     "logged in as admin" should {
+      implicit val _ = Role.Admin
+
       "reject invalid roles" in {
         val response = doAuthenticatedRequest(
           PUT, s"/v1/users/${donald.id}", Some(userUpdateJson("fooRole")), role = Some(Role.Admin))
@@ -119,6 +129,15 @@ class UserControllerSpec extends PlaySpec
         status(response) must equal(400)
         doSync(inject[UserRepository].get(adminUser.id)).get.role must equal(Some(Role.Admin.toString))
       }
+
+      "create user" in {
+        val response = doAuthenticatedRequest(POST, "/v1/users", Some(userCreationJson("Dagobert Duck")))
+        status(response) must equal(CREATED)
+
+        val createdUser = contentAsJson(response)
+        createdUser("name").as[String] must equal("Dagobert Duck")
+        createdUser("id").as[Long] must be >= 0L
+      }
     }
   }
 
@@ -127,4 +146,8 @@ class UserControllerSpec extends PlaySpec
       "role" -> role
     )
   }
+
+  def userCreationJson(name: String): JsObject = Json.obj(
+    "name" -> name
+  )
 }

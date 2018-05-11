@@ -4,6 +4,7 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.util.matching.Regex
 
+import auth.AuthService
 import auth.DefaultEnv
 import auth.roles.ForAdmins
 import auth.roles.ForAnyEditorOrUser
@@ -22,6 +23,16 @@ import util.JsonSuccess
 import v1.RestBaseController
 import v1.RestControllerComponents
 
+case class UserCreationFormData(name: String)
+
+object UserCreationForm {
+  val form = Form(
+    mapping(
+      "name" -> nonEmptyText
+    )(UserCreationFormData.apply)(UserCreationFormData.unapply)
+  )
+}
+
 case class UserUpdateFormData(role: Option[String])
 
 object UserUpdateForm {
@@ -38,11 +49,19 @@ class UserController @Inject()(
   rcc: RestControllerComponents,
   silhouette: Silhouette[DefaultEnv],
   userRepository: UserRepository,
-  studyRepository: StudyRepository
+  studyRepository: StudyRepository,
+  authService: AuthService
 )(implicit ec: ExecutionContext) extends RestBaseController(rcc) {
 
   def index = silhouette.SecuredAction(ForEditors).async {
     userRepository.listAll().map(users => Ok(Json.toJson(users)))
+  }
+
+  def create = silhouette.SecuredAction(ForEditors).async { implicit request =>
+    UserCreationForm.form.bindFromRequest().fold(
+      badForm => Future.successful(BadRequest(badForm.errorsAsJson)),
+      formData => authService.register(formData.name, None).map(u => Created(Json.toJson(u)))
+    )
   }
 
   def getStudies(userId: Long) = silhouette.SecuredAction(ForAnyEditorOrUser(userId)).async {

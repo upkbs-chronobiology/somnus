@@ -66,7 +66,7 @@ class AuthControllerSpec extends PlaySpec
   }
 
   "AuthController password reset endpoint" when {
-    val jeff = doSync(authService.register("Jeff Goldblum", "jeffjeff"))
+    val jeff = doSync(authService.register("Jeff Goldblum", Some("jeffjeff")))
 
     "not logged in" should {
       "reject generating tokens" in {

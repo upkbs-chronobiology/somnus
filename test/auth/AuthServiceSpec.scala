@@ -15,7 +15,7 @@ class AuthServiceSpec extends PlaySpec with GuiceOneAppPerSuite with Injecting w
 
   "AuthService" should {
     "register users" in {
-      val user = doSync(authService.register("User A", "12345678"))
+      val user = doSync(authService.register("User A", Some("12345678")))
 
       user.name must equal("User A")
 
@@ -24,7 +24,7 @@ class AuthServiceSpec extends PlaySpec with GuiceOneAppPerSuite with Injecting w
     }
 
     "unregister users" in {
-      val user = doSync(authService.register("User B", "12345678"))
+      val user = doSync(authService.register("User B", Some("12345678")))
 
       user.name must equal("User B")
 
