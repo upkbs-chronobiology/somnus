@@ -16,7 +16,8 @@ import com.mohiva.play.silhouette.api.util.Credentials
 import com.mohiva.play.silhouette.impl.providers.CredentialsProvider
 import exceptions.ItemNotFoundException
 import javax.inject.Inject
-import models.UserService
+import models.PwResetsRepository
+import models.UserRepository
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.data.Mapping
@@ -47,7 +48,7 @@ object LoginForm {
   val form = Form(
     mapping(
       "name" -> nonEmptyText,
-      "password" -> SignUpForm.passwordField
+      "password" -> nonEmptyText
     )(SignUpFormData.apply)(SignUpFormData.unapply)
   )
 }
@@ -57,7 +58,7 @@ case class PwResetFormData(password: String)
 object PwResetForm {
   val form = Form(
     mapping(
-      "password" -> nonEmptyText
+      "password" -> SignUpForm.passwordField
     )(PwResetFormData.apply)(PwResetFormData.unapply)
   )
 }
@@ -65,7 +66,8 @@ object PwResetForm {
 class AuthController @Inject()(
   val environment: Environment[DefaultEnv],
   rcc: RestControllerComponents,
-  userService: UserService,
+  userRepo: UserRepository,
+  pwResetsRepo: PwResetsRepository,
   credentialsProvider: CredentialsProvider,
   silhouette: Silhouette[DefaultEnv],
   authService: AuthService
@@ -93,7 +95,7 @@ class AuthController @Inject()(
       formData => {
         val credentials = Credentials(formData.name, formData.password)
         credentialsProvider.authenticate(credentials).flatMap { loginInfo =>
-          userService.retrieve(loginInfo).flatMap {
+          userRepo.retrieve(loginInfo).flatMap {
             case None => Future.successful(credentialsWrong) // user not found
             case Some(user) => for {
               authenticator <- environment.authenticatorService.create(loginInfo)
@@ -116,6 +118,16 @@ class AuthController @Inject()(
       .recover {
         case e: ItemNotFoundException => NotFound(JsonError(e.getMessage))
       }
+  }
+
+  def getUserForToken(token: String) = Action.async { implicit request =>
+    pwResetsRepo.getByToken(token) flatMap {
+      case None => Future.successful(NotFound(JsonError("Token not valid")))
+      case Some(pwReset) => userRepo.get(pwReset.userId) map {
+        case None => NotFound(JsonError("User for token does not exist"))
+        case Some(user) => Ok(Json.toJson(user))
+      }
+    }
   }
 
   def resetPassword(token: String) = Action.async { implicit request =>

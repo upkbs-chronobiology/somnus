@@ -78,6 +78,36 @@ class AuthControllerSpec extends PlaySpec
       "reject generating tokens" in {
         status(doAuthenticatedRequest(GET, s"/v1/auth/password/reset/new/${jeff.id}")) must equal(FORBIDDEN)
       }
+
+      "deliver users for tokens" in {
+        val tomorrow = Timestamp.from(Instant.now() plus Duration.ofDays(1))
+        val token = doSync(authService.generateResetToken(jeff.id, tomorrow)).token
+
+        val response = doAuthenticatedRequest(GET, s"/v1/auth/password/reset/$token/user")
+        status(response) must equal(OK)
+        contentAsJson(response).apply("name").as[String] must equal("Jeff Goldblum")
+      }
+
+      "reject short passwords" in {
+        val tomorrow = Timestamp.from(Instant.now() plus Duration.ofDays(1))
+
+        val token = doSync(authService.generateResetToken(jeff.id, tomorrow)).token
+        val response = doAuthenticatedRequest(POST, s"/v1/auth/password/reset/$token", Some(pwResetJson("123")))
+        status(response) must equal(BAD_REQUEST)
+      }
+
+      "change password" in {
+        val tomorrow = Timestamp.from(Instant.now() plus Duration.ofDays(1))
+        val token = doSync(authService.generateResetToken(jeff.id, tomorrow)).token
+
+        val response = doAuthenticatedRequest(POST, s"/v1/auth/password/reset/$token", Some(pwResetJson("asdfasdf")))
+
+        status(response) must equal(OK)
+
+        val loginResponse = doRequest(POST, "/v1/auth/login", Some(signUpJson("Jeff Goldblum", "asdfasdf")))
+        status(loginResponse) must equal(OK)
+        header("X-Auth-Token", loginResponse).get.length must equal(256)
+      }
     }
 
     "logged in as researcher" should {
@@ -112,27 +142,6 @@ class AuthControllerSpec extends PlaySpec
 
         val response = doAuthenticatedRequest(POST, s"/v1/auth/password/reset/$token", Some(pwResetJson("12345678")))
         status(response) must equal(BAD_REQUEST)
-      }
-
-      "reject short passwords" in {
-        val tomorrow = Timestamp.from(Instant.now() plus Duration.ofDays(1))
-        val token = authService.generateResetToken(jeff.id, tomorrow)
-
-        val response = doAuthenticatedRequest(POST, s"/v1/auth/password/reset/$token", Some(pwResetJson("123")))
-        status(response) must equal(BAD_REQUEST)
-      }
-
-      "change password" in {
-        val tomorrow = Timestamp.from(Instant.now() plus Duration.ofDays(1))
-        val token = doSync(authService.generateResetToken(jeff.id, tomorrow)).token
-
-        val response = doAuthenticatedRequest(POST, s"/v1/auth/password/reset/$token", Some(pwResetJson("asdfasdf")))
-
-        status(response) must equal(OK)
-
-        val loginResponse = doRequest(POST, "/v1/auth/login", Some(signUpJson("Jeff Goldblum", "asdfasdf")))
-        status(loginResponse) must equal(OK)
-        header("X-Auth-Token", loginResponse).get.length must equal(256)
       }
     }
   }
