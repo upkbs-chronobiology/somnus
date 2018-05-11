@@ -60,7 +60,9 @@ class UserController @Inject()(
   def create = silhouette.SecuredAction(ForEditors).async { implicit request =>
     UserCreationForm.form.bindFromRequest().fold(
       badForm => Future.successful(BadRequest(badForm.errorsAsJson)),
-      formData => authService.register(formData.name, None).map(u => Created(Json.toJson(u)))
+      formData => authService.register(formData.name, None).map(u => Created(Json.toJson(u))) recover {
+        case e: IllegalArgumentException => BadRequest(JsonError(s"Failed to create user: ${e.getMessage}"))
+      }
     )
   }
 

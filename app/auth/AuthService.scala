@@ -43,9 +43,6 @@ class AuthService @Inject()(
         } yield
           // TODO: Log in?
           user
-    } recoverWith {
-      // TODO: Proper logging in case of errors
-      case e: Exception => Future.failed(new IllegalStateException("Failed to register user", e))
     }
   }
 

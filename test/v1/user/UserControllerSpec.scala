@@ -138,6 +138,14 @@ class UserControllerSpec extends PlaySpec
         createdUser("name").as[String] must equal("Dagobert Duck")
         createdUser("id").as[Long] must be >= 0L
       }
+
+      "refuse to create user with already existing name" in {
+        val response = doAuthenticatedRequest(POST, "/v1/users", Some(userCreationJson("Daisy Duck")))
+        status(response) must equal(CREATED)
+
+        val secondResponse = doAuthenticatedRequest(POST, "/v1/users", Some(userCreationJson("Daisy Duck")))
+        status(secondResponse) must equal(BAD_REQUEST)
+      }
     }
   }
 
