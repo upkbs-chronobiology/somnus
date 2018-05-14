@@ -79,7 +79,10 @@ class AuthService @Inject()(
             pwResetsRepo.delete(pwReset.id)
 
             val loginInfo = LoginInfo(credentialsProvider.id, user.name)
-            authInfoRepository.update(loginInfo, passwordHasher.hash(newPassword))
+            authInfoRepository.find[PasswordInfo](loginInfo) flatMap {
+              case None => authInfoRepository.add(loginInfo, passwordHasher.hash(newPassword))
+              case Some(_) => authInfoRepository.update(loginInfo, passwordHasher.hash(newPassword))
+            }
         }
     }
   }

@@ -108,6 +108,21 @@ class AuthControllerSpec extends PlaySpec
         status(loginResponse) must equal(OK)
         header("X-Auth-Token", loginResponse).get.length must equal(256)
       }
+
+      "create password for new accounts" in {
+        val olga = doSync(authService.register("Olga Bołądź", None))
+
+        val tomorrow = Timestamp.from(Instant.now() plus Duration.ofDays(1))
+        val token = doSync(authService.generateResetToken(olga.id, tomorrow)).token
+
+        val response = doAuthenticatedRequest(POST, s"/v1/auth/password/reset/$token", Some(pwResetJson("qwerqwer")))
+
+        status(response) must equal(OK)
+
+        val loginResponse = doRequest(POST, "/v1/auth/login", Some(signUpJson("Olga Bołądź", "qwerqwer")))
+        status(loginResponse) must equal(OK)
+        header("X-Auth-Token", loginResponse).get.length must equal(256)
+      }
     }
 
     "logged in as researcher" should {

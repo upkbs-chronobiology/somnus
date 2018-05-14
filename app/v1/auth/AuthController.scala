@@ -13,6 +13,8 @@ import auth.roles.ForEditors
 import com.mohiva.play.silhouette.api.Environment
 import com.mohiva.play.silhouette.api.Silhouette
 import com.mohiva.play.silhouette.api.util.Credentials
+import com.mohiva.play.silhouette.impl.exceptions.IdentityNotFoundException
+import com.mohiva.play.silhouette.impl.exceptions.InvalidPasswordException
 import com.mohiva.play.silhouette.impl.providers.CredentialsProvider
 import exceptions.ItemNotFoundException
 import javax.inject.Inject
@@ -25,6 +27,7 @@ import play.api.data.validation.Constraints._
 import play.api.libs.json.Json
 import util.JsonError
 import util.JsonSuccess
+import util.Logging
 import v1.RestBaseController
 import v1.RestControllerComponents
 
@@ -72,7 +75,7 @@ class AuthController @Inject()(
   silhouette: Silhouette[DefaultEnv],
   authService: AuthService
 )(implicit ec: ExecutionContext)
-  extends RestBaseController(rcc) {
+  extends RestBaseController(rcc) with Logging {
 
   def signUp = Action.async { implicit request =>
     SignUpForm.form.bindFromRequest.fold(
@@ -104,8 +107,13 @@ class AuthController @Inject()(
             } yield result
           }
         } recover {
-          // TODO: Proper logging
-          case _: Exception => credentialsWrong
+          case _: IllegalArgumentException => credentialsWrong
+          case _: IdentityNotFoundException => credentialsWrong
+          case _: InvalidPasswordException => credentialsWrong
+          case e: Exception =>
+            e.printStackTrace()
+            logger.error("Exception during login attempt", e)
+            credentialsWrong
         }
       }
     )
