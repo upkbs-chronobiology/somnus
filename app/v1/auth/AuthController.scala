@@ -10,6 +10,7 @@ import scala.concurrent.Future
 import auth.AuthService
 import auth.DefaultEnv
 import auth.roles.ForEditors
+import auth.roles.Role
 import com.mohiva.play.silhouette.api.Environment
 import com.mohiva.play.silhouette.api.Silhouette
 import com.mohiva.play.silhouette.api.util.Credentials
@@ -119,13 +120,21 @@ class AuthController @Inject()(
     )
   }
 
-  def createResetToken(userId: Long) = silhouette.SecuredAction(ForEditors).async {
-    val tomorrow = Timestamp.from(Instant.now().plus(Duration.ofDays(1)))
-    authService.generateResetToken(userId, tomorrow)
-      .map(pwReset => Created(Json.toJson(pwReset)))
-      .recover {
-        case e: ItemNotFoundException => NotFound(JsonError(e.getMessage))
-      }
+  def createResetToken(userId: Long) = silhouette.SecuredAction(ForEditors).async { implicit request =>
+    val currentUserLevel = Role.level(request.identity.role.map(Role.withName))
+    userRepo.get(userId) flatMap {
+      case None => Future.successful(NotFound(JsonError(s"User with id $userId not found")))
+      case Some(user) if Role.level(user.role.map(Role.withName)) >= currentUserLevel =>
+        Future.successful(Forbidden(JsonError(
+          "Generating reset tokens for users of same or higher permission level is not allowed")))
+      case Some(_) =>
+        val tomorrow = Timestamp.from(Instant.now().plus(Duration.ofDays(1)))
+        authService.generateResetToken(userId, tomorrow)
+          .map(pwReset => Created(Json.toJson(pwReset)))
+          .recover {
+            case e: ItemNotFoundException => NotFound(JsonError(e.getMessage))
+          }
+    }
   }
 
   def getUserForToken(token: String) = Action.async { implicit request =>

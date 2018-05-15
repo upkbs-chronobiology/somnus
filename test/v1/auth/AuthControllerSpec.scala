@@ -132,6 +132,16 @@ class AuthControllerSpec extends PlaySpec
         status(doAuthenticatedRequest(GET, "/v1/auth/password/reset/new/999")) must equal(NOT_FOUND)
       }
 
+      "reject generating tokens for users of same or higher permission" in {
+        val adi = doSync(authService.register("Adrian Admin", None))
+        doSync(userRepository.setRole(adi.id, Some(Role.Admin)))
+        val resi = doSync(authService.register("Reese Researcher", Some("IAMREESE")))
+        doSync(userRepository.setRole(resi.id, Some(Role.Researcher)))
+
+        status(doAuthenticatedRequest(GET, s"/v1/auth/password/reset/new/${adi.id}")) must equal(FORBIDDEN)
+        status(doAuthenticatedRequest(GET, s"/v1/auth/password/reset/new/${resi.id}")) must equal(FORBIDDEN)
+      }
+
       "generate a token" in {
         val response = doAuthenticatedRequest(GET, s"/v1/auth/password/reset/new/${jeff.id}")
 
@@ -157,6 +167,24 @@ class AuthControllerSpec extends PlaySpec
 
         val response = doAuthenticatedRequest(POST, s"/v1/auth/password/reset/$token", Some(pwResetJson("12345678")))
         status(response) must equal(BAD_REQUEST)
+      }
+    }
+
+    "logged in as admin" should {
+      implicit val _ = Role.Admin
+
+      "reject generating a token for another admin" in {
+        val aaron = doSync(authService.register("Aaron Admin", None))
+        doSync(userRepository.setRole(aaron.id, Some(Role.Admin)))
+
+        status(doAuthenticatedRequest(GET, s"/v1/auth/password/reset/new/${aaron.id}")) must equal(FORBIDDEN)
+      }
+
+      "generate a token for research users" in {
+        val ronda = doSync(authService.register("Ronda Researcher", Some("IAMREESE")))
+        doSync(userRepository.setRole(ronda.id, Some(Role.Researcher)))
+
+        status(doAuthenticatedRequest(GET, s"/v1/auth/password/reset/new/${ronda.id}")) must equal(CREATED)
       }
     }
   }
