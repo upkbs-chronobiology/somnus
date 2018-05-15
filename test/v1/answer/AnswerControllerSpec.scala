@@ -36,12 +36,21 @@ class AnswerControllerSpec extends PlaySpec
 
     "logged in as base user" should {
       "reject indexing and CRUD requests" in {
-        val createResponse = doAuthenticatedRequest(POST, "/v1/answers", Some(Json.arr(answerJson(1, "Some answer A"))))
-        status(createResponse) must equal(FORBIDDEN)
-
         status(doAuthenticatedRequest(GET, "/v1/answers")) must equal(FORBIDDEN)
         status(doAuthenticatedRequest(GET, "/v1/answers/1")) must equal(FORBIDDEN)
         status(doAuthenticatedRequest(DELETE, "/v1/answers/1")) must equal(FORBIDDEN)
+      }
+
+      "accept answers" in {
+        val questionX = doSync(questionsRepo.add(Question(0, "My question X", AnswerType.Text)))
+        val questionY = doSync(questionsRepo.add(Question(0, "My question Y", AnswerType.Text)))
+
+        val data = Json.arr(
+          answerJson(questionX.id, "Some answer X"),
+          answerJson(questionY.id, "Some answer Y")
+        )
+        val response = doAuthenticatedRequest(POST, "/v1/answers", Some(data))
+        status(response) must equal(CREATED)
       }
     }
 
@@ -71,6 +80,8 @@ class AnswerControllerSpec extends PlaySpec
       "accept, then serve and delete answers with valid question ids" in {
         implicit val _ = Role.Researcher
 
+        val initialList = contentAsJson(doAuthenticatedRequest(GET, s"/v1/answers")).as[JsArray].value
+
         val questionX = doSync(questionsRepo.add(Question(0, "My question X", AnswerType.Text)))
         val questionY = doSync(questionsRepo.add(Question(0, "My question Y", AnswerType.Text)))
 
@@ -90,7 +101,7 @@ class AnswerControllerSpec extends PlaySpec
         }
 
         val finalList = contentAsJson(doAuthenticatedRequest(GET, s"/v1/answers")).as[JsArray].value
-        finalList.size must equal(0)
+        finalList.size - initialList.size must equal(0)
 
         // delete question again to leave db in initial state
         doSync(questionsRepo.delete(questionX.id)) must equal(1)

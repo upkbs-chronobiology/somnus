@@ -50,7 +50,8 @@ class QuestionnaireController @Inject()(
     }
   }
 
-  def getQuestions(questionnaireId: Long) = silhouette.SecuredAction(ForEditors).async { implicit request =>
+  // XXX: Restrict to users part of this questionnaire's study (and editors)?
+  def getQuestions(questionnaireId: Long) = silhouette.SecuredAction.async { implicit request =>
     questionsRepo.listByQuestionnaire(questionnaireId)
       .map(questions => Ok(Json.toJson(questions)))
       .recover {

@@ -39,12 +39,15 @@ class QuestionnaireControllerSpec extends PlaySpec
     }
 
     "logged in as base user" should {
-      "reject requests" in {
+      "reject index and editing requests" in {
         status(doAuthenticatedRequest(GET, s"/v1/questionnaires")) must equal(FORBIDDEN)
         status(doAuthenticatedRequest(POST, s"/v1/questionnaires", Some(qJson("Foo bar", None)))) must equal(FORBIDDEN)
         status(doAuthenticatedRequest(PUT, s"/v1/questionnaires/${questionnaire.id}", Some(qJson("Foo bar", None)))) must equal(FORBIDDEN)
         status(doAuthenticatedRequest(DELETE, s"/v1/questionnaires/${questionnaire.id}")) must equal(FORBIDDEN)
-        status(doAuthenticatedRequest(GET, s"/v1/questionnaires/${questionnaire.id}/questions")) must equal(FORBIDDEN)
+      }
+
+      "list questions for specific questionnaire" in {
+        status(doAuthenticatedRequest(GET, s"/v1/questionnaires/${questionnaire.id}/questions")) must equal(OK)
       }
     }
 
