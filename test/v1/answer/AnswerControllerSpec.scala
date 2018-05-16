@@ -1,5 +1,7 @@
 package v1.answer
 
+import java.time.OffsetDateTime
+
 import scala.concurrent.Future
 
 import auth.roles.Role
@@ -46,11 +48,20 @@ class AnswerControllerSpec extends PlaySpec
         val questionY = doSync(questionsRepo.add(Question(0, "My question Y", AnswerType.Text)))
 
         val data = Json.arr(
-          answerJson(questionX.id, "Some answer X"),
-          answerJson(questionY.id, "Some answer Y")
+          answerJson(questionX.id, "Some answer X", "2018-05-16T14:08:43+02:00"),
+          answerJson(questionY.id, "Some answer Y", "2099-01-01T01:01:55-11:30")
         )
         val response = doAuthenticatedRequest(POST, "/v1/answers", Some(data))
         status(response) must equal(CREATED)
+
+        val newAnswers = contentAsJson(response).as[JsArray].value
+        newAnswers.size must equal(2)
+
+        val firstNewAnswer = newAnswers(0)
+        firstNewAnswer("id").as[Long] must be >= 0L
+        firstNewAnswer("questionId").as[Long] must equal(questionX.id)
+        firstNewAnswer("content").as[String] must equal("Some answer X")
+        firstNewAnswer("createdLocal").as[String] must equal("2018-05-16T14:08:43+02:00")
       }
     }
 
@@ -58,7 +69,8 @@ class AnswerControllerSpec extends PlaySpec
 
       implicit val _ = Role.Researcher
       "reject single answer with invalid question id" in {
-        val response = doAuthenticatedRequest(POST, "/v1/answers", Some(Json.arr(answerJson(999, "Some answer A"))))
+        val response = doAuthenticatedRequest(POST, "/v1/answers",
+          Some(Json.arr(answerJson(999, "Some answer A", "2000-01-01T00:00:00+00:00"))))
         status(response) must equal(BAD_REQUEST)
       }
 
@@ -66,8 +78,8 @@ class AnswerControllerSpec extends PlaySpec
         val question = doSync(questionsRepo.add(Question(0, "My question B", AnswerType.Text)))
 
         val data = Json.arr(
-          answerJson(question.id, "I will not be created"),
-          answerJson(999, "Some answer A")
+          answerJson(question.id, "I will not be created", "2000-01-01T00:00:00+00:00"),
+          answerJson(999, "Some answer A", "2000-01-01T00:00:00+00:00")
         )
         val response = doAuthenticatedRequest(POST, "/v1/answers", Some(data))
         status(response) must equal(BAD_REQUEST)
@@ -86,8 +98,8 @@ class AnswerControllerSpec extends PlaySpec
         val questionY = doSync(questionsRepo.add(Question(0, "My question Y", AnswerType.Text)))
 
         val data = Json.arr(
-          answerJson(questionX.id, "Some answer X"),
-          answerJson(questionY.id, "Some answer Y")
+          answerJson(questionX.id, "Some answer X", "2000-01-01T00:00:00+00:00"),
+          answerJson(questionY.id, "Some answer Y", "2000-01-01T00:00:00+00:00")
         )
         val response = doAuthenticatedRequest(POST, "/v1/answers", Some(data))
         status(response) must equal(CREATED)
@@ -198,14 +210,15 @@ class AnswerControllerSpec extends PlaySpec
   }
 
   def postAnswer(questionId: Long, content: String)(implicit role: Role): Future[Result] = {
-    val payload = Json.arr(answerJson(questionId, content))
+    val payload = Json.arr(answerJson(questionId, content, OffsetDateTime.now().toString))
     doAuthenticatedRequest(POST, "/v1/answers", Some(payload))
   }
 
-  private def answerJson(questionId: Long, text: String): JsValue = {
+  private def answerJson(questionId: Long, text: String, createdLocal: String): JsValue = {
     Json.obj(
       "questionId" -> questionId,
-      "content" -> text
+      "content" -> text,
+      "createdLocal" -> createdLocal
     )
   }
 }

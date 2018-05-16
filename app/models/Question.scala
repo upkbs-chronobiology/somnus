@@ -15,8 +15,8 @@ import play.api.libs.json.Json
 import play.api.libs.json.Writes
 import slick.jdbc.H2Profile.api._
 import slick.jdbc.JdbcProfile
-import util.CustomForms._
-import util.PlayFormsEnum.enum
+import util.form.CustomForms._
+import util.form.PlayFormsEnum.enum
 import util.Serialization
 
 case class Question(

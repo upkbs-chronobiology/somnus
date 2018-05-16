@@ -1,4 +1,4 @@
-package util
+package util.form
 
 import play.api.data.FormError
 import play.api.data.Forms.of

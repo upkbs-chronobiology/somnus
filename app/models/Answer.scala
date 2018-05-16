@@ -1,6 +1,7 @@
 package models
 
 import java.sql.Timestamp
+import java.time.OffsetDateTime
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -17,8 +18,10 @@ import slick.jdbc.H2Profile.api._
 import slick.jdbc.JdbcProfile
 import slick.sql.SqlProfile.ColumnOption.SqlType
 import util.Serialization
+import util.TemporalSqlMappings
+import util.form.FormOffsetDateTime.offsetDateTime
 
-case class Answer(id: Long, questionId: Long, content: String, userId: Long, created: Timestamp)
+case class Answer(id: Long, questionId: Long, content: String, userId: Long, created: Timestamp, createdLocal: OffsetDateTime)
 
 object Answer {
   implicit val implicitWrites = new Writes[Answer] {
@@ -28,7 +31,8 @@ object Answer {
         "questionId" -> answer.questionId,
         "content" -> answer.content,
         "userId" -> answer.userId,
-        "created" -> answer.created
+        "created" -> answer.created,
+        "createdLocal" -> answer.createdLocal.toString
       )
     }
   }
@@ -36,29 +40,33 @@ object Answer {
   val tupled = (this.apply _).tupled
 }
 
-case class AnswerFormData(questionId: Long, content: String, userId: Option[Long])
+case class AnswerFormData(questionId: Long, content: String, userId: Option[Long], createdLocal: OffsetDateTime)
 
 object AnswerForm {
   val form = Form(
     mapping(
       "questionId" -> longNumber, // XXX: Can we map to existing question ids?
       "content" -> nonEmptyText,
-      "userId" -> optional(longNumber)
+      "userId" -> optional(longNumber),
+      "createdLocal" -> offsetDateTime
     )(AnswerFormData.apply)(AnswerFormData.unapply)
   )
 }
 
-class AnswerTable(tag: Tag) extends Table[Answer](tag, "answer") {
+class AnswerTable(tag: Tag) extends Table[Answer](tag, "answer") with TemporalSqlMappings {
   def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
   def questionId = column[Long]("question_id")
   def content = column[String]("content")
   def userId = column[Long]("user_id")
-  def created = column[Timestamp]("created", SqlType("TIMESTAMP NOT NULL DEFAULT current_timestamp()"))
+  // XXX: O.AutoInc is a hack to let Slick ignore it on write ops (because map doesn't seem to work with mapped columns)
+  // https://stackoverflow.com/questions/50386823/mapping-a-tablequery-to-an-offsetdatetime-column
+  def created = column[Timestamp]("created", SqlType("TIMESTAMP NOT NULL DEFAULT current_timestamp()"), O.AutoInc)
+  def createdLocal = column[OffsetDateTime]("created_local")
 
   def question = foreignKey("question", questionId, TableQuery[QuestionTable])(_.id)
   def user = foreignKey("user", userId, TableQuery[UserTable])(_.id)
 
-  override def * = (id, questionId, content, userId, created) <> (Answer.tupled, Answer.unapply)
+  override def * = (id, questionId, content, userId, created, createdLocal) <> (Answer.tupled, Answer.unapply)
 }
 
 @Singleton
@@ -70,8 +78,13 @@ class AnswersRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) {
   val questions = TableQuery[QuestionTable]
 
   // required because we don't want to insert "created", but use its default value
-  private val InsertColumnsMap = (table: AnswerTable) => (table.questionId, table.content, table.userId)
-  private val InsertValuesMap = (answer: Answer) => (answer.questionId, answer.content, answer.userId)
+  // XXX: Currently unused because of AutoInc hack (see below)
+  //  type InsertTuple = (Long, String, Long, OffsetDateTime)
+  //  type RepInsertTuple = (Rep[Long], Rep[String], Rep[Long], Rep[OffsetDateTime])
+  //  private def mapToInsertColumns(answers: TableQuery[AnswerTable]): QueryBase[Seq[(Long, String, Long, OffsetDateTime)]] =
+  //    answers.map[RepInsertTuple, Seq[InsertTuple], InsertTuple]((table: AnswerTable) =>
+  //      (table.questionId, table.content, table.userId, table.createdLocal))
+  //  private val InsertValuesMap = (answer: Answer) => (answer.questionId, answer.content, answer.userId, answer.createdLocal)
 
   /** Make sure answer content corresponds with answerType in question.
     */
@@ -112,23 +125,39 @@ class AnswersRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) {
   }
 
   def add(answer: Answer): Future[Answer] = {
+    // XXX: See above (AutoInc hack)
     assureTypeConsistency(answer).flatMap { _ =>
-      dbConfig().db.run((answers.map(InsertColumnsMap) returning answers.map(_.id)) += InsertValuesMap(answer))
+      dbConfig().db.run((answers returning answers.map(_.id)) += answer)
         .flatMap(this.get(_).flatMap {
           case Some(a) => Future.successful(a)
           case None => Future.failed(new IllegalStateException("Failed to load answer after creation"))
         })
     }
+    //    assureTypeConsistency(answer).flatMap { _ =>
+    //      dbConfig().db.run((mapToInsertColumns(answers) returning answers.map(_.id)) += InsertValuesMap(answer))
+    //        .flatMap(this.get(_).flatMap {
+    //          case Some(a) => Future.successful(a)
+    //          case None => Future.failed(new IllegalStateException("Failed to load answer after creation"))
+    //        })
+    //    }
   }
 
   def addAll(newAnswers: Seq[Answer]): Future[Seq[Answer]] = {
+    // XXX: See above (AutoInc hack)
     Future.sequence(newAnswers.map(answer => assureTypeConsistency(answer))).flatMap { _ =>
-      dbConfig().db.run(((answers.map(InsertColumnsMap) returning answers.map(_.id)) ++= newAnswers.map(InsertValuesMap)).transactionally)
+      dbConfig().db.run(((answers returning answers.map(_.id)) ++= newAnswers).transactionally)
         .flatMap(createdSeq => Future.sequence(createdSeq.map(this.get(_).map {
           case Some(a) => a
           case None => throw new IllegalStateException("Failed to load an answer after creation")
         })))
     }
+    //    Future.sequence(newAnswers.map(answer => assureTypeConsistency(answer))).flatMap { _ =>
+    //      dbConfig().db.run(((mapToInsertColumns(answers) returning answers.map(_.id)) ++= newAnswers.map(InsertValuesMap)).transactionally)
+    //        .flatMap(createdSeq => Future.sequence(createdSeq.map(this.get(_).map {
+    //          case Some(a) => a
+    //          case None => throw new IllegalStateException("Failed to load an answer after creation")
+    //        })))
+    //    }
   }
 
   def delete(id: Long): Future[Int] = {

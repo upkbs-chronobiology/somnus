@@ -24,7 +24,6 @@ import com.mohiva.play.silhouette.persistence.repositories.DelegableAuthInfoRepo
 import models.UserRepository
 import models.UserService
 import net.codingwell.scalaguice.ScalaModule
-import play.api.Configuration
 
 class SilhouetteModule extends AbstractModule with ScalaModule {
 

@@ -75,6 +75,7 @@ create table answer (
   content VARCHAR NOT NULL,
   user_id BIGINT NOT NULL,
   created TIMESTAMP NOT NULL DEFAULT current_timestamp(),
+  created_local TIMESTAMP WITH TIME ZONE NOT NULL,
   FOREIGN KEY(question_id) REFERENCES question(id),
   FOREIGN KEY(user_id) REFERENCES user(id)
 );

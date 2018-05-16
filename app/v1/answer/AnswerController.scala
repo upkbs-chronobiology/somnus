@@ -13,6 +13,7 @@ import models.AnswersRepository
 import play.api.libs.json.JsArray
 import play.api.libs.json.Json
 import util.JsonError
+import util.Logging
 import v1.RestBaseController
 import v1.RestControllerComponents
 
@@ -21,7 +22,7 @@ class AnswerController @Inject()(
   silhouette: Silhouette[DefaultEnv],
   answersRepo: AnswersRepository
 )(implicit ec: ExecutionContext)
-  extends RestBaseController(rcc) {
+  extends RestBaseController(rcc) with Logging {
 
   def index = silhouette.SecuredAction(ForEditors).async { implicit request =>
     answersRepo.listAll().map(answers => Ok(Json.toJson(answers)))
@@ -45,13 +46,15 @@ class AnswerController @Inject()(
             badForm => throw new IllegalArgumentException(badForm.errorsAsJson.toString()),
             formData => {
               val userId = formData.userId.getOrElse(request.identity.id)
-              Answer(0, formData.questionId, formData.content, userId, null) // scalastyle:ignore null
+              Answer(0, formData.questionId, formData.content, userId, null, formData.createdLocal) // scalastyle:ignore null
             }
           )
         )
         answersRepo.addAll(newAnswers).map(answers => Created(Json.toJson(answers))).recover {
           case e: IllegalArgumentException => BadRequest(JsonError(e.getMessage))
-          case _: Exception => BadRequest(JsonError("Could not create answer"))
+          case e: Exception =>
+            logger.error("Failed to create answer", e)
+            InternalServerError(JsonError("Could not create answer"))
         }
       case _ => Future.successful(BadRequest(JsonError("Expected array of answers")))
     }
