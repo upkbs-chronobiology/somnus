@@ -66,8 +66,8 @@ class AnswerControllerSpec extends PlaySpec
     }
 
     "logged in as researcher" should {
-
       implicit val _ = Role.Researcher
+
       "reject single answer with invalid question id" in {
         val response = doAuthenticatedRequest(POST, "/v1/answers",
           Some(Json.arr(answerJson(999, "Some answer A", "2000-01-01T00:00:00+00:00"))))

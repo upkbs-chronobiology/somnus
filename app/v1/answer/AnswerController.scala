@@ -13,6 +13,7 @@ import models.AnswersRepository
 import play.api.libs.json.JsArray
 import play.api.libs.json.Json
 import util.JsonError
+import util.JsonSuccess
 import util.Logging
 import v1.RestBaseController
 import v1.RestControllerComponents
@@ -41,20 +42,24 @@ class AnswerController @Inject()(
   def add = silhouette.SecuredAction.async { implicit request =>
     request.body.asJson match {
       case Some(array: JsArray) =>
-        val newAnswers = array.value.map(item =>
-          AnswerForm.form.bind(item).fold(
-            badForm => throw new IllegalArgumentException(badForm.errorsAsJson.toString()),
-            formData => {
-              val userId = formData.userId.getOrElse(request.identity.id)
-              Answer(0, formData.questionId, formData.content, userId, null, formData.createdLocal) // scalastyle:ignore null
-            }
+        try {
+          val newAnswers = array.value.map(item =>
+            AnswerForm.form.bind(item).fold(
+              badForm => throw new IllegalArgumentException(badForm.errorsAsJson.toString()),
+              formData => {
+                val userId = formData.userId.getOrElse(request.identity.id)
+                Answer(0, formData.questionId, formData.content, userId, null, formData.createdLocal) // scalastyle:ignore null
+              }
+            )
           )
-        )
-        answersRepo.addAll(newAnswers).map(answers => Created(Json.toJson(answers))).recover {
-          case e: IllegalArgumentException => BadRequest(JsonError(e.getMessage))
+          answersRepo.addAll(newAnswers).map(answers => Created(Json.toJson(answers))) recover {
+            case e: IllegalArgumentException => BadRequest(JsonError(e.getMessage))
+          }
+        } catch {
+          case e: IllegalArgumentException => Future.successful(BadRequest(JsonError(e.getMessage)))
           case e: Exception =>
             logger.error("Failed to create answer", e)
-            InternalServerError(JsonError("Could not create answer"))
+            Future.successful(InternalServerError(JsonError("Could not create answer")))
         }
       case _ => Future.successful(BadRequest(JsonError("Expected array of answers")))
     }
@@ -62,7 +67,7 @@ class AnswerController @Inject()(
 
   def delete(id: Long) = silhouette.SecuredAction(ForEditors).async { implicit request =>
     answersRepo.delete(id).map {
-      num => Ok(s"Deleted $num answer${if (num != 1) "s"}")
+      num => Ok(JsonSuccess(s"Deleted $num answer${if (num != 1) "s"}"))
     }
   }
 }
