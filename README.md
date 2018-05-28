@@ -24,3 +24,30 @@ All tests are executed with sbt's `test` goal, e.g. `sbt test` from the command 
 
 During tests, a different config file (`application.test.conf`) is used, and sbt is configured to automatically pick it up.
 If you want to run tests from an IDE, you might need to set the following VM parameter manually: `-Dconfig.file=conf/application.test.conf`
+
+## Release
+
+### Application docker image
+
+In order to build a distribution docker image, you can use `sbt docker:publishLocal`, or `sbt docker:publish`, respectively.
+It will prompt you for the prod database password and automatically insert it into config.
+The resulting image's name should be printed to the console; it has the form `somnus:<version>`.
+
+In order to run it, you'll have to make sure the database container  is reachable under `somnus-db`,
+e.g. by running starting the app container with `docker run -d --link <db-container-name>:somnus-db --name SomnusBE somnus:<version>`.
+
+### Database docker image
+
+The database runs in a separate container than the main application in production.
+As main application updates usually shouldn't affect the db image (short of schema changes), hence building that image is rarely necessary.
+Schema updates should be executed on a copy of the production db, then replace it.
+
+However, to build a complete fresh H2 docker image, do the following:
+
+- Pull and run the [`oscarfonts/h2` image](https://hub.docker.com/r/oscarfonts/h2/), e.g. `docker run -d -p 1521:1521 -p 81:81 --name=SomnusH2 oscarfonts/h2`.
+- Locally run the application with the dist config file (`sbt "run -Dconfig.file=conf/application.dist.conf"` - quotes are crucial) and apply evolutions.
+*Also, make sure to write down the generated application admin user's ("somnus") password, as printed to the console!*
+*NB: After successful db upgrade, you should see a "Bad Request" error - this is expected, as localhost is not an allowed host in prod.*
+- Using an H2 browser (the one of the container is likely at [`172.18.0.2:81`](http://172.18.0.2:81/)), connect to the db `jdbc:h2:tcp://localhost:1521/default` and verify tables have been generated.
+Now, set a password for the "SA" user: `alter user SA set password '<new-password>'` (again, make sure to write it down).
+- Stop the container, create an image out of it (`docker commit`) and put it into production, either through an online repository or by using `docker save`.

@@ -1,7 +1,11 @@
+import scala.io.StdIn.readLine
+import scala.io.Source
+import scala.tools.nsc.io.File
+
 name := """somnus"""
 organization := "ch.chronobiology"
 
-version := "1.0-SNAPSHOT"
+version := "0.1-beta1-SNAPSHOT"
 
 lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
@@ -65,8 +69,27 @@ testScalastyle := scalastyle.in(Test).toTask("").value
 
 (scalastyleConfig in Test) := baseDirectory.value / "scalastyle-test-config.xml"
 
-// Adds additional packages into Twirl
-//TwirlKeys.templateImports += "ch.chronobiology.controllers._"
+dockerEntrypoint := Seq("bin/somnus", "-Dconfig.file=conf/application.dist.conf")
+dockerExposedPorts := Seq(9000)
 
-// Adds additional packages into conf/routes
-// play.sbt.routes.RoutesKeys.routesImport += "ch.chronobiology.binders._"
+val prepConfigForDocker = taskKey[Unit]("Append db password to target dist config file")
+prepConfigForDocker := {
+  val stageLocation = (Docker / stage).value
+
+  val configFile = File(s"$stageLocation/opt/docker/conf/application.dist.conf")
+
+  val dbPseudoDomain = "somnus-db"
+  val mappedLines = Source.fromFile(configFile.path).getLines()
+    .map(_.replaceAll("tcp://localhost", s"tcp://$dbPseudoDomain")).toSeq
+
+  // TODO: What if PW is already present (e.g. from previous build, without clean since)?
+  val dbPassword = readLine("Enter database user password: ")
+  val passwordLine = s"""slick.dbs.default.db.password="$dbPassword""""
+
+  val applicationSecret = readLine("Enter application secret key: ")
+  val secretLine = s"""play.http.secret.key="$applicationSecret""""
+
+  configFile.writeAll((mappedLines ++ Seq(passwordLine, secretLine)).mkString("\n"))
+}
+
+(Docker / publishLocal) := ((Docker / publishLocal) dependsOn prepConfigForDocker).value
