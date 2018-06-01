@@ -5,8 +5,6 @@ import scala.tools.nsc.io.File
 name := """somnus"""
 organization := "ch.chronobiology"
 
-version := "0.1-beta1-SNAPSHOT"
-
 lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
 scalaVersion := "2.12.3"
@@ -69,6 +67,9 @@ testScalastyle := scalastyle.in(Test).toTask("").value
 
 (scalastyleConfig in Test) := baseDirectory.value / "scalastyle-test-config.xml"
 
+
+// ~ Docker publication ~
+
 dockerEntrypoint := Seq("bin/somnus", "-Dconfig.file=conf/application.dist.conf")
 dockerExposedPorts := Seq(9000)
 
@@ -93,3 +94,22 @@ prepConfigForDocker := {
 }
 
 (Docker / publishLocal) := ((Docker / publishLocal) dependsOn prepConfigForDocker).value
+
+
+// ~ Releasing ~
+
+import ReleaseTransformations._
+
+releaseProcess := Seq[ReleaseStep](
+  checkSnapshotDependencies,
+  inquireVersions,
+  runClean,
+  runTest,
+  setReleaseVersion,
+  commitReleaseVersion,
+  tagRelease,
+  releaseStepTask(publishLocal in Docker),
+  setNextVersion,
+  commitNextVersion,
+  pushChanges
+)

@@ -27,7 +27,14 @@ If you want to run tests from an IDE, you might need to set the following VM par
 
 ## Release
 
+A new docker prod release can be done by running `sbt release`.
+This should be the standard procedure for releasing, so we always have reliable versioning.
+This does most of what's necessary for a release, including version bumping, tagging, and locally publishing docker images.
+However, it does not deploy anything to an actual production server.
+
 ### Application docker image
+
+*Manually creating an image is only relevant if not done through `sbt release` as described above.*
 
 In order to build a distribution docker image, you can use `sbt docker:publishLocal`, or `sbt docker:publish`, respectively.
 It will prompt you for the prod database password and automatically insert it into config.
