@@ -58,3 +58,11 @@ However, to build a complete fresh H2 docker image, do the following:
 - Using an H2 browser (the one of the container is likely at [`172.18.0.2:81`](http://172.18.0.2:81/)), connect to the db `jdbc:h2:tcp://localhost:1521/default` and verify tables have been generated.
 Now, set a password for the "SA" user: `alter user SA set password '<new-password>'` (again, make sure to write it down).
 - Stop the container, create an image out of it (`docker commit`) and put it into production, either through an online repository or by using `docker save`.
+
+## Production setup
+
+When running the two containers (db and application) in production, either link them as described above, or properly set up networking:
+
+- Make sure the two containers are part of the same network.
+- On the application container, set a hosts file entry mapping `somnus-db` to the db container's IP.
+  In Portainer, this can be configured under "Advanced container settings" > "Network"
