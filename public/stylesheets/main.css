@@ -1,0 +1,67 @@
+html, body {
+    font-family: 'Open Sans', sans-serif;
+    min-height: 100%;
+}
+
+html {
+    background-image: linear-gradient(70deg, #fff2b3, white, #99abcc);
+}
+
+body {
+    width: 1024px;
+    max-width: 90%;
+    margin: auto;
+}
+
+h1, h2, h3, h4, h5, h6, strong, b {
+    font-weight: 600;
+}
+
+a {
+    text-decoration: none;
+    color: #3AAEAA;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+.heading {
+    display: flex;
+    flex-direction: row;
+    justify-content: left;
+    align-items: center;
+    margin: 1rem 0;
+    flex-wrap: wrap;
+}
+
+.logo {
+    margin-right: 1.5rem;
+    border-radius: 1ex;
+    box-shadow: 0 2px 2px rgba(0, 0, 0, 0.25);
+    height: 5rem;
+}
+
+h1 {
+    margin: 0;
+    font-size: 4rem;
+}
+
+.badges {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.badge {
+    height: 3.5rem;
+    margin: 0 1rem 1rem;
+}
+
+.badge img {
+    height: 100%;
+}
+
+@media all and (max-width: 480px) {
+
+}

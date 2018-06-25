@@ -1,12 +1,36 @@
 @()(implicit requestHeader: RequestHeader)
 
-@main("Welcome to Somnus") {
-  <h1>Welcome to Somnus*</h1>
+@main("Somnus") {
+    <div class="heading">
+        <img src="@routes.Assets.versioned("images/logo.svg")" alt="somnus logo" class="logo">
+        <h1>Somnus</h1>
+    </div>
+    <p>
+        Somnus is a platform for easy surveying in the context scientific studies.
+        Using a mobile app, participants digitally fill out questionnaires and are regularly notified
+        about new questions.
+    </p>
+    <p>
+        This open source application is being developed at the
+        <a href="http://www.chronobiology.ch/" target="_blank">Centre for Chronobiology</a>
+        in Basel and its source code can be found
+        <a href="https://github.com/upkbs-chronobiology" target="_blank">on Github</a>.
+    </p>
 
-  <em>CSRF Token (as JSON tuple):</em>
-  <code>"@helper.CSRF.getToken.name": "@helper.CSRF.getToken.value"</code>
+    <h2>Mobile apps</h2>
+    <p>The Somnus mobile app is available for Android and iOS. Links are yet to be inserted here...</p>
+    <div class="badges">
+        <a href="https://play.google.com/store/apps/details?id=ch.somnus.app" target="_blank" class="badge">
+            <img src="@routes.Assets.versioned("images/google-play-badge.png")" alt="Google play badge">
+        </a>
+        <a href="https://theappstore.org/search.php?search=somnus&platform=software" target="_blank" class="badge">
+            <img src="@routes.Assets.versioned("images/app-store-badge.svg")" alt="App store badge">
+        </a>
+    </div>
 
-  <hr>
-
-  <sub>*It's a code name (Somnus is the Roman god of sleep)</sub>
+    <h2>Webapp</h2>
+    <p>
+        A browser version of Somnus is available at
+        <strong><a href="https://webapp.somnus.ch/" target="_blank">webapp.somnus.ch</a></strong>.
+    </p>
 }
