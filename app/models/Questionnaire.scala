@@ -51,7 +51,7 @@ class QuestionnaireTable(tag: Tag) extends Table[Questionnaire](tag, "questionna
 }
 
 @Singleton
-class QuestionnairesRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) {
+class QuestionnairesRepository @Inject()(dbConfigProvider: DatabaseConfigProvider, questionsRepository: QuestionsRepository) {
 
   private def questionnaires = TableQuery[QuestionnaireTable]
   private def questions = TableQuery[QuestionTable]
@@ -85,6 +85,19 @@ class QuestionnairesRepository @Inject()(dbConfigProvider: DatabaseConfigProvide
     dbConfig().db.run(questions.filter(_.questionnaireId === id).result).map(_.size).flatMap {
       case 0 => dbConfig().db.run(questionnaires.filter(_.id === id).delete)
       case _ => Future.failed(new IllegalArgumentException(s"Cannot delete questionnaire $id because it contains questions"))
+    }
+  }
+
+  def duplicate(id: Long): Future[Questionnaire] = {
+    this.read(id).flatMap {
+      case None => throw new IllegalArgumentException(s"No questionnaire with id $id")
+      case Some(questionnaire) =>
+        this.create(questionnaire) flatMap { newQuestionnaire =>
+          questionsRepository.listByQuestionnaire(id) flatMap { qs =>
+            Future.sequence(qs.map(q => new Question(0, q.content, q.answerType, q.answerLabels, q.answerRange, Some(newQuestionnaire.id)))
+              .map(q => questionsRepository.add(q)))
+          } map { _ => newQuestionnaire }
+        }
     }
   }
 

@@ -34,6 +34,7 @@ class QuestionnaireControllerSpec extends PlaySpec
         status(doRequest(POST, s"/v1/questionnaires", Some(qJson("Foo bar", None)))) must equal(UNAUTHORIZED)
         status(doRequest(PUT, s"/v1/questionnaires/${questionnaire.id}", Some(qJson("Foo bar", None)))) must equal(UNAUTHORIZED)
         status(doRequest(DELETE, s"/v1/questionnaires/${questionnaire.id}")) must equal(UNAUTHORIZED)
+        status(doRequest(POST, s"/v1/questionnaires/${questionnaire.id}/duplicate")) must equal(UNAUTHORIZED)
         status(doRequest(GET, s"/v1/questionnaires/${questionnaire.id}/questions")) must equal(UNAUTHORIZED)
       }
     }
@@ -44,6 +45,7 @@ class QuestionnaireControllerSpec extends PlaySpec
         status(doAuthenticatedRequest(POST, s"/v1/questionnaires", Some(qJson("Foo bar", None)))) must equal(FORBIDDEN)
         status(doAuthenticatedRequest(PUT, s"/v1/questionnaires/${questionnaire.id}", Some(qJson("Foo bar", None)))) must equal(FORBIDDEN)
         status(doAuthenticatedRequest(DELETE, s"/v1/questionnaires/${questionnaire.id}")) must equal(FORBIDDEN)
+        status(doAuthenticatedRequest(POST, s"/v1/questionnaires/${questionnaire.id}/duplicate")) must equal(FORBIDDEN)
       }
 
       "list questions for specific questionnaire" in {
@@ -103,6 +105,31 @@ class QuestionnaireControllerSpec extends PlaySpec
 
       "reject deleting questionnaires containing questions" in {
         status(doAuthenticatedRequest(DELETE, s"/v1/questionnaires/${questionnaire.id}")) must equal(BAD_REQUEST)
+      }
+
+      "refuse to duplicate inexistent questionnaires" in {
+        status(doAuthenticatedRequest(POST, "/v1/questionnaires/999/duplicate")) must equal(BAD_REQUEST)
+      }
+
+      "duplicate existing questionnaires" in {
+        val response = doAuthenticatedRequest(POST, s"/v1/questionnaires/${questionnaire.id}/duplicate")
+        status(response) must equal(CREATED)
+
+        val dupeJson = contentAsJson(response)
+        // TODO: More generic comparison (all properties except id)
+        dupeJson("id").as[Long] must not equal questionnaire.id
+        dupeJson("name").as[String] must equal(questionnaire.name)
+        dupeJson("studyId").as[Long] must equal(questionnaire.studyId.get)
+
+        val dupeQuestions = doSync(inject[QuestionsRepository].listByQuestionnaire(dupeJson("id").as[Long]))
+        dupeQuestions.size must equal(1)
+        // TODO: More generic comparison (all properties except id)
+        dupeQuestions.head.id must not equal question.id
+        dupeQuestions.head.content must equal(question.content)
+        dupeQuestions.head.answerType must equal(question.answerType)
+        dupeQuestions.head.answerLabels must equal(question.answerLabels)
+        dupeQuestions.head.answerRange must equal(question.answerRange)
+        dupeQuestions.head.questionnaireId.get must equal(dupeJson("id").as[Long])
       }
     }
   }

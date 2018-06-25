@@ -50,6 +50,13 @@ class QuestionnaireController @Inject()(
     }
   }
 
+  def duplicate(id: Long) = silhouette.SecuredAction(ForEditors).async { implicit request =>
+    questionnaires.duplicate(id).map(q => Created(Json.toJson(q)))
+      .recover {
+        case e: IllegalArgumentException => BadRequest(JsonError(e.getMessage))
+      }
+  }
+
   // XXX: Restrict to users part of this questionnaire's study (and editors)?
   def getQuestions(questionnaireId: Long) = silhouette.SecuredAction.async { implicit request =>
     questionsRepo.listByQuestionnaire(questionnaireId)
