@@ -68,6 +68,12 @@ testScalastyle := scalastyle.in(Test).toTask("").value
 (scalastyleConfig in Test) := baseDirectory.value / "scalastyle-test-config.xml"
 
 
+// ~ Integration testing ~
+
+addCommandAlias("testServe", "testProd -Dplay.http.secret.key='dummy-secret' " +
+  "-Dconfig.file=conf/application.test.conf -DtestServe=true")
+
+
 // ~ Docker publication ~
 
 dockerEntrypoint := Seq("bin/somnus", "-Dconfig.file=conf/application.dist.conf")

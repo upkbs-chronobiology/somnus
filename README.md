@@ -25,6 +25,11 @@ All tests are executed with sbt's `test` goal, e.g. `sbt test` from the command 
 During tests, a different config file (`application.test.conf`) is used, and sbt is configured to automatically pick it up.
 If you want to run tests from an IDE, you might need to set the following VM parameter manually: `-Dconfig.file=conf/application.test.conf`
 
+### Integration testing
+
+For integration tests running against this back end, it is best to start it with the `testServe` command (`sbt testServe`).
+This uses test configuration (in particular a volatile, in-memory db) and auto-creates a test user.
+
 ## Release
 
 A new docker prod release can be done by running `sbt release`.
