@@ -63,6 +63,12 @@ class AuthControllerSpec extends PlaySpec
       status(response) must equal(OK)
       header("X-Auth-Token", response).get.length must equal(256)
     }
+
+    "accept credentials case-insensitively" in {
+      val response = doRequest(POST, "/v1/auth/login", Some(signUpJson("john KARCIS", "notagoat")))
+      status(response) must equal(OK)
+      header("X-Auth-Token", response).get.length must equal(256)
+    }
   }
 
   "AuthController password reset endpoint" when {

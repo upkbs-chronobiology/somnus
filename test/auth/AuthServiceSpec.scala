@@ -35,5 +35,19 @@ class AuthServiceSpec extends PlaySpec with GuiceOneAppPerSuite with Injecting w
         e mustBe an[IllegalArgumentException]
       }
     }
+
+    "refuse to register with existing names, case-insensitively" in {
+      val user = doSync(authService.register("Johnny B. Goode", Some("12345678")))
+
+      user.name must equal("Johnny B. Goode")
+
+      Seq("Johnny B. Goode", "johnny b. goode", "jOhNNy b. GOoDe") foreach { username =>
+        val eventualUser = authService.register(username, Some("12345678"))
+        ScalaFutures.whenReady(eventualUser.failed) { e =>
+          e mustBe an[IllegalArgumentException]
+          e.getMessage must include("exists")
+        }
+      }
+    }
   }
 }

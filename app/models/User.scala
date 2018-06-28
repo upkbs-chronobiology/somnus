@@ -50,14 +50,20 @@ class UserRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) extends
 
   def users = TableQuery[UserTable]
 
+  private def userByName(name: String) = users.filter(_.name.toLowerCase === name.toLowerCase)
+
   def dbConfig = dbConfigProvider.get[JdbcProfile]
 
   def create(user: User): Future[User] = {
-    dbConfig.db.run((users returning users.map(_.id)) += user)
-      .flatMap(this.get(_).flatMap {
-        case None => Future.failed(new IllegalStateException("User could not be loaded after creation"))
-        case Some(u) => Future.successful(u)
-      })
+    this.get(user.name) flatMap {
+      case Some(_) => throw new IllegalArgumentException("User already exists")
+      case None =>
+        dbConfig.db.run((users returning users.map(_.id)) += user)
+          .flatMap(this.get(_).flatMap {
+            case None => Future.failed(new IllegalStateException("User could not be loaded after creation"))
+            case Some(u) => Future.successful(u)
+          })
+    }
   }
 
   def get(id: Long): Future[Option[User]] = {
@@ -65,17 +71,15 @@ class UserRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) extends
   }
 
   def get(name: String): Future[Option[User]] = {
-    dbConfig.db.run(users.filter(_.name === name).result.headOption)
+    dbConfig.db.run(userByName(name).result.headOption)
   }
 
   override def retrieve(loginInfo: LoginInfo): Future[Option[User]] = {
-    // assume we only have simple login (by user name)
-    val name = loginInfo.providerKey
-    dbConfig.db.run(users.filter(_.name === name).result.headOption)
+    this.get(loginInfo.providerKey)
   }
 
   def updatePassword(loginInfo: LoginInfo, passwordId: Option[Long]): Future[Int] = {
-    val query = users.filter(_.name === loginInfo.providerKey)
+    val query = userByName(loginInfo.providerKey)
       .map(_.passwordId.?).update(passwordId)
     dbConfig.db.run(query)
   }
@@ -89,7 +93,7 @@ class UserRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) extends
   }
 
   def delete(name: String): Future[Int] = {
-    dbConfig.db.run(users.filter(_.name === name).delete)
+    dbConfig.db.run(userByName(name).delete)
   }
 
   def setRole(id: Long, role: Option[Role]): Future[Int] = {
@@ -98,7 +102,7 @@ class UserRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) extends
   }
 
   def setRole(name: String, role: Option[Role]): Future[Int] = {
-    val query = users.filter(_.name === name).map(_.role.?).update(role.map(_.toString))
+    val query = userByName(name).map(_.role.?).update(role.map(_.toString))
     dbConfig.db.run(query)
   }
 }
