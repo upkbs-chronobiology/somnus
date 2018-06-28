@@ -54,14 +54,30 @@ h1 {
 }
 
 .badge {
-    height: 3.5rem;
     margin: 0 1rem 1rem;
 }
 
 .badge img {
-    height: 100%;
+    display: block;
+    height: 3.5rem;
 }
 
-@media all and (max-width: 480px) {
+.screenshots {
+    display: flex;
+    flex-wrap: wrap;
+}
 
+.screenshot {
+    margin: 1rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.25);
+}
+
+.screenshot img {
+    display: block;
+    max-height: 20rem;
+}
+
+.screenshot,
+.screenshot img {
+    border-radius: 0.25rem;
 }
