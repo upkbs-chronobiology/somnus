@@ -158,8 +158,8 @@ class AuthControllerSpec extends PlaySpec
         pwReset("userId").as[Long] must equal(jeff.id)
 
         val expiry = pwReset("expiry").as[Long]
-        expiry must be >= Instant.now().plus(Duration.ofHours(23)).toEpochMilli
-        expiry must be <= Instant.now().plus(Duration.ofHours(25)).toEpochMilli
+        expiry must be >= Instant.now().plus(Duration.ofDays(13)).toEpochMilli
+        expiry must be <= Instant.now().plus(Duration.ofDays(15)).toEpochMilli
       }
 
       "reject unknown tokens" in {

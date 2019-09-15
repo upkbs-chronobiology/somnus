@@ -128,8 +128,8 @@ class AuthController @Inject()(
         Future.successful(Forbidden(JsonError(
           "Generating reset tokens for users of same or higher permission level is not allowed")))
       case Some(_) =>
-        val tomorrow = Timestamp.from(Instant.now().plus(Duration.ofDays(1)))
-        authService.generateResetToken(userId, tomorrow)
+        val inTwoWeeks = Timestamp.from(Instant.now().plus(Duration.ofDays(14)))
+        authService.generateResetToken(userId, inTwoWeeks)
           .map(pwReset => Created(Json.toJson(pwReset)))
           .recover {
             case e: ItemNotFoundException => NotFound(JsonError(e.getMessage))
