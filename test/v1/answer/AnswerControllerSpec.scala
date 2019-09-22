@@ -63,6 +63,24 @@ class AnswerControllerSpec extends PlaySpec
         firstNewAnswer("content").as[String] must equal("Some answer X")
         firstNewAnswer("createdLocal").as[String] must equal("2018-05-16T14:08:43+02:00")
       }
+
+      "properly deal with zero-truncated timestamps" in {
+        val questionX = doSync(questionsRepo.add(Question(0, "My question X", AnswerType.Text)))
+        val questionY = doSync(questionsRepo.add(Question(0, "My question Y", AnswerType.Text)))
+
+        val data = Json.arr(
+          answerJson(questionX.id, "Some answer X", "2019-09-21T13:14:15.98+02:00"),
+          answerJson(questionY.id, "Some answer Y", "2019-09-21T13:14:15.9876+02:00")
+        )
+        val response = doAuthenticatedRequest(POST, "/v1/answers", Some(data))
+        status(response) must equal(CREATED)
+
+        val newAnswers = contentAsJson(response).as[JsArray].value
+        val firstNewAnswer = newAnswers(0)
+        firstNewAnswer("createdLocal").as[String] must equal("2019-09-21T13:14:15.980+02:00")
+        val secondNewAnswer = newAnswers(1)
+        secondNewAnswer("createdLocal").as[String] must equal("2019-09-21T13:14:15.987600+02:00")
+      }
     }
 
     "logged in as researcher" should {

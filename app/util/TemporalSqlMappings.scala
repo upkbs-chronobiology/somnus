@@ -12,7 +12,18 @@ import slick.jdbc.H2Profile.api._
 
 trait TemporalSqlMappings {
 
-  protected val H2_INCLUDING_ISO_8601 = DateTimeFormatter.ofPattern("yyyy-MM-dd[ ]['T']HH:mm:ss[.SSS][XXX][X]")
+  // TODO: Find a better solution for this.
+  protected val H2_INCLUDING_ISO_8601 = DateTimeFormatter.ofPattern("yyyy-MM-dd[ ]['T']HH:mm:ss" +
+    "[.SSSSSSSSS]" +
+    "[.SSSSSSSS]" +
+    "[.SSSSSSS]" +
+    "[.SSSSSS]" +
+    "[.SSSSS]" +
+    "[.SSSS]" +
+    "[.SSS]" +
+    "[.SS]" +
+    "[.S]" +
+    "[XXX][X]")
 
   implicit def localDate = MappedColumnType.base[LocalDate, Date](
     localDate => Date.valueOf(localDate),
