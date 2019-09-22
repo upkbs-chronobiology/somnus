@@ -1,7 +1,6 @@
 package modules
 
 import scala.concurrent.ExecutionContext.Implicits.global
-
 import auth.DefaultEnv
 import auth.PasswordAuthInfoDAO
 import auth.TokenRepository
@@ -21,6 +20,7 @@ import com.mohiva.play.silhouette.impl.util.SecureRandomIDGenerator
 import com.mohiva.play.silhouette.password.BCryptPasswordHasher
 import com.mohiva.play.silhouette.persistence.daos.DelegableAuthInfoDAO
 import com.mohiva.play.silhouette.persistence.repositories.DelegableAuthInfoRepository
+import models.PasswordRepository
 import models.UserRepository
 import models.UserService
 import net.codingwell.scalaguice.ScalaModule
@@ -30,7 +30,6 @@ class SilhouetteModule extends AbstractModule with ScalaModule {
   override def configure(): Unit = {
     bind[Silhouette[DefaultEnv]].to[SilhouetteProvider[DefaultEnv]]
     bind[UserService].to[UserRepository]
-    bind[DelegableAuthInfoDAO[PasswordInfo]].to[PasswordAuthInfoDAO]
 
     bind[IDGenerator].toInstance(new SecureRandomIDGenerator)
     bind[Clock].toInstance(Clock())
@@ -38,6 +37,12 @@ class SilhouetteModule extends AbstractModule with ScalaModule {
 
     bind[UserGenerator].asEagerSingleton()
   }
+
+  @Provides
+  def provideDelegableAuthInfoDAO(
+    userRepository: UserRepository,
+    passwordRepository: PasswordRepository
+  ): DelegableAuthInfoDAO[PasswordInfo] = new PasswordAuthInfoDAO(userRepository, passwordRepository)
 
   @Provides
   def providePasswordHasherRegistry(

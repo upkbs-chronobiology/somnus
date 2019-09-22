@@ -130,12 +130,11 @@ trait Authenticated extends BeforeAndAfterAll with GuiceOneAppPerSuite with Inje
       remoteAddress: String,
       version: String,
       id: Long,
-      tags: Map[String, String],
       secure: Boolean,
       clientCertificateChain: Option[Seq[X509Certificate]],
       attrs: TypedMap
     ): FakeRequest[A] = {
-      super.apply(method, uri, addToken(headers, role), body, remoteAddress, version, id, tags, secure, clientCertificateChain, attrs)
+      super.apply(method, uri, addToken(headers, role), body, remoteAddress, version, id, secure, clientCertificateChain, attrs)
     }
   }
 

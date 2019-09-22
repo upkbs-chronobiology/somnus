@@ -7,14 +7,14 @@ organization := "ch.chronobiology"
 
 lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
-scalaVersion := "2.12.3"
+scalaVersion := "2.12.10"
 
 scalacOptions ++= Seq("-Ywarn-unused")
 
 resolvers += Resolver.jcenterRepo
 
 libraryDependencies += guice
-libraryDependencies += "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.2" % Test
+libraryDependencies += "org.scalatestplus.play" %% "scalatestplus-play" % "4.0.3" % Test
 javaOptions in Test += "-Dconfig.file=conf/application.test.conf"
 
 libraryDependencies += "com.h2database" % "h2" % "1.4.197"
@@ -24,18 +24,18 @@ libraryDependencies ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "com.mohiva" %% "play-silhouette" % "5.0.0",
-  "com.mohiva" %% "play-silhouette-password-bcrypt" % "5.0.0",
-  "com.mohiva" %% "play-silhouette-crypto-jca" % "5.0.0",
-  "com.mohiva" %% "play-silhouette-persistence" % "5.0.0",
-  "com.mohiva" %% "play-silhouette-testkit" % "5.0.0" % "test"
+  "com.mohiva" %% "play-silhouette" % "6.1.0",
+  "com.mohiva" %% "play-silhouette-password-bcrypt" % "6.1.0",
+  "com.mohiva" %% "play-silhouette-crypto-jca" % "6.1.0",
+  "com.mohiva" %% "play-silhouette-persistence" % "6.1.0",
+  "com.mohiva" %% "play-silhouette-testkit" % "6.1.0" % "test"
 )
 
-libraryDependencies += "net.codingwell" %% "scala-guice" % "4.1.1"
+libraryDependencies += "net.codingwell" %% "scala-guice" % "4.2.6"
 
-libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.2.18"
+libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.2.28"
 
-libraryDependencies += "com.opencsv" % "opencsv" % "4.1"
+libraryDependencies += "com.opencsv" % "opencsv" % "4.6"
 
 wartremoverErrors in(Compile, compile) ++= Warts.unsafe diff List(
   Wart.NonUnitStatements,

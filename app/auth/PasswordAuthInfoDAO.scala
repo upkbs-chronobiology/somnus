@@ -2,7 +2,6 @@ package auth
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-
 import com.mohiva.play.silhouette.api.LoginInfo
 import com.mohiva.play.silhouette.api.util.PasswordInfo
 import com.mohiva.play.silhouette.persistence.daos.DelegableAuthInfoDAO
@@ -11,9 +10,13 @@ import models.Password
 import models.PasswordRepository
 import models.UserRepository
 
+import scala.reflect.ClassTag
+
 class PasswordAuthInfoDAO @Inject()(
   userRepository: UserRepository,
   passwordRepository: PasswordRepository
+)(
+  implicit val classTag: ClassTag[PasswordInfo]
 ) extends DelegableAuthInfoDAO[PasswordInfo] {
 
   override def find(loginInfo: LoginInfo): Future[Option[PasswordInfo]] = {
