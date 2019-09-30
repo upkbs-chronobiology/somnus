@@ -25,6 +25,9 @@ import models.UserRepository
 import models.UserService
 import net.codingwell.scalaguice.ScalaModule
 
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
+
 class SilhouetteModule extends AbstractModule with ScalaModule {
 
   override def configure(): Unit = {
@@ -65,8 +68,10 @@ class SilhouetteModule extends AbstractModule with ScalaModule {
     idGenerator: IDGenerator,
     clock: Clock): AuthenticatorService[BearerTokenAuthenticator] = {
 
-    // no custom config at the moment - otherwise, read from configuration here
-    val config = BearerTokenAuthenticatorSettings()
+    // XXX: Should we read from configuration here?
+    val maxTimeout = 10 * 7 days // 10 weeks
+    val idleTimeout = Some(2 * 7 days) // 2 weeks
+    val config = BearerTokenAuthenticatorSettings(authenticatorExpiry = maxTimeout, authenticatorIdleTimeout = idleTimeout)
 
     new BearerTokenAuthenticatorService(config, TokenRepository, idGenerator, clock)
   }
