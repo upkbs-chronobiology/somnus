@@ -37,6 +37,8 @@ libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.2.18"
 
 libraryDependencies += "com.opencsv" % "opencsv" % "4.1"
 
+libraryDependencies += "javax.xml.bind" % "jaxb-api" % "2.3.0"
+
 wartremoverErrors in(Compile, compile) ++= Warts.unsafe diff List(
   Wart.NonUnitStatements,
   Wart.DefaultArguments,
