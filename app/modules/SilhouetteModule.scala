@@ -66,6 +66,7 @@ class SilhouetteModule extends AbstractModule with ScalaModule {
   @Provides
   def provideAuthenticatorService(
     idGenerator: IDGenerator,
+    tokenRepository: TokenRepository,
     clock: Clock): AuthenticatorService[BearerTokenAuthenticator] = {
 
     // XXX: Should we read from configuration here?
@@ -73,7 +74,7 @@ class SilhouetteModule extends AbstractModule with ScalaModule {
     val idleTimeout = Some(2 * 7 days) // 2 weeks
     val config = BearerTokenAuthenticatorSettings(authenticatorExpiry = maxTimeout, authenticatorIdleTimeout = idleTimeout)
 
-    new BearerTokenAuthenticatorService(config, TokenRepository, idGenerator, clock)
+    new BearerTokenAuthenticatorService(config, tokenRepository, idGenerator, clock)
   }
 
   @Provides

@@ -78,6 +78,8 @@ class AuthController @Inject()(
 )(implicit ec: ExecutionContext)
   extends RestBaseController(rcc) with Logging {
 
+  private val ResetTokenValidityDays = 14
+
   def signUp = Action.async { implicit request =>
     SignUpForm.form.bindFromRequest.fold(
       badForm => Future.successful(BadRequest(badForm.errorsAsJson)), // XXX: More info?
@@ -128,7 +130,7 @@ class AuthController @Inject()(
         Future.successful(Forbidden(JsonError(
           "Generating reset tokens for users of same or higher permission level is not allowed")))
       case Some(_) =>
-        val inTwoWeeks = Timestamp.from(Instant.now().plus(Duration.ofDays(14)))
+        val inTwoWeeks = Timestamp.from(Instant.now().plus(Duration.ofDays(ResetTokenValidityDays)))
         authService.generateResetToken(userId, inTwoWeeks)
           .map(pwReset => Created(Json.toJson(pwReset)))
           .recover {

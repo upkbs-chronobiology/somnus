@@ -2,6 +2,8 @@ package util
 
 import java.sql.Date
 import java.sql.Time
+import java.sql.Timestamp
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.OffsetDateTime
@@ -31,8 +33,13 @@ trait TemporalSqlMappings {
   )
 
   implicit def localTime = MappedColumnType.base[LocalTime, Time](
-    localTime => Time.valueOf(localTime),
+    localTime => java.sql.Time.valueOf(localTime),
     time => time.toLocalTime
+  )
+
+  implicit def instant = MappedColumnType.base[Instant, Timestamp](
+    Timestamp.from,
+    _.toInstant
   )
 
   implicit def offsetDateTime = MappedColumnType.base[OffsetDateTime, String](

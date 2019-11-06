@@ -55,6 +55,7 @@ class UserRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) extends
   def dbConfig = dbConfigProvider.get[JdbcProfile]
 
   def create(user: User): Future[User] = {
+    // FIXME: Potential race condition (and not very efficient) - try to do everything in a single query/transaction
     this.get(user.name) flatMap {
       case Some(_) => throw new IllegalArgumentException("User already exists")
       case None =>
