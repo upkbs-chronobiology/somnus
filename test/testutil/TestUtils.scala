@@ -36,6 +36,6 @@ trait TestUtils extends GuiceOneAppPerSuite {
   }
 
   protected def doSync[T](action: Awaitable[T]): T = {
-    Await.result(action, Duration(1, TimeUnit.SECONDS))
+    Await.result(action, Duration(2, TimeUnit.SECONDS))
   }
 }
