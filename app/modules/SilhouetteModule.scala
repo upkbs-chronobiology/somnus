@@ -1,6 +1,8 @@
 package modules
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
+import scala.reflect.ClassTag
 
 import auth.DefaultEnv
 import auth.PasswordAuthInfoDAO
@@ -17,6 +19,7 @@ import com.mohiva.play.silhouette.api.services.AuthenticatorService
 import com.mohiva.play.silhouette.api.util._
 import com.mohiva.play.silhouette.impl.authenticators._
 import com.mohiva.play.silhouette.impl.providers.CredentialsProvider
+import com.mohiva.play.silhouette.impl.util.PlayCacheLayer
 import com.mohiva.play.silhouette.impl.util.SecureRandomIDGenerator
 import com.mohiva.play.silhouette.password.BCryptPasswordHasher
 import com.mohiva.play.silhouette.persistence.daos.DelegableAuthInfoDAO
@@ -25,15 +28,15 @@ import models.UserRepository
 import models.UserService
 import net.codingwell.scalaguice.ScalaModule
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration._
-
 class SilhouetteModule extends AbstractModule with ScalaModule {
 
   override def configure(): Unit = {
     bind[Silhouette[DefaultEnv]].to[SilhouetteProvider[DefaultEnv]]
     bind[UserService].to[UserRepository]
     bind[DelegableAuthInfoDAO[PasswordInfo]].to[PasswordAuthInfoDAO]
+
+    bind[CacheLayer].to[PlayCacheLayer]
+    bind[ClassTag[BearerTokenAuthenticator]].toInstance(ClassTag(classOf[BearerTokenAuthenticator]))
 
     bind[IDGenerator].toInstance(new SecureRandomIDGenerator)
     bind[Clock].toInstance(Clock())
