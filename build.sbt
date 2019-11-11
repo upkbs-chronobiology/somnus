@@ -39,8 +39,6 @@ libraryDependencies += "com.opencsv" % "opencsv" % "4.1"
 
 libraryDependencies += "javax.xml.bind" % "jaxb-api" % "2.3.0"
 
-libraryDependencies += ehcache
-
 wartremoverErrors in(Compile, compile) ++= Warts.unsafe diff List(
   Wart.NonUnitStatements,
   Wart.DefaultArguments,

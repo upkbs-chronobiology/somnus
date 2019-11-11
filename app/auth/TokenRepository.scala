@@ -11,7 +11,6 @@ import com.mohiva.play.silhouette.api.LoginInfo
 import com.mohiva.play.silhouette.api.repositories.AuthenticatorRepository
 import com.mohiva.play.silhouette.impl.authenticators.BearerTokenAuthenticator
 import com.mohiva.play.silhouette.impl.providers.CredentialsProvider
-import com.mohiva.play.silhouette.persistence.repositories.CacheAuthenticatorRepository
 import javax.inject.Inject
 import javax.inject.Singleton
 import org.joda.time.DateTime
@@ -52,8 +51,7 @@ class UserSessionTable(tag: Tag) extends Table[UserSession](tag, "user_session")
 }
 
 @Singleton
-class TokenRepository @Inject()(dbConfigProvider: DatabaseConfigProvider, credentialsProvider: CredentialsProvider,
-  cacheRepo: CacheAuthenticatorRepository[BearerTokenAuthenticator])
+class TokenRepository @Inject()(dbConfigProvider: DatabaseConfigProvider, credentialsProvider: CredentialsProvider)
   extends AuthenticatorRepository[BearerTokenAuthenticator] {
 
   def sessions = TableQuery[UserSessionTable]
@@ -61,12 +59,8 @@ class TokenRepository @Inject()(dbConfigProvider: DatabaseConfigProvider, creden
   def dbConfig = dbConfigProvider.get[JdbcProfile]
 
   override def find(id: String): Future[Option[BearerTokenAuthenticator]] = {
-    cacheRepo.find(id) flatMap {
-      case Some(a) => Future.successful(Some(a))
-      case None =>
-        val sessionById = sessions.filter(_.id === id).result.headOption
-        dbConfig.db.run(sessionById).map(_.map(UserSession.toBearerTokenAuthenticator(_, credentialsProvider)))
-    }
+    val sessionById = sessions.filter(_.id === id).result.headOption
+    dbConfig.db.run(sessionById).map(_.map(UserSession.toBearerTokenAuthenticator(_, credentialsProvider)))
   }
 
   override def add(authenticator: BearerTokenAuthenticator): Future[BearerTokenAuthenticator] = {
@@ -74,23 +68,20 @@ class TokenRepository @Inject()(dbConfigProvider: DatabaseConfigProvider, creden
     this.find(authenticator.id) flatMap {
       case Some(_) => throw new IllegalArgumentException(s"BearerTokenAuthenticator with id ${authenticator.id} already exists")
       case None =>
-        cacheRepo.add(authenticator) flatMap (_ =>
-          dbConfig.db.run(sessions += UserSession.fromBearerTokenAuthenticator(authenticator)) map {
-            case 1 => authenticator
-            case 0 => throw new IllegalStateException("Insertion of authenticator to database failed")
-            case _ => throw new IllegalStateException("Number of authenticator insertions was neither 0 nor 1")
-          })
+        dbConfig.db.run(sessions += UserSession.fromBearerTokenAuthenticator(authenticator)) map {
+          case 1 => authenticator
+          case 0 => throw new IllegalStateException("Insertion of authenticator to database failed")
+          case _ => throw new IllegalStateException("Number of authenticator insertions was neither 0 nor 1")
+        }
     }
   }
 
   override def update(authenticator: BearerTokenAuthenticator): Future[BearerTokenAuthenticator] = {
-    cacheRepo.update(authenticator) flatMap (_ =>
-      dbConfig.db.run(sessions.filter(_.id === authenticator.id)
-        .update(UserSession.fromBearerTokenAuthenticator(authenticator))).map(_ => authenticator))
+    dbConfig.db.run(sessions.filter(_.id === authenticator.id)
+      .update(UserSession.fromBearerTokenAuthenticator(authenticator))).map(_ => authenticator)
   }
 
   override def remove(id: String): Future[Unit] = {
-    cacheRepo.remove(id) flatMap (_ =>
-      dbConfig.db.run(sessions.filter(_.id === id).delete).map(_ => Unit))
+    dbConfig.db.run(sessions.filter(_.id === id).delete).map(_ => Unit)
   }
 }
