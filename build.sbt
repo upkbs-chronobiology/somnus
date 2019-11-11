@@ -7,7 +7,7 @@ organization := "ch.chronobiology"
 
 lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
-scalaVersion := "2.12.3"
+scalaVersion := "2.12.10"
 
 scalacOptions ++= Seq("-Ywarn-unused")
 
