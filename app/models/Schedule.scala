@@ -106,9 +106,19 @@ class SchedulesRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) {
   }
 
   def create(schedule: Schedule): Future[Schedule] = {
-    validate(schedule) flatMap { _ =>
-      dbConfig.db.run((schedules returning schedules.map(_.id)) += schedule)
-        .flatMap(this.get(_).map(_.getOrElse(throw new IllegalStateException("Failed to load just created schedule"))))
+    // FIXME: Not really atomic/transactional (why?)
+    // We just sync in code for now, as it's the only db manipulator anyway so far
+    this.synchronized {
+      val exists = schedules.filter(s => s.userId === schedule.userId.bind &&
+        s.questionnaireId === schedule.questionnaireId.bind).exists
+      validate(schedule) flatMap { _ =>
+        dbConfig.db.run((exists.result flatMap {
+          case true => throw new IllegalArgumentException(
+            s"Schedule for user ${schedule.userId} and questionnaire ${schedule.questionnaireId} already exists")
+          case false => (schedules returning schedules.map(_.id)) += schedule
+        }).transactionally)
+          .flatMap(this.get(_).map(_.getOrElse(throw new IllegalStateException("Failed to load just created schedule"))))
+      }
     }
   }
 
