@@ -11,6 +11,9 @@ GET           /assets/*file                              controllers.Assets.vers
 
 # REST API
 
+# General
+GET           /v1/poke                                   v1.GeneralController.poke
+
 # Auth
 POST          /v1/auth/signup                            v1.auth.AuthController.signUp
 POST          /v1/auth/login                             v1.auth.AuthController.logIn
@@ -55,7 +58,7 @@ GET           /v1/questionnaires                         v1.questionnaire.Questi
 POST          /v1/questionnaires                         v1.questionnaire.QuestionnaireController.add
 PUT           /v1/questionnaires/:id                     v1.questionnaire.QuestionnaireController.update(id: Long)
 DELETE        /v1/questionnaires/:id                     v1.questionnaire.QuestionnaireController.delete(id: Long)
-POST           /v1/questionnaires/:id/duplicate           v1.questionnaire.QuestionnaireController.duplicate(id: Long)
+POST          /v1/questionnaires/:id/duplicate           v1.questionnaire.QuestionnaireController.duplicate(id: Long)
 GET           /v1/questionnaires/:id/questions           v1.questionnaire.QuestionnaireController.getQuestions(id: Long)
 GET           /v1/questionnaires/:id/schedules           v1.schedule.ScheduleController.listByQuestionnaire(id: Long)
 GET           /v1/questionnaires/:id/answers/mine        v1.answer.AnswerController.listMineByQuestionnaire(id: Long)
