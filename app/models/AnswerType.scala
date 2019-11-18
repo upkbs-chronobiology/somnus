@@ -11,6 +11,8 @@ object AnswerType extends Enumeration {
   val RangeDiscrete = Value("range-discrete")
   val MultipleChoiceSingle = Value("multiple-choice-single")
   val MultipleChoiceMany = Value("multiple-choice-many")
+  val TimeOfDay = Value("time-of-day")
+  val Date = Value("date")
 
   implicit val answerTypeMapper = MappedColumnType.base[AnswerType, String](
     answerType => answerType.toString,

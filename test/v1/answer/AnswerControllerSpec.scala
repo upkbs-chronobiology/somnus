@@ -167,6 +167,16 @@ class AnswerControllerSpec extends PlaySpec
         status(postAnswer(question.id, "0,1,2")) must equal(CREATED)
       }
 
+      "accept time answers" in {
+        val question = doSync(questionsRepo.add(Question(0, "When did humans appear?", AnswerType.TimeOfDay)))
+        status(postAnswer(question.id, "23:55:04")) must equal(201)
+      }
+
+      "accept date answers" in {
+        val question = doSync(questionsRepo.add(Question(0, "What is your birthday?", AnswerType.Date)))
+        status(postAnswer(question.id, "2020-02-29")) must equal(201)
+      }
+
       "reject text answers to continuous-number type questions" in {
         val question = doSync(questionsRepo.add(Question(0, "My question X", AnswerType.RangeContinuous)))
         status(postAnswer(question.id, "This should not be text")) must equal(400)
@@ -223,6 +233,16 @@ class AnswerControllerSpec extends PlaySpec
         status(postAnswer(question.id, "foobar")) must equal(BAD_REQUEST)
         status(postAnswer(question.id, "0,1.2")) must equal(BAD_REQUEST)
         status(postAnswer(question.id, "foobar,1")) must equal(BAD_REQUEST)
+      }
+
+      "reject invalid time answers" in {
+        val question = doSync(questionsRepo.add(Question(0, "Question about time", AnswerType.TimeOfDay)))
+        status(postAnswer(question.id, "Once upon a time")) must equal(400)
+      }
+
+      "reject invalid date answers" in {
+        val question = doSync(questionsRepo.add(Question(0, "Question about date", AnswerType.Date)))
+        status(postAnswer(question.id, "The day after tomorrow")) must equal(400)
       }
     }
   }

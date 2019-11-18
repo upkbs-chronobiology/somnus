@@ -160,6 +160,8 @@ class QuestionsRepository @Inject()(dbConfigProvider: DatabaseConfigProvider, an
           case AnswerType.RangeContinuous => Serialization.parseFloatRange(range)
           case AnswerType.MultipleChoiceSingle =>
           case AnswerType.MultipleChoiceMany =>
+          case AnswerType.TimeOfDay =>
+          case AnswerType.Date =>
         }
       }
 
@@ -172,6 +174,8 @@ class QuestionsRepository @Inject()(dbConfigProvider: DatabaseConfigProvider, an
           case AnswerType.RangeContinuous if labels.length == 2 =>
           case AnswerType.MultipleChoiceSingle if labels.nonEmpty =>
           case AnswerType.MultipleChoiceMany if labels.nonEmpty =>
+          case AnswerType.TimeOfDay =>
+          case AnswerType.Date =>
           case _ => throw new IllegalArgumentException("Number of answer labels doesn't match answer type")
         }
       }

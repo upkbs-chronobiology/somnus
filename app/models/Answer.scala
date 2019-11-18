@@ -1,7 +1,10 @@
 package models
 
 import java.sql.Timestamp
+import java.time.LocalDate
+import java.time.LocalTime
 import java.time.OffsetDateTime
+import java.time.format.DateTimeParseException
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -118,6 +121,18 @@ class AnswersRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) {
           values foreach { value =>
             if (value < 0 || value >= numOptions)
               throw new IllegalArgumentException("At least one answer option index doesn't match answer options")
+          }
+        case AnswerType.TimeOfDay =>
+          try {
+            LocalTime.parse(answer.content)
+          } catch {
+            case e: DateTimeParseException => throw new IllegalArgumentException(e)
+          }
+        case AnswerType.Date =>
+          try {
+            LocalDate.parse(answer.content)
+          } catch {
+            case e: DateTimeParseException => throw new IllegalArgumentException(e)
           }
         case _ => Unit
       }

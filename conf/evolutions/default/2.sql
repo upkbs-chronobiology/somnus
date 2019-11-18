@@ -11,6 +11,9 @@ create table "user_session" (
 --   "token" VARCHAR NOT NULL -- TODO: remove if not needed
 );
 
+alter table "question" alter column "answer_type"
+    ENUM('text', 'range-continuous', 'range-discrete', 'multiple-choice-single', 'multiple-choice-many', 'time-of-day', 'date') NOT NULL;
+
 # --- !Downs
 
 drop table "user_session";

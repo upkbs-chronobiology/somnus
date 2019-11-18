@@ -95,6 +95,58 @@ class AnswerSpec extends PlaySpec
       }
     }
 
+    "accept well-formatted time answers" in {
+      val question = doSync(questionsRepo.add(Question(0, "What's the time?", AnswerType.TimeOfDay)))
+
+      val answerA = doSync(answersRepo.add(Answer(0, question.id, "13:37", this.baseUser.id, null, SampleCreatedLocal)))
+      answerA.id must be >= 0L
+
+      val answerB = doSync(answersRepo.add(Answer(0, question.id, "10:31:42", this.baseUser.id, null, SampleCreatedLocal)))
+      answerB.id must be >= 0L
+    }
+
+    "reject badly formatted time answers" in {
+      val question = doSync(questionsRepo.add(Question(0, "What's the time?", AnswerType.TimeOfDay)))
+
+      an[IllegalArgumentException] shouldBe thrownBy {
+        doSync(answersRepo.add(Answer(0, question.id, "5.55", this.baseUser.id, null, SampleCreatedLocal)))
+      }
+
+      an[IllegalArgumentException] shouldBe thrownBy {
+        doSync(answersRepo.add(Answer(0, question.id, "3am", this.baseUser.id, null, SampleCreatedLocal)))
+      }
+
+      an[IllegalArgumentException] shouldBe thrownBy {
+        doSync(answersRepo.add(Answer(0, question.id, "Time to leave", this.baseUser.id, null, SampleCreatedLocal)))
+      }
+    }
+
+    "accept well-formatted date answers" in {
+      val question = doSync(questionsRepo.add(Question(0, "Can I get a date?", AnswerType.Date)))
+
+      val answerB = doSync(answersRepo.add(Answer(0, question.id, "1990-01-25", this.baseUser.id, null, SampleCreatedLocal)))
+      answerB.id must be >= 0L
+
+      val answerA = doSync(answersRepo.add(Answer(0, question.id, "1898-03-14", this.baseUser.id, null, SampleCreatedLocal)))
+      answerA.id must be >= 0L
+    }
+
+    "reject badly formatted date answers" in {
+      val question = doSync(questionsRepo.add(Question(0, "Can I get a date?", AnswerType.Date)))
+
+      an[IllegalArgumentException] shouldBe thrownBy {
+        doSync(answersRepo.add(Answer(0, question.id, "01.02.2003", this.baseUser.id, null, SampleCreatedLocal)))
+      }
+
+      an[IllegalArgumentException] shouldBe thrownBy {
+        doSync(answersRepo.add(Answer(0, question.id, "Dec 31 2006", this.baseUser.id, null, SampleCreatedLocal)))
+      }
+
+      an[IllegalArgumentException] shouldBe thrownBy {
+        doSync(answersRepo.add(Answer(0, question.id, "No", this.baseUser.id, null, SampleCreatedLocal)))
+      }
+    }
+
     "list by user and questionnaire" in {
       val questionnaire1 = doSync(questionnairesRepo.create(Questionnaire(0, "Questionnnaire 1", None)))
       val questionnaire2 = doSync(questionnairesRepo.create(Questionnaire(0, "Questionnnaire 2", None)))
