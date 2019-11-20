@@ -3,6 +3,7 @@ package models
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
+import auth.roles.Role
 import auth.roles.Role.Role
 import com.mohiva.play.silhouette.api.Identity
 import com.mohiva.play.silhouette.api.LoginInfo
@@ -17,7 +18,10 @@ import slick.jdbc.H2Profile.api._
 import slick.jdbc.JdbcProfile
 import slick.lifted.Tag
 
-case class User(id: Long, name: String, passwordId: Option[Long], role: Option[String] = None) extends Identity
+// TODO: Consider directly using Role enum instead of String
+case class User(id: Long, name: String, passwordId: Option[Long], role: Option[String] = None) extends Identity {
+  def hasRole(otherRole: Role) = this.role.contains(otherRole.toString)
+}
 
 object User {
   implicit val implicitWrites = new Writes[User] {

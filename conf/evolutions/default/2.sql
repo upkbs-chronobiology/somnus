@@ -8,7 +8,16 @@ create table "user_session" (
   "expiry" TIMESTAMP WITH TIME ZONE NOT NULL,
   /* seconds */
   "idle_timeout" BIGINT
---   "token" VARCHAR NOT NULL -- TODO: remove if not needed
+);
+
+/* ACL for researchers */
+create table "study_access" (
+    "user_id" BIGINT NOT NULL,
+    "study_id" BIGINT NOT NULL,
+    "level" ENUM('read', 'write', 'own') NOT NULL DEFAULT 'read',
+    FOREIGN KEY("user_id") REFERENCES "user"("id"),
+    FOREIGN KEY("study_id") REFERENCES "study"("id"),
+    PRIMARY KEY("user_id", "study_id")
 );
 
 alter table "question" alter column "answer_type"
