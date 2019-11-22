@@ -49,7 +49,11 @@ class StudyTable(tag: Tag) extends Table[Study](tag, "study") {
 }
 
 @Singleton
-class StudyRepository @Inject()(dbConfigProvider: DatabaseConfigProvider, questionnaires: QuestionnairesRepository) {
+class StudyRepository @Inject()(
+  dbConfigProvider: DatabaseConfigProvider,
+  questionnaires: QuestionnairesRepository,
+  studyAccessRepo: StudyAccessRepository
+) {
 
   def studies = TableQuery[StudyTable]
   def studyParticipants = TableQuery[StudyParticipantsTable]
@@ -60,9 +64,16 @@ class StudyRepository @Inject()(dbConfigProvider: DatabaseConfigProvider, questi
   def listAll(): Future[Seq[Study]] = dbConfig.db.run(studies.result)
 
   def create(study: Study): Future[Study] = {
-    val query = (studies returning studies.map(_.id)) += study
-    dbConfig.db.run(query).flatMap(id => this.read(id)
-      .map(_.getOrElse(throw new IllegalStateException("Failed to load study after creation"))))
+    // This existence check is not thread safe, but that's acceptable because the same constraint is
+    // implemented on db level. This is just for more human-friendly feedback in case of collisions.
+    // XXX: Does this constraint even make sense, especially given limited visibility through ACLs?
+    dbConfig.db.run(studies.filter(_.name === study.name).result.headOption) flatMap {
+      case Some(_) => throw new IllegalArgumentException("A study with the same name already exists")
+      case None =>
+        val query = (studies returning studies.map(_.id)) += study
+        dbConfig.db.run(query).flatMap(id => this.read(id)
+          .map(_.getOrElse(throw new IllegalStateException("Failed to load study after creation"))))
+    }
   }
 
   def read(id: Long): Future[Option[Study]] = {
@@ -87,8 +98,13 @@ class StudyRepository @Inject()(dbConfigProvider: DatabaseConfigProvider, questi
           Future.failed(new IllegalArgumentException(s"Cannot delete study with id $id because it contains questionnaires"))
         else if (participants.nonEmpty)
           Future.failed(new IllegalArgumentException(s"Cannot delete study with id $id because it contains participants"))
-        else
-          dbConfig.db.run(studies.filter(_.id === id).delete)
+        else {
+          for {
+            sas <- studyAccessRepo.listByStudy(id)
+            _ <- Future.sequence(sas.map(sa => studyAccessRepo.delete(sa)))
+            deleted <- dbConfig.db.run(studies.filter(_.id === id).delete)
+          } yield deleted
+        }
     } yield result
   }
 

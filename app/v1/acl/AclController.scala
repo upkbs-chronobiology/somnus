@@ -3,8 +3,7 @@ package v1.acl
 import scala.concurrent.ExecutionContext
 
 import auth.DefaultEnv
-import auth.acl.WithStudyAccess
-import auth.acl.WithUserAccess
+import auth.acl.Acls
 import com.mohiva.play.silhouette.api.Silhouette
 import javax.inject.Inject
 import models.AccessLevel
@@ -19,20 +18,18 @@ import v1.RestControllerComponents
 class AclController @Inject()(
   rcc: RestControllerComponents,
   silhouette: Silhouette[DefaultEnv],
-  studyAccessRepo: StudyAccessRepository
+  studyAccessRepo: StudyAccessRepository,
+  acls: Acls
 )(implicit ec: ExecutionContext) extends RestBaseController(rcc) {
 
-  // XXX: Hacky
-  implicit val implicitSAR: StudyAccessRepository = studyAccessRepo
+  private def studyOwnerAction(studyId: Long) = silhouette.SecuredAction(acls.withStudyAccess(studyId, AccessLevel.Own))
 
-  private def studyOwnerAction(studyId: Long) = silhouette.SecuredAction(WithStudyAccess(studyId, AccessLevel.Own))
-
-  def listStudyAccessByUser(userId: Long) = silhouette.SecuredAction(WithUserAccess(userId, AccessLevel.Read)).async {
+  def listStudyAccessByUser(userId: Long) = silhouette.SecuredAction(acls.withStudyAccess(userId, AccessLevel.Read)).async {
     implicit request =>
       studyAccessRepo.listByUser(userId).map(seq => Ok(Json.toJson(seq)))
   }
 
-  def listAccessByStudy(studyId: Long) = silhouette.SecuredAction(WithStudyAccess(studyId, AccessLevel.Read)).async {
+  def listAccessByStudy(studyId: Long) = silhouette.SecuredAction(acls.withStudyAccess(studyId, AccessLevel.Read)).async {
     implicit request =>
       studyAccessRepo.listByStudy(studyId).map(seq => Ok(Json.toJson(seq)))
   }

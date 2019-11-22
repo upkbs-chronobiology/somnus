@@ -2,7 +2,10 @@ package v1.user
 
 import auth.AuthService
 import auth.roles.Role
+import models.AccessLevel
 import models.Study
+import models.StudyAccess
+import models.StudyAccessRepository
 import models.StudyRepository
 import models.UserRepository
 import org.scalatest.BeforeAndAfterAll
@@ -26,8 +29,15 @@ class UserControllerSpec extends PlaySpec
     val studyRepo = inject[StudyRepository]
     val study = doSync(studyRepo.create(Study(0, "Test Study")))
 
+    doSync(inject[StudyAccessRepository].upsert(StudyAccess(researchUser.id, study.id, AccessLevel.Read)))
+
     doSync(studyRepo.addParticipant(study.id, donald.id))
     doSync(studyRepo.addParticipant(study.id, baseUser.id))
+
+    val secretStudy = doSync(studyRepo.create(Study(0, "Noyb Study")))
+
+    doSync(studyRepo.addParticipant(secretStudy.id, donald.id))
+    doSync(studyRepo.addParticipant(secretStudy.id, baseUser.id))
   }
 
   "UserController" when {
@@ -56,8 +66,9 @@ class UserControllerSpec extends PlaySpec
         status(response) must equal(200)
 
         val list = contentAsJson(response).as[JsArray].value
-        list.length must equal(1)
+        list.length must equal(2)
         list.head.apply("name").as[String] must equal("Test Study")
+        list(1).apply("name").as[String] must equal("Noyb Study")
       }
 
       "reject creating users" in {
@@ -78,7 +89,7 @@ class UserControllerSpec extends PlaySpec
         list.map(_ ("name").as[String]) must contain(donald.name)
       }
 
-      "list studies of other users" in {
+      "list studies of other users based on ACLs" in {
         val response = doAuthenticatedRequest(GET, s"/v1/users/${donald.id}/studies")
 
         status(response) must equal(200)
@@ -116,7 +127,7 @@ class UserControllerSpec extends PlaySpec
 
       "accept user updates with null-role" in {
         val response = doAuthenticatedRequest(
-            PUT, s"/v1/users/${donald.id}", Some(userUpdateJson(null)), role = Some(Role.Admin))
+          PUT, s"/v1/users/${donald.id}", Some(userUpdateJson(null)), role = Some(Role.Admin))
 
         status(response) must equal(200)
         doSync(inject[UserRepository].get(donald.id)).get.role must equal(None)
@@ -124,7 +135,7 @@ class UserControllerSpec extends PlaySpec
 
       "reject removing own admin rights" in {
         val response = doAuthenticatedRequest(
-            PUT, s"/v1/users/${adminUser.id}", Some(userUpdateJson(null)), role = Some(Role.Admin))
+          PUT, s"/v1/users/${adminUser.id}", Some(userUpdateJson(null)), role = Some(Role.Admin))
 
         status(response) must equal(400)
         doSync(inject[UserRepository].get(adminUser.id)).get.role must equal(Some(Role.Admin.toString))
@@ -145,6 +156,17 @@ class UserControllerSpec extends PlaySpec
 
         val secondResponse = doAuthenticatedRequest(POST, "/v1/users", Some(userCreationJson("Daisy Duck")))
         status(secondResponse) must equal(BAD_REQUEST)
+      }
+
+      "list all studies of other users" in {
+        val response = doAuthenticatedRequest(GET, s"/v1/users/${donald.id}/studies")
+
+        status(response) must equal(200)
+
+        val list = contentAsJson(response).as[JsArray].value
+        list.length must equal(2)
+        list(0).apply("name").as[String] must equal("Test Study")
+        list(1).apply("name").as[String] must equal("Noyb Study")
       }
     }
   }

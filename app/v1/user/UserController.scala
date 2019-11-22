@@ -6,18 +6,25 @@ import scala.util.matching.Regex
 
 import auth.AuthService
 import auth.DefaultEnv
-import auth.roles.ForAdmins
+import auth.acl.AccessRules
+import auth.acl.Acls
 import auth.roles.ForAnyEditorOrUser
 import auth.roles.ForEditors
 import auth.roles.Role
 import com.mohiva.play.silhouette.api.Silhouette
 import javax.inject.Inject
+import models.AccessLevel
+import models.Study
+import models.StudyAccess
+import models.StudyAccessRepository
 import models.StudyRepository
 import models.UserRepository
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.data.validation.Constraints.pattern
 import play.api.libs.json.Json
+import util.Futures
+import util.Futures.TraversableFutureExtensions
 import util.JsonError
 import util.JsonSuccess
 import v1.RestBaseController
@@ -50,11 +57,17 @@ class UserController @Inject()(
   silhouette: Silhouette[DefaultEnv],
   userRepository: UserRepository,
   studyRepository: StudyRepository,
-  authService: AuthService
+  authService: AuthService,
+  studyAccessRepo: StudyAccessRepository,
+  acls: Acls,
+  accessRules: AccessRules
 )(implicit ec: ExecutionContext) extends RestBaseController(rcc) {
 
-  def index = silhouette.SecuredAction(ForEditors).async {
-    userRepository.listAll().map(users => Ok(Json.toJson(users)))
+  def index = silhouette.SecuredAction(ForEditors).async { implicit request =>
+    userRepository.listAll()
+      .filterTraversableAsync(user =>
+        accessRules.mayAccessUser(request.identity, user.id, AccessLevel.Read))
+      .map(users => Ok(Json.toJson(users)))
   }
 
   def create = silhouette.SecuredAction(ForEditors).async { implicit request =>
@@ -66,15 +79,27 @@ class UserController @Inject()(
     )
   }
 
-  def getStudies(userId: Long) = silhouette.SecuredAction(ForAnyEditorOrUser(userId)).async {
-    studyRepository.listForParticipant(userId)
-      .map(studies => Ok(Json.toJson(studies)))
+  def getStudies(userId: Long) = silhouette.SecuredAction(ForAnyEditorOrUser(userId)).async { implicit request =>
+    // TODO: Use accessRules instead
+    def studyFilter(study: Study, acls: Seq[StudyAccess]) =
+      userId == request.identity.id ||
+        request.identity.hasRole(Role.Admin) ||
+        acls.find(_.studyId == study.id).exists(_.level >= AccessLevel.Read)
+
+    Futures.parallel(
+      studyAccessRepo.listByUser(request.identity.id),
+      studyRepository.listForParticipant(userId)
+    ).map(aclsAndStudies => {
+      val acls = aclsAndStudies._1
+      val studies = aclsAndStudies._2
+      studies.filter(studyFilter(_, acls))
+    }).map(studies => Ok(Json.toJson(studies)))
       .recover {
         case e: IllegalArgumentException => BadRequest(JsonError(e.getMessage))
       }
   }
 
-  def update(id: Long) = silhouette.SecuredAction(ForAdmins).async { implicit request =>
+  def update(id: Long) = silhouette.SecuredAction(acls.withUserAccess(id, AccessLevel.Write)).async { implicit request =>
     UserUpdateForm.form.bindFromRequest().fold(
       badForm => Future.successful(BadRequest(badForm.errorsAsJson)),
       formData => {

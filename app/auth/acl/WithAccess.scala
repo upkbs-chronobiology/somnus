@@ -1,40 +1,65 @@
 package auth.acl
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-import auth.roles.Role
 import com.mohiva.play.silhouette.api.Authorization
 import com.mohiva.play.silhouette.impl.authenticators.BearerTokenAuthenticator
 import models.AccessLevel.AccessLevel
-import models.StudyAccessRepository
 import models.User
 import play.api.mvc.Request
 
-case class WithUserAccess(targetUserId: Long, level: AccessLevel) extends Authorization[User, BearerTokenAuthenticator] {
+case class WithUserAccess(targetUserId: Long, level: AccessLevel)(implicit accessRules: AccessRules) extends Authorization[User, BearerTokenAuthenticator] {
 
   override def isAuthorized[B](user: User, authenticator: BearerTokenAuthenticator)
     (implicit request: Request[B]): Future[Boolean] = {
-    user match {
-      case _ if user.id == targetUserId => Future.successful(true)
-      case _ if user.hasRole(Role.Admin) => Future.successful(true)
-      case _ =>
-        // TODO: Implement
-        Future.successful(false)
-    }
+    accessRules.mayAccessUser(user, targetUserId, level)
   }
 }
 
-// XXX: Cleaner solution than implicitly passing StudyAccessRepository?
-case class WithStudyAccess(studyId: Long, level: AccessLevel)(implicit studyAccessRepo: StudyAccessRepository)
+case class WithStudyAccess(studyId: Long, level: AccessLevel)(implicit accessRules: AccessRules)
   extends Authorization[User, BearerTokenAuthenticator] {
 
   override def isAuthorized[B](user: User, authenticator: BearerTokenAuthenticator)
     (implicit request: Request[B]): Future[Boolean] = {
-    user match {
-      case _ if user.hasRole(Role.Admin) => Future.successful(true)
-      case _ =>
-        studyAccessRepo.read(user.id, studyId).map(_.exists(_.level >= level))
-    }
+    accessRules.mayAccessStudy(user, studyId, level)
+  }
+}
+
+case class WithQuestionnaireAccess(questionnaireId: Long, level: AccessLevel)
+  (implicit accessRules: AccessRules)
+  extends Authorization[User, BearerTokenAuthenticator] {
+
+  override def isAuthorized[B](user: User, authenticator: BearerTokenAuthenticator)
+    (implicit request: Request[B]): Future[Boolean] = {
+    accessRules.mayAccessQuestionnaire(user, questionnaireId, level)
+  }
+}
+
+case class WithQuestionAccess(questionId: Long, level: AccessLevel)
+  (implicit accessRules: AccessRules)
+  extends Authorization[User, BearerTokenAuthenticator] {
+
+  override def isAuthorized[B](user: User, authenticator: BearerTokenAuthenticator)
+    (implicit request: Request[B]): Future[Boolean] = {
+    accessRules.mayAccessQuestion(user, questionId, level)
+  }
+}
+
+case class WithAnswerAccess(answerId: Long, level: AccessLevel)
+  (implicit accessRules: AccessRules)
+  extends Authorization[User, BearerTokenAuthenticator] {
+
+  override def isAuthorized[B](user: User, authenticator: BearerTokenAuthenticator)
+    (implicit request: Request[B]): Future[Boolean] = {
+    accessRules.mayAccessAnswer(user, answerId, level)
+  }
+}
+
+case class WithScheduleAccess(scheduleId: Long, level: AccessLevel)(implicit accessRules: AccessRules)
+  extends Authorization[User, BearerTokenAuthenticator] {
+
+  override def isAuthorized[B](user: User, authenticator: BearerTokenAuthenticator)
+    (implicit request: Request[B]): Future[Boolean] = {
+    accessRules.mayAccessSchedule(user, scheduleId, level)
   }
 }

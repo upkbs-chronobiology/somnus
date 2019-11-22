@@ -67,4 +67,7 @@ class StudyAccessRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) 
   def delete(userId: Long, studyId: Long): Future[Int] = {
     dbConfig.db.run(find(userId, studyId).delete)
   }
+
+  def delete(studyAccess: StudyAccess): Future[Int] =
+    delete(studyAccess.userId, studyAccess.studyId)
 }

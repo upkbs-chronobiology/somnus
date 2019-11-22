@@ -10,8 +10,12 @@ object AccessLevel extends Enumeration {
   val Own = Value("own")
 
   implicit class AccessLevelValue(level: Value) {
-    def >=(other: AccessLevel): Boolean =
+
+    def >=(other: AccessLevel): Boolean = // scalastyle:ignore method.name
       this.level == Own || other == Read || this.level == other
+
+    def <=(other: AccessLevel): Boolean = // scalastyle:ignore method.name
+      this.level == Read || other == Own || this.level == other
   }
 
   implicit val accessLevelMapper = MappedColumnType.base[AccessLevel, String](
