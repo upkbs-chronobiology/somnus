@@ -75,7 +75,11 @@ class QuestionnaireControllerSpec extends PlaySpec
       }
 
       "list questions for specific questionnaire where participant" in {
-        status(doAuthenticatedRequest(GET, s"/v1/questionnaires/${readableQuestionnaire.id}/questions")) must equal(OK)
+        val response = doAuthenticatedRequest(GET, s"/v1/questionnaires/${readableQuestionnaire.id}/questions")
+
+        status(response) must equal(OK)
+        val list = contentAsJson(response).as[JsArray].value
+        list.map(_ ("id").as[Long]) must contain only readableQuestion.id
       }
 
       "reject listing questions for questionnaire where not participant" in {
