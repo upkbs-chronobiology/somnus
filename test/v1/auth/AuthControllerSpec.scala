@@ -154,7 +154,7 @@ class AuthControllerSpec extends PlaySpec
         status(response) must equal(CREATED)
 
         val pwReset = contentAsJson(response)
-        pwReset("token").as[String].length must equal(12)
+        pwReset("token").as[String].length must equal(8)
         pwReset("userId").as[Long] must equal(jeff.id)
 
         val expiry = pwReset("expiry").as[Long]

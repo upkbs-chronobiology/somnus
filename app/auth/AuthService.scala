@@ -30,7 +30,7 @@ class AuthService @Inject()(
   passwordHasher: PasswordHasher
 ) {
 
-  private val TokenLength = 12
+  private val TokenLength = 8
 
   def register(username: String, password: Option[String]): Future[User] = {
     val loginInfo = LoginInfo(credentialsProvider.id, username)
@@ -61,7 +61,7 @@ class AuthService @Inject()(
     userRepository.get(userId) flatMap {
       case None => throw new ItemNotFoundException(s"User with id $userId not found")
       case Some(_) =>
-        val token = Random.alphanumeric.take(TokenLength).mkString
+        val token = Random.alphanumeric.take(TokenLength).mkString.toLowerCase
         pwResetsRepo.create(PwReset(0, token, expiry, userId))
     }
   }
