@@ -17,6 +17,7 @@ import play.api.libs.json.Writes
 import slick.jdbc.H2Profile.api._
 import slick.jdbc.JdbcProfile
 import util.TemporalSqlMappings
+import java.util.concurrent.Semaphore
 
 case class Schedule(
   id: Long,
@@ -87,6 +88,8 @@ class ScheduleTable(tag: Tag) extends Table[Schedule](tag, "schedule") with Temp
 @Singleton
 class SchedulesRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) {
 
+  val creationSemaphore = new Semaphore(1)
+
   def schedules = TableQuery[ScheduleTable]
   def questionnaires = TableQuery[QuestionnaireTable]
   def users = TableQuery[UserTable]
@@ -108,17 +111,18 @@ class SchedulesRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) {
   def create(schedule: Schedule): Future[Schedule] = {
     // FIXME: Not really atomic/transactional (why?)
     // We just sync in code for now, as it's the only db manipulator anyway so far
-    this.synchronized {
-      val exists = schedules.filter(s => s.userId === schedule.userId.bind &&
-        s.questionnaireId === schedule.questionnaireId.bind).exists
-      validate(schedule) flatMap { _ =>
-        dbConfig.db.run((exists.result flatMap {
-          case true => throw new IllegalArgumentException(
-            s"Schedule for user ${schedule.userId} and questionnaire ${schedule.questionnaireId} already exists")
-          case false => (schedules returning schedules.map(_.id)) += schedule
-        }).transactionally)
-          .flatMap(this.get(_).map(_.getOrElse(throw new IllegalStateException("Failed to load just created schedule"))))
-      }
+    creationSemaphore.acquire()
+    val exists = schedules.filter(s => s.userId === schedule.userId.bind &&
+      s.questionnaireId === schedule.questionnaireId.bind).exists
+    validate(schedule) flatMap { _ =>
+      dbConfig.db.run((exists.result flatMap {
+        case true => throw new IllegalArgumentException(
+          s"Schedule for user ${schedule.userId} and questionnaire ${schedule.questionnaireId} already exists")
+        case false => (schedules returning schedules.map(_.id)) += schedule
+      }).transactionally)
+        .flatMap(this.get(_).map(_.getOrElse(throw new IllegalStateException("Failed to load just created schedule"))))
+    } andThen { case _ =>
+      creationSemaphore.release()
     }
   }
 

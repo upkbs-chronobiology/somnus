@@ -167,7 +167,6 @@ class ScheduleControllerSpec extends PlaySpec
         status(reCreationResponse) must equal(BAD_REQUEST)
       }
 
-      // FIXME: Flaky - but why/how?
       "only create 1 schedule in case of many repeating requests" in {
         val schedule = scheduleJson(writeableQuestionnaire.id, baseUser.id,
           "2018-10-20", "2018-11-05", "10:00:00", "23:45:07", 10)
