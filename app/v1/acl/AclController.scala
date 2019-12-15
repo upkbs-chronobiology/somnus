@@ -1,6 +1,7 @@
 package v1.acl
 
 import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 
 import auth.DefaultEnv
 import auth.acl.Acls
@@ -11,6 +12,7 @@ import models.AccessLevel.AccessLevel
 import models.StudyAccess
 import models.StudyAccessRepository
 import play.api.libs.json.Json
+import util.JsonError
 import util.JsonSuccess
 import v1.RestBaseController
 import v1.RestControllerComponents
@@ -37,7 +39,7 @@ class AclController @Inject()(
   def put(userId: Long, studyId: Long) = studyOwnerAction(studyId).async { implicit request =>
     request.body.asJson.flatMap(json => json.apply(StudyAccess.LevelJsonKey).asOpt[AccessLevel]) match {
       case None =>
-        throw new IllegalArgumentException("Failed to parse body JSON")
+        Future.successful(BadRequest(JsonError("Failed to parse body JSON")))
       case Some(level) =>
         studyAccessRepo.upsert(StudyAccess(userId, studyId, level))
           .map(num => Ok(JsonSuccess(s"Updated $num entries")))

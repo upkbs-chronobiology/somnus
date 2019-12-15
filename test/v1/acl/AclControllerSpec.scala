@@ -128,6 +128,12 @@ class AclControllerSpec extends PlaySpec
         contentAsJson(doAuthenticatedRequest(GET, s"/v1/studies/${study.id}/acls")).as[JsArray].value.size must equal(0)
         contentAsJson(doAuthenticatedRequest(GET, s"/v1/users/${user.id}/acls")).as[JsArray].value.size must equal(0)
       }
+
+      "return status 400 for invalid object" in {
+        val badJson = Json.obj("level" -> "this-is-wrong")
+        val response = doAuthenticatedRequest(PUT, s"/v1/users/${user.id}/acls/${study.id}", Some(badJson))
+        status(response) must equal(BAD_REQUEST)
+      }
     }
   }
 
@@ -142,5 +148,6 @@ class AclControllerSpec extends PlaySpec
       "level" -> level
     ))
   }
+
   private def levelJson(level: AccessLevel): JsValue = Json.obj("level" -> level.toString)
 }
