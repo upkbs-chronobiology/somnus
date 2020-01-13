@@ -52,7 +52,7 @@ e.g. by running starting the app container with `docker run -d --link <db-contai
 
 The database runs in a separate container than the main application in production.
 As main application updates usually shouldn't affect the db image (short of schema changes), hence building that image is rarely necessary.
-Schema updates should be executed on a copy of the production db, then replace it.
+Schema updates should either be executed on a copy of the production db, then replace it, or they should be tested locally on a backup before prod execution.
 
 However, to build a complete fresh H2 docker image, do the following:
 
@@ -70,4 +70,5 @@ When running the two containers (db and application) in production, either link 
 
 - Make sure the two containers are part of the same network.
 - On the application container, set a hosts file entry mapping `somnus-db` to the db container's IP.
-  In Portainer, this can be configured under "Advanced container settings" > "Network"
+-- In Portainer, this can be configured under "Advanced container settings" > "Network".
+-- For local testing, the backend app container can be started with the argument `--add-host somnus-db:0.0.0.0`.
