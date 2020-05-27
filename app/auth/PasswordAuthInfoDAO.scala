@@ -1,12 +1,13 @@
 package auth
 
+import javax.inject.Inject
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 import com.mohiva.play.silhouette.api.LoginInfo
 import com.mohiva.play.silhouette.api.util.PasswordInfo
 import com.mohiva.play.silhouette.persistence.daos.DelegableAuthInfoDAO
-import javax.inject.Inject
 import models.Password
 import models.PasswordRepository
 import models.UserRepository

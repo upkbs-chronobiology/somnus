@@ -1,12 +1,13 @@
 package auth.acl
 
+import javax.inject.Inject
+import javax.inject.Singleton
+
 import scala.Function.tupled
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
 import auth.roles.Role
-import javax.inject.Inject
-import javax.inject.Singleton
 import models.AccessLevel
 import models.AccessLevel.AccessLevel
 import models.Answer

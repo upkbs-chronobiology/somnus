@@ -3,6 +3,8 @@ package auth
 import java.time.Instant
 import java.util.Collections
 import java.util.concurrent.TimeUnit
+import javax.inject.Inject
+import javax.inject.Singleton
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -12,8 +14,6 @@ import com.mohiva.play.silhouette.api.LoginInfo
 import com.mohiva.play.silhouette.api.repositories.AuthenticatorRepository
 import com.mohiva.play.silhouette.impl.authenticators.BearerTokenAuthenticator
 import com.mohiva.play.silhouette.impl.providers.CredentialsProvider
-import javax.inject.Inject
-import javax.inject.Singleton
 import org.apache.commons.collections4.map.LRUMap
 import org.joda.time.DateTime
 import play.api.db.slick.DatabaseConfigProvider

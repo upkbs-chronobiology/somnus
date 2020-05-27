@@ -1,8 +1,8 @@
 package util
 
 import play.api.libs.json.JsNumber
-import play.api.libs.json.JsValue
 import play.api.libs.json.Json
+import play.api.libs.json.JsValue
 import play.api.libs.json.Writes
 
 // XXX: Cannot use upper bound for T because there's no global number supertype in Scala

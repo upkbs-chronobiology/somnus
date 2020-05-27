@@ -15,8 +15,8 @@ import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.libs.json.JsArray
-import play.api.libs.json.JsValue
 import play.api.libs.json.Json
+import play.api.libs.json.JsValue
 import play.api.test.Helpers._
 import play.api.test.Injecting
 import testutil.Authenticated

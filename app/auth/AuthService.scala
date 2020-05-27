@@ -2,6 +2,7 @@ package auth
 
 import java.sql.Timestamp
 import java.time.Instant
+import javax.inject.Inject
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -13,7 +14,6 @@ import com.mohiva.play.silhouette.api.util.PasswordHasher
 import com.mohiva.play.silhouette.api.util.PasswordInfo
 import com.mohiva.play.silhouette.impl.providers.CredentialsProvider
 import exceptions.ItemNotFoundException
-import javax.inject.Inject
 import models.PwReset
 import models.PwResetsRepository
 import models.User

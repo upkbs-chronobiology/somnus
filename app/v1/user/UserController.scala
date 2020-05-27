@@ -1,5 +1,7 @@
 package v1.user
 
+import javax.inject.Inject
+
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.util.matching.Regex
@@ -12,7 +14,6 @@ import auth.roles.ForAnyEditorOrUser
 import auth.roles.ForEditors
 import auth.roles.Role
 import com.mohiva.play.silhouette.api.Silhouette
-import javax.inject.Inject
 import models.AccessLevel
 import models.Study
 import models.StudyAccess

@@ -1,5 +1,7 @@
 package v1.study
 
+import javax.inject.Inject
+
 import scala.concurrent.ExecutionContext
 
 import auth.DefaultEnv
@@ -7,7 +9,6 @@ import auth.acl.AccessRules
 import auth.acl.Acls
 import auth.roles.ForEditors
 import com.mohiva.play.silhouette.api.Silhouette
-import javax.inject.Inject
 import models.AccessLevel
 import models.QuestionnairesRepository
 import models.Study

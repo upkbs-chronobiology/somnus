@@ -1,11 +1,12 @@
 package v1
 
+import javax.inject.Inject
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 import _root_.auth.DefaultEnv
 import com.mohiva.play.silhouette.api.actions.SecuredRequest
-import javax.inject.Inject
 import play.api.data.Form
 import play.api.http.FileMimeTypes
 import play.api.i18n.I18nSupport

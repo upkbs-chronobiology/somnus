@@ -3,6 +3,7 @@ package v1.auth
 import java.sql.Timestamp
 import java.time.Duration
 import java.time.Instant
+import javax.inject.Inject
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
@@ -18,7 +19,6 @@ import com.mohiva.play.silhouette.impl.exceptions.IdentityNotFoundException
 import com.mohiva.play.silhouette.impl.exceptions.InvalidPasswordException
 import com.mohiva.play.silhouette.impl.providers.CredentialsProvider
 import exceptions.ItemNotFoundException
-import javax.inject.Inject
 import models.PwResetsRepository
 import models.UserRepository
 import play.api.data.Form

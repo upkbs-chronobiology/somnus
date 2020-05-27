@@ -1,5 +1,7 @@
 package v1.answer
 
+import javax.inject.Inject
+
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
@@ -9,7 +11,6 @@ import auth.acl.Acls
 import auth.acl.ForbiddenAccessException
 import auth.roles.ForEditors
 import com.mohiva.play.silhouette.api.Silhouette
-import javax.inject.Inject
 import models.AccessLevel
 import models.Answer
 import models.AnswerForm

@@ -1,7 +1,7 @@
 package util
 
-import play.api.libs.json.JsValue
 import play.api.libs.json.Json
+import play.api.libs.json.JsValue
 
 object JsonResponse {
   def apply(message: String): JsValue = {

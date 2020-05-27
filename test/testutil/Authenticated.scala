@@ -17,8 +17,8 @@ import org.scalatest.BeforeAndAfterAll
 import org.scalatest.TestSuite
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.HttpConfiguration
-import play.api.libs.json.JsValue
 import play.api.libs.json.Json
+import play.api.libs.json.JsValue
 import play.api.libs.typedmap.TypedMap
 import play.api.mvc.Headers
 import play.api.mvc.Result

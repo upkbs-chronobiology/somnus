@@ -1,12 +1,13 @@
 package v1.acl
 
+import javax.inject.Inject
+
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
 import auth.DefaultEnv
 import auth.acl.Acls
 import com.mohiva.play.silhouette.api.Silhouette
-import javax.inject.Inject
 import models.AccessLevel
 import models.AccessLevel.AccessLevel
 import models.StudyAccess

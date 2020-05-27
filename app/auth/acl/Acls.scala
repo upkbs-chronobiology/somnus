@@ -2,6 +2,7 @@ package auth.acl
 
 import javax.inject.Inject
 import javax.inject.Singleton
+
 import models.AccessLevel.AccessLevel
 
 @Singleton

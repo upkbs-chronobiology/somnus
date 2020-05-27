@@ -1,6 +1,7 @@
 package modules
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
 
 import auth.DefaultEnv
 import auth.PasswordAuthInfoDAO
@@ -24,9 +25,6 @@ import com.mohiva.play.silhouette.persistence.repositories.DelegableAuthInfoRepo
 import models.UserRepository
 import models.UserService
 import net.codingwell.scalaguice.ScalaModule
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration._
 
 class SilhouetteModule extends AbstractModule with ScalaModule {
 

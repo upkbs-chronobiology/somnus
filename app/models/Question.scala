@@ -1,23 +1,24 @@
 package models
 
+import javax.inject.Inject
+import javax.inject.Singleton
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-import javax.inject.Inject
-import javax.inject.Singleton
 import models.AnswerType.AnswerType
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.data.format.Formats._
 import play.api.db.slick.DatabaseConfigProvider
-import play.api.libs.json.JsValue
 import play.api.libs.json.Json
+import play.api.libs.json.JsValue
 import play.api.libs.json.Writes
 import slick.jdbc.H2Profile.api._
 import slick.jdbc.JdbcProfile
+import util.Serialization
 import util.form.CustomForms._
 import util.form.PlayFormsEnum.enum
-import util.Serialization
 
 case class Question(
   id: Long,
