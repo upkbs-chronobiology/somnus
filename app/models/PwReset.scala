@@ -20,11 +20,7 @@ case class PwReset(id: Long, token: String, expiry: Timestamp, userId: Long)
 object PwReset {
   implicit val implicitWrites = new Writes[PwReset] {
     def writes(pwReset: PwReset): JsValue = {
-      Json.obj(
-        "token" -> pwReset.token,
-        "expiry" -> pwReset.expiry,
-        "userId" -> pwReset.userId
-      )
+      Json.obj("token" -> pwReset.token, "expiry" -> pwReset.expiry, "userId" -> pwReset.userId)
     }
   }
 
@@ -43,7 +39,7 @@ class PwResetTable(tag: Tag) extends Table[PwReset](tag, "pw_reset") {
 }
 
 @Singleton
-class PwResetsRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) {
+class PwResetsRepository @Inject() (dbConfigProvider: DatabaseConfigProvider) {
 
   private def pwResets = TableQuery[PwResetTable]
 
@@ -54,7 +50,8 @@ class PwResetsRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) {
   }
 
   def create(pwReset: PwReset): Future[PwReset] = {
-    dbConfig.db.run((pwResets returning pwResets.map(_.id)) += pwReset)
+    dbConfig.db
+      .run((pwResets returning pwResets.map(_.id)) += pwReset)
       .flatMap(newId => dbConfig.db.run(pwResets.filter(_.id === newId).result.head))
   }
 

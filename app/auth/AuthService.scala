@@ -21,7 +21,7 @@ import models.UserRepository
 import models.UserService
 import util.Futures
 
-class AuthService @Inject()(
+class AuthService @Inject() (
   userService: UserService,
   userRepository: UserRepository,
   authInfoRepository: AuthInfoRepository,
@@ -41,8 +41,8 @@ class AuthService @Inject()(
           user <- userRepository.create(User(0, loginInfo.providerKey, None))
           _ <- Futures.swapOption(password.map(pw => authInfoRepository.add(loginInfo, passwordHasher.hash(pw))))
         } yield
-          // TODO: Log in?
-          user
+        // TODO: Log in?
+        user
     }
   }
 

@@ -24,9 +24,14 @@ import testutil.Authenticated
 import testutil.FreshDatabase
 import testutil.TestUtils
 
-class QuestionnaireControllerSpec extends PlaySpec
-  with GuiceOneAppPerSuite with Injecting with FreshDatabase with TestUtils with Authenticated
-  with BeforeAndAfterAll {
+class QuestionnaireControllerSpec
+    extends PlaySpec
+    with GuiceOneAppPerSuite
+    with Injecting
+    with FreshDatabase
+    with TestUtils
+    with Authenticated
+    with BeforeAndAfterAll {
 
   private val studyRepo = inject[StudyRepository]
   private val questionnairesRepo = inject[QuestionnairesRepository]
@@ -35,13 +40,24 @@ class QuestionnaireControllerSpec extends PlaySpec
   private val hiddenStudy = doSync(studyRepo.create(Study(0, "Hidden Study")))
   private val readableStudy = doSync(studyRepo.create(Study(0, "Readable Study")))
   private val writeableStudy = doSync(studyRepo.create(Study(0, "Writeable Study")))
-  private val hiddenQuestionnaire = doSync(questionnairesRepo.create(Questionnaire(0, "Hidden Questionnaire", Some(hiddenStudy.id))))
-  private val readableQuestionnaire = doSync(questionnairesRepo.create(Questionnaire(0, "Readable Questionnaire", Some(readableStudy.id))))
-  private val writeableQuestionnaire = doSync(questionnairesRepo.create(Questionnaire(0, "Writeable Questionnaire", Some(writeableStudy.id))))
-  private val hiddenQuestion = doSync(questionsRepo.add(Question(0, "Hidden Question",
-    AnswerType.RangeDiscrete, None, Some("1,5"), Some(hiddenQuestionnaire.id))))
-  private val readableQuestion = doSync(questionsRepo.add(Question(0, "Readable Question",
-    AnswerType.RangeDiscrete, None, Some("1,5"), Some(readableQuestionnaire.id))))
+  private val hiddenQuestionnaire = doSync(
+    questionnairesRepo.create(Questionnaire(0, "Hidden Questionnaire", Some(hiddenStudy.id)))
+  )
+  private val readableQuestionnaire = doSync(
+    questionnairesRepo.create(Questionnaire(0, "Readable Questionnaire", Some(readableStudy.id)))
+  )
+  private val writeableQuestionnaire = doSync(
+    questionnairesRepo.create(Questionnaire(0, "Writeable Questionnaire", Some(writeableStudy.id)))
+  )
+  private val hiddenQuestion = doSync(
+    questionsRepo
+      .add(Question(0, "Hidden Question", AnswerType.RangeDiscrete, None, Some("1,5"), Some(hiddenQuestionnaire.id)))
+  )
+  private val readableQuestion = doSync(
+    questionsRepo.add(
+      Question(0, "Readable Question", AnswerType.RangeDiscrete, None, Some("1,5"), Some(readableQuestionnaire.id))
+    )
+  )
 
   override def beforeAll(): Unit = {
     super.beforeAll()
@@ -58,7 +74,9 @@ class QuestionnaireControllerSpec extends PlaySpec
       "reject requests" in {
         status(doRequest(GET, s"/v1/questionnaires")) must equal(UNAUTHORIZED)
         status(doRequest(POST, s"/v1/questionnaires", Some(qJson("Foo bar", None)))) must equal(UNAUTHORIZED)
-        status(doRequest(PUT, s"/v1/questionnaires/${readableQuestionnaire.id}", Some(qJson("Foo bar", None)))) must equal(UNAUTHORIZED)
+        status(doRequest(PUT, s"/v1/questionnaires/${readableQuestionnaire.id}", Some(qJson("Foo bar", None)))) must equal(
+          UNAUTHORIZED
+        )
         status(doRequest(DELETE, s"/v1/questionnaires/${readableQuestionnaire.id}")) must equal(UNAUTHORIZED)
         status(doRequest(POST, s"/v1/questionnaires/${readableQuestionnaire.id}/duplicate")) must equal(UNAUTHORIZED)
         status(doRequest(GET, s"/v1/questionnaires/${readableQuestionnaire.id}/questions")) must equal(UNAUTHORIZED)
@@ -69,9 +87,13 @@ class QuestionnaireControllerSpec extends PlaySpec
       "reject index and editing requests" in {
         status(doAuthenticatedRequest(GET, s"/v1/questionnaires")) must equal(FORBIDDEN)
         status(doAuthenticatedRequest(POST, s"/v1/questionnaires", Some(qJson("Foo bar", None)))) must equal(FORBIDDEN)
-        status(doAuthenticatedRequest(PUT, s"/v1/questionnaires/${readableQuestionnaire.id}", Some(qJson("Foo bar", None)))) must equal(FORBIDDEN)
+        status(
+          doAuthenticatedRequest(PUT, s"/v1/questionnaires/${readableQuestionnaire.id}", Some(qJson("Foo bar", None)))
+        ) must equal(FORBIDDEN)
         status(doAuthenticatedRequest(DELETE, s"/v1/questionnaires/${readableQuestionnaire.id}")) must equal(FORBIDDEN)
-        status(doAuthenticatedRequest(POST, s"/v1/questionnaires/${readableQuestionnaire.id}/duplicate")) must equal(FORBIDDEN)
+        status(doAuthenticatedRequest(POST, s"/v1/questionnaires/${readableQuestionnaire.id}/duplicate")) must equal(
+          FORBIDDEN
+        )
       }
 
       "list questions for specific questionnaire where participant" in {
@@ -79,11 +101,13 @@ class QuestionnaireControllerSpec extends PlaySpec
 
         status(response) must equal(OK)
         val list = contentAsJson(response).as[JsArray].value
-        list.map(_ ("id").as[Long]) must contain only readableQuestion.id
+        list.map(_("id").as[Long]) must contain only readableQuestion.id
       }
 
       "reject listing questions for questionnaire where not participant" in {
-        status(doAuthenticatedRequest(GET, s"/v1/questionnaires/${hiddenQuestionnaire.id}/questions")) must equal(FORBIDDEN)
+        status(doAuthenticatedRequest(GET, s"/v1/questionnaires/${hiddenQuestionnaire.id}/questions")) must equal(
+          FORBIDDEN
+        )
       }
     }
 
@@ -96,8 +120,8 @@ class QuestionnaireControllerSpec extends PlaySpec
         status(result) must equal(OK)
 
         val list = contentAsJson(result).as[JsArray].value
-        list.map(_ ("name").as[String]) must contain("Readable Questionnaire")
-        list.map(_ ("id").as[Long]) must not contain (hiddenQuestionnaire.id)
+        list.map(_("name").as[String]) must contain("Readable Questionnaire")
+        list.map(_("id").as[Long]) must not contain (hiddenQuestionnaire.id)
       }
 
       "list questions" in {
@@ -105,8 +129,8 @@ class QuestionnaireControllerSpec extends PlaySpec
 
         status(response) must equal(OK)
         val questions = contentAsJson(response).as[JsArray].value
-        questions.map(_ ("content").as[String]) must contain("Readable Question")
-        questions.map(_ ("id").as[Long]) must not contain (hiddenQuestion.id)
+        questions.map(_("content").as[String]) must contain("Readable Question")
+        questions.map(_("id").as[Long]) must not contain (hiddenQuestion.id)
       }
 
       "reject listing questions for non-readable questionnaire" in {
@@ -139,24 +163,37 @@ class QuestionnaireControllerSpec extends PlaySpec
       }
 
       "reject modifying read-only questionnaire" in {
-        val response = doAuthenticatedRequest(PUT, s"/v1/questionnaires/${readableQuestionnaire.id}", Some(qJson("another name", Some(readableStudy.id))))
+        val response = doAuthenticatedRequest(
+          PUT,
+          s"/v1/questionnaires/${readableQuestionnaire.id}",
+          Some(qJson("another name", Some(readableStudy.id)))
+        )
         status(response) must equal(FORBIDDEN)
 
         status(doAuthenticatedRequest(DELETE, s"/v1/questionnaires/${readableQuestionnaire.id}")) must equal(FORBIDDEN)
       }
 
       "reject adding questionnaires to read-only studies" in {
-        val response = doAuthenticatedRequest(POST, "/v1/questionnaires", Some(qJson("some name", Some(readableStudy.id))))
+        val response =
+          doAuthenticatedRequest(POST, "/v1/questionnaires", Some(qJson("some name", Some(readableStudy.id))))
         status(response) must equal(FORBIDDEN)
       }
 
       "reject re-assigning questionnaires from read-only studies" in {
-        val response = doAuthenticatedRequest(PUT, s"/v1/questionnaires/${readableQuestionnaire.id}", Some(qJson("another name", Some(writeableStudy.id))))
+        val response = doAuthenticatedRequest(
+          PUT,
+          s"/v1/questionnaires/${readableQuestionnaire.id}",
+          Some(qJson("another name", Some(writeableStudy.id)))
+        )
         status(response) must equal(FORBIDDEN)
       }
 
       "reject re-assigning questionnaires to read-only studies" in {
-        val response = doAuthenticatedRequest(PUT, s"/v1/questionnaires/${writeableQuestionnaire.id}", Some(qJson("another name", Some(readableStudy.id))))
+        val response = doAuthenticatedRequest(
+          PUT,
+          s"/v1/questionnaires/${writeableQuestionnaire.id}",
+          Some(qJson("another name", Some(readableStudy.id)))
+        )
         status(response) must equal(FORBIDDEN)
       }
 
@@ -203,12 +240,17 @@ class QuestionnaireControllerSpec extends PlaySpec
       implicit val _ = Role.Admin
 
       "list all questionnaires" in {
-        val ids = contentAsJson(doAuthenticatedRequest(GET, s"/v1/questionnaires")).as[JsArray].value.map(_ ("id").as[Long])
-        ids must contain allOf(hiddenQuestionnaire.id, readableQuestionnaire.id, writeableQuestionnaire.id)
+        val ids =
+          contentAsJson(doAuthenticatedRequest(GET, s"/v1/questionnaires")).as[JsArray].value.map(_("id").as[Long])
+        ids must contain allOf (hiddenQuestionnaire.id, readableQuestionnaire.id, writeableQuestionnaire.id)
       }
 
       "modify questionnaires without explicit acls" in {
-        val response = doAuthenticatedRequest(PUT, s"/v1/questionnaires/${hiddenQuestionnaire.id}", Some(qJson("another name", Some(hiddenStudy.id))))
+        val response = doAuthenticatedRequest(
+          PUT,
+          s"/v1/questionnaires/${hiddenQuestionnaire.id}",
+          Some(qJson("another name", Some(hiddenStudy.id)))
+        )
         status(response) must equal(OK)
       }
 
@@ -222,7 +264,9 @@ class QuestionnaireControllerSpec extends PlaySpec
       }
 
       "reject deleting questionnaires containing questions" in {
-        status(doAuthenticatedRequest(DELETE, s"/v1/questionnaires/${readableQuestionnaire.id}")) must equal(BAD_REQUEST)
+        status(doAuthenticatedRequest(DELETE, s"/v1/questionnaires/${readableQuestionnaire.id}")) must equal(
+          BAD_REQUEST
+        )
       }
 
       "refuse to duplicate inexistent questionnaires" in {
@@ -232,9 +276,7 @@ class QuestionnaireControllerSpec extends PlaySpec
   }
 
   private def qJson(name: String, studyId: Option[Long]): JsValue = {
-    val obj = Json.obj(
-      "name" -> name
-    )
+    val obj = Json.obj("name" -> name)
     if (studyId.isEmpty) obj else obj + ("studyId" -> JsNumber(studyId.get))
   }
 }

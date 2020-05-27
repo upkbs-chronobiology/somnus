@@ -30,14 +30,22 @@ case class UserSession(id: String, username: String, lastUsed: Instant, expiry: 
 
 object UserSession {
   def fromBearerTokenAuthenticator(a: BearerTokenAuthenticator) =
-    UserSession(a.id, a.loginInfo.providerKey,
-      Time.toJava(a.lastUsedDateTime.toInstant), Time.toJava(a.expirationDateTime.toInstant),
-      a.idleTimeout.map(_.toSeconds))
+    UserSession(
+      a.id,
+      a.loginInfo.providerKey,
+      Time.toJava(a.lastUsedDateTime.toInstant),
+      Time.toJava(a.expirationDateTime.toInstant),
+      a.idleTimeout.map(_.toSeconds)
+    )
 
   def toBearerTokenAuthenticator(session: UserSession, credentialsProvider: CredentialsProvider) =
-    BearerTokenAuthenticator(session.id, LoginInfo(credentialsProvider.id, session.username),
-      new DateTime(session.lastUsed.toEpochMilli), new DateTime(session.expiry.toEpochMilli),
-      session.idleTimeout.map(FiniteDuration(_, TimeUnit.SECONDS)))
+    BearerTokenAuthenticator(
+      session.id,
+      LoginInfo(credentialsProvider.id, session.username),
+      new DateTime(session.lastUsed.toEpochMilli),
+      new DateTime(session.expiry.toEpochMilli),
+      session.idleTimeout.map(FiniteDuration(_, TimeUnit.SECONDS))
+    )
 
   val tupled = (this.apply _).tupled
 }
@@ -53,8 +61,8 @@ class UserSessionTable(tag: Tag) extends Table[UserSession](tag, "user_session")
 }
 
 @Singleton
-class TokenRepository @Inject()(dbConfigProvider: DatabaseConfigProvider, credentialsProvider: CredentialsProvider)
-  extends AuthenticatorRepository[BearerTokenAuthenticator] {
+class TokenRepository @Inject() (dbConfigProvider: DatabaseConfigProvider, credentialsProvider: CredentialsProvider)
+    extends AuthenticatorRepository[BearerTokenAuthenticator] {
 
   private val MaxCachedSessions = 1000
   private val authCache = Collections.synchronizedMap(new LRUMap[String, BearerTokenAuthenticator](MaxCachedSessions))
@@ -76,7 +84,8 @@ class TokenRepository @Inject()(dbConfigProvider: DatabaseConfigProvider, creden
   override def add(authenticator: BearerTokenAuthenticator): Future[BearerTokenAuthenticator] = {
     // FIXME: Potential race condition (and not very efficient) - try to do everything in a single query/transaction
     this.find(authenticator.id) flatMap {
-      case Some(_) => throw new IllegalArgumentException(s"BearerTokenAuthenticator with id ${authenticator.id} already exists")
+      case Some(_) =>
+        throw new IllegalArgumentException(s"BearerTokenAuthenticator with id ${authenticator.id} already exists")
       case None =>
         dbConfig.db.run(sessions += UserSession.fromBearerTokenAuthenticator(authenticator)) map {
           case 1 =>
@@ -90,8 +99,13 @@ class TokenRepository @Inject()(dbConfigProvider: DatabaseConfigProvider, creden
 
   override def update(authenticator: BearerTokenAuthenticator): Future[BearerTokenAuthenticator] = {
     authCache.put(authenticator.id, authenticator)
-    dbConfig.db.run(sessions.filter(_.id === authenticator.id)
-      .update(UserSession.fromBearerTokenAuthenticator(authenticator))).map(_ => authenticator)
+    dbConfig.db
+      .run(
+        sessions
+          .filter(_.id === authenticator.id)
+          .update(UserSession.fromBearerTokenAuthenticator(authenticator))
+      )
+      .map(_ => authenticator)
   }
 
   override def remove(id: String): Future[Unit] = {

@@ -5,9 +5,7 @@ import play.api.libs.json.JsValue
 
 object JsonResponse {
   def apply(message: String): JsValue = {
-    Json.obj(
-      "message" -> message
-    )
+    Json.obj("message" -> message)
   }
 }
 

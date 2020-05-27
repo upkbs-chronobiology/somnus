@@ -33,9 +33,15 @@ import testutil.FreshDatabase
 import testutil.TestUtils
 import util.Futures.TraversableFutureExtensions
 
-class AnswerControllerSpec extends PlaySpec
-  with GuiceOneAppPerSuite with FreshDatabase with Injecting with TestUtils with Authenticated
-  with BeforeAndAfterAll with BeforeAndAfterEach {
+class AnswerControllerSpec
+    extends PlaySpec
+    with GuiceOneAppPerSuite
+    with FreshDatabase
+    with Injecting
+    with TestUtils
+    with Authenticated
+    with BeforeAndAfterAll
+    with BeforeAndAfterEach {
 
   val questionsRepo = inject[QuestionsRepository]
   val answersRepo = inject[AnswersRepository]
@@ -49,8 +55,13 @@ class AnswerControllerSpec extends PlaySpec
   private val readableQuestionnaire =
     doSync(inject[QuestionnairesRepository].create(Questionnaire(0, "Readable Questionnaire", Some(readableStudy.id))))
 
-  private val hiddenQuestion = doSync(questionsRepo.add(Question(0, "hidden question", AnswerType.Text, questionnaireId = Some(hiddenQuestionnaire.id))))
-  private val readableQuestion = doSync(questionsRepo.add(Question(0, "readable question", AnswerType.Text, questionnaireId = Some(readableQuestionnaire.id))))
+  private val hiddenQuestion = doSync(
+    questionsRepo.add(Question(0, "hidden question", AnswerType.Text, questionnaireId = Some(hiddenQuestionnaire.id)))
+  )
+  private val readableQuestion = doSync(
+    questionsRepo
+      .add(Question(0, "readable question", AnswerType.Text, questionnaireId = Some(readableQuestionnaire.id)))
+  )
 
   override def beforeAll(): Unit = {
     super.beforeAll()
@@ -120,8 +131,11 @@ class AnswerControllerSpec extends PlaySpec
       }
 
       "reject single answer with invalid question id" in {
-        val response = doAuthenticatedRequest(POST, "/v1/answers",
-          Some(Json.arr(answerJson(999, "Some answer A", "2000-01-01T00:00:00+00:00"))))
+        val response = doAuthenticatedRequest(
+          POST,
+          "/v1/answers",
+          Some(Json.arr(answerJson(999, "Some answer A", "2000-01-01T00:00:00+00:00")))
+        )
         status(response) must equal(BAD_REQUEST)
       }
 
@@ -141,29 +155,35 @@ class AnswerControllerSpec extends PlaySpec
       }
 
       "accept discrete-number answers" in {
-        val question = doSync(questionsRepo.add(Question(0, "My question X", AnswerType.RangeDiscrete, None, Some("1,5"))))
+        val question =
+          doSync(questionsRepo.add(Question(0, "My question X", AnswerType.RangeDiscrete, None, Some("1,5"))))
         status(postAnswer(question.id, "4")) must equal(201)
       }
 
       "accept continuous-number answers" in {
-        val question = doSync(questionsRepo.add(Question(0, "My question X", AnswerType.RangeContinuous, None, Some("0,1"))))
+        val question =
+          doSync(questionsRepo.add(Question(0, "My question X", AnswerType.RangeContinuous, None, Some("0,1"))))
         status(postAnswer(question.id, "0.1337")) must equal(201)
       }
 
       "accept continuous-number answers within custom range" in {
-        val question = doSync(questionsRepo.add(Question(0, "My question X", AnswerType.RangeContinuous, answerRange = Some("-2,5"))))
+        val question = doSync(
+          questionsRepo.add(Question(0, "My question X", AnswerType.RangeContinuous, answerRange = Some("-2,5")))
+        )
         status(postAnswer(question.id, "4.44")) must equal(201)
         status(postAnswer(question.id, "-0.1")) must equal(201)
       }
 
       "accept single-select multiple-choice answers" in {
-        val question = doSync(questionsRepo.add(Question(0, "My question X", AnswerType.MultipleChoiceSingle, Some("a,b,c"))))
+        val question =
+          doSync(questionsRepo.add(Question(0, "My question X", AnswerType.MultipleChoiceSingle, Some("a,b,c"))))
         status(postAnswer(question.id, "0")) must equal(CREATED)
         status(postAnswer(question.id, "2")) must equal(CREATED)
       }
 
       "accept many-select multiple-choice answers" in {
-        val question = doSync(questionsRepo.add(Question(0, "My question X", AnswerType.MultipleChoiceMany, Some("a,b,c"))))
+        val question =
+          doSync(questionsRepo.add(Question(0, "My question X", AnswerType.MultipleChoiceMany, Some("a,b,c"))))
         status(postAnswer(question.id, "0")) must equal(CREATED)
         status(postAnswer(question.id, "2")) must equal(CREATED)
         status(postAnswer(question.id, "0,1,2")) must equal(CREATED)
@@ -185,7 +205,8 @@ class AnswerControllerSpec extends PlaySpec
       }
 
       "reject text answers to discrete-number type questions" in {
-        val question = doSync(questionsRepo.add(Question(0, "My question Y", AnswerType.RangeDiscrete, None, Some("1,5"))))
+        val question =
+          doSync(questionsRepo.add(Question(0, "My question Y", AnswerType.RangeDiscrete, None, Some("1,5"))))
         status(postAnswer(question.id, "This should not be text")) must equal(400)
       }
 
@@ -195,28 +216,34 @@ class AnswerControllerSpec extends PlaySpec
       }
 
       "reject continuous-number type answers out of custom range" in {
-        val question = doSync(questionsRepo.add(Question(0, "My question Z", AnswerType.RangeContinuous, answerRange = Some("13,177"))))
+        val question = doSync(
+          questionsRepo.add(Question(0, "My question Z", AnswerType.RangeContinuous, answerRange = Some("13,177")))
+        )
         status(postAnswer(question.id, "0.5")) must equal(400)
       }
 
       "reject discrete-number type answers out of range" in {
-        val question = doSync(questionsRepo.add(Question(0, "My question W", AnswerType.RangeDiscrete, None, Some("2,6"))))
+        val question =
+          doSync(questionsRepo.add(Question(0, "My question W", AnswerType.RangeDiscrete, None, Some("2,6"))))
         status(postAnswer(question.id, "7")) must equal(400)
       }
 
       "reject continuous number answers to discrete-number type questions" in {
-        val question = doSync(questionsRepo.add(Question(0, "My question Z", AnswerType.RangeDiscrete, None, Some("1,5"))))
+        val question =
+          doSync(questionsRepo.add(Question(0, "My question Z", AnswerType.RangeDiscrete, None, Some("1,5"))))
         status(postAnswer(question.id, "2.5")) must equal(400)
       }
 
       "reject single-select multiple-choice answers out of range" in {
-        val question = doSync(questionsRepo.add(Question(0, "My question X", AnswerType.MultipleChoiceSingle, Some("a,b,c"))))
+        val question =
+          doSync(questionsRepo.add(Question(0, "My question X", AnswerType.MultipleChoiceSingle, Some("a,b,c"))))
         status(postAnswer(question.id, "-1")) must equal(BAD_REQUEST)
         status(postAnswer(question.id, "3")) must equal(BAD_REQUEST)
       }
 
       "reject many-select multiple-choice answers out of range" in {
-        val question = doSync(questionsRepo.add(Question(0, "My question X", AnswerType.MultipleChoiceMany, Some("a,b,c"))))
+        val question =
+          doSync(questionsRepo.add(Question(0, "My question X", AnswerType.MultipleChoiceMany, Some("a,b,c"))))
         status(postAnswer(question.id, "-1")) must equal(BAD_REQUEST)
         status(postAnswer(question.id, "3")) must equal(BAD_REQUEST)
         status(postAnswer(question.id, "-1,2")) must equal(BAD_REQUEST)
@@ -224,13 +251,15 @@ class AnswerControllerSpec extends PlaySpec
       }
 
       "reject single-select multiple-choice answers other than integers" in {
-        val question = doSync(questionsRepo.add(Question(0, "My question X", AnswerType.MultipleChoiceSingle, Some("a,b,c"))))
+        val question =
+          doSync(questionsRepo.add(Question(0, "My question X", AnswerType.MultipleChoiceSingle, Some("a,b,c"))))
         status(postAnswer(question.id, "1.2")) must equal(BAD_REQUEST)
         status(postAnswer(question.id, "foobar")) must equal(BAD_REQUEST)
       }
 
       "reject many-select multiple-choice answers other than integers" in {
-        val question = doSync(questionsRepo.add(Question(0, "My question X", AnswerType.MultipleChoiceMany, Some("a,b,c"))))
+        val question =
+          doSync(questionsRepo.add(Question(0, "My question X", AnswerType.MultipleChoiceMany, Some("a,b,c"))))
         status(postAnswer(question.id, "1.2")) must equal(BAD_REQUEST)
         status(postAnswer(question.id, "foobar")) must equal(BAD_REQUEST)
         status(postAnswer(question.id, "0,1.2")) must equal(BAD_REQUEST)
@@ -250,8 +279,11 @@ class AnswerControllerSpec extends PlaySpec
       "accept answers to studies where participant" in {
         val study = doSync(inject[StudyRepository].create(Study(0, "My Study")))
         doSync(inject[StudyRepository].addParticipant(study.id, baseUser.id))
-        val questionnaire = doSync(inject[QuestionnairesRepository].create(Questionnaire(0, "My Questionnaire", Some(study.id))))
-        val question = doSync(questionsRepo.add(Question(0, "My Question", AnswerType.Text, questionnaireId = Some(questionnaire.id))))
+        val questionnaire =
+          doSync(inject[QuestionnairesRepository].create(Questionnaire(0, "My Questionnaire", Some(study.id))))
+        val question = doSync(
+          questionsRepo.add(Question(0, "My Question", AnswerType.Text, questionnaireId = Some(questionnaire.id)))
+        )
 
         val data = Json.arr(answerJson(question.id, "Some answer", "2099-01-01T01:01:55-11:30"))
         val response = doAuthenticatedRequest(POST, "/v1/answers", Some(data))
@@ -260,8 +292,12 @@ class AnswerControllerSpec extends PlaySpec
 
       "reject answers to studies where not participant" in {
         val study = doSync(inject[StudyRepository].create(Study(0, "Unrelated Study")))
-        val questionnaire = doSync(inject[QuestionnairesRepository].create(Questionnaire(0, "Unrelated Questionnaire", Some(study.id))))
-        val question = doSync(questionsRepo.add(Question(0, "Unrelated Question", AnswerType.Text, questionnaireId = Some(questionnaire.id))))
+        val questionnaire =
+          doSync(inject[QuestionnairesRepository].create(Questionnaire(0, "Unrelated Questionnaire", Some(study.id))))
+        val question = doSync(
+          questionsRepo
+            .add(Question(0, "Unrelated Question", AnswerType.Text, questionnaireId = Some(questionnaire.id)))
+        )
 
         val data = Json.arr(answerJson(question.id, "Some answer", "2099-01-01T01:01:55-11:30"))
         val response = doAuthenticatedRequest(POST, "/v1/answers", Some(data))
@@ -270,9 +306,14 @@ class AnswerControllerSpec extends PlaySpec
 
       "not save any answers if one was rejected" in {
         val study = doSync(inject[StudyRepository].create(Study(0, "Unrelated Study 2")))
-        val questionnaire = doSync(inject[QuestionnairesRepository].create(Questionnaire(0, "Unrelated Questionnaire", Some(study.id))))
-        val hiddenQuestion = doSync(questionsRepo.add(Question(0, "Hidden Question", AnswerType.Text, questionnaireId = Some(questionnaire.id))))
-        val visibleQuestion = doSync(questionsRepo.add(Question(0, "Visible Question", AnswerType.Text, questionnaireId = Some(questionnaire.id))))
+        val questionnaire =
+          doSync(inject[QuestionnairesRepository].create(Questionnaire(0, "Unrelated Questionnaire", Some(study.id))))
+        val hiddenQuestion = doSync(
+          questionsRepo.add(Question(0, "Hidden Question", AnswerType.Text, questionnaireId = Some(questionnaire.id)))
+        )
+        val visibleQuestion = doSync(
+          questionsRepo.add(Question(0, "Visible Question", AnswerType.Text, questionnaireId = Some(questionnaire.id)))
+        )
 
         val data = Json.arr(
           answerJson(visibleQuestion.id, "Some answer", "2099-01-01T01:01:55-11:30"),
@@ -282,7 +323,7 @@ class AnswerControllerSpec extends PlaySpec
 
         status(response) must equal(FORBIDDEN)
         val answerQuestionIds = answersRepo.listAll().mapTraversable(_.questionId)
-        doSync(answerQuestionIds) must contain noneOf(hiddenQuestion.id, visibleQuestion.id)
+        doSync(answerQuestionIds) must contain noneOf (hiddenQuestion.id, visibleQuestion.id)
       }
     }
 
@@ -321,32 +362,34 @@ class AnswerControllerSpec extends PlaySpec
       }
 
       "list answers on readable studies" in {
-        val answer = doSync(answersRepo.add(Answer(0, readableQuestion.id,
-          "Some answer", baseUser.id, null, OffsetDateTime.now())))
+        val answer = doSync(
+          answersRepo.add(Answer(0, readableQuestion.id, "Some answer", baseUser.id, null, OffsetDateTime.now()))
+        )
 
         val list = contentAsJson(doAuthenticatedRequest(GET, "/v1/answers")).as[JsArray].value
-        list.map(_ ("id").as[Long]) must contain(answer.id)
+        list.map(_("id").as[Long]) must contain(answer.id)
       }
 
       "omit answers on hidden studies from list" in {
-        val answer = doSync(answersRepo.add(Answer(0, hiddenQuestion.id,
-          "Some answer", baseUser.id, null, OffsetDateTime.now())))
+        val answer =
+          doSync(answersRepo.add(Answer(0, hiddenQuestion.id, "Some answer", baseUser.id, null, OffsetDateTime.now())))
 
         val list = contentAsJson(doAuthenticatedRequest(GET, "/v1/answers")).as[JsArray].value
-        list.map(_ ("id").as[Long]) must not contain answer.id
+        list.map(_("id").as[Long]) must not contain answer.id
       }
 
       "allow reading answers on readable studies" in {
-        val answer = doSync(answersRepo.add(Answer(0, readableQuestion.id,
-          "Some answer", baseUser.id, null, OffsetDateTime.now())))
+        val answer = doSync(
+          answersRepo.add(Answer(0, readableQuestion.id, "Some answer", baseUser.id, null, OffsetDateTime.now()))
+        )
 
         val response = doAuthenticatedRequest(GET, s"/v1/answers/${answer.id}")
         status(response) must equal(OK)
       }
 
       "reject reading hidden studies" in {
-        val answer = doSync(answersRepo.add(Answer(0, hiddenQuestion.id,
-          "Some answer", baseUser.id, null, OffsetDateTime.now())))
+        val answer =
+          doSync(answersRepo.add(Answer(0, hiddenQuestion.id, "Some answer", baseUser.id, null, OffsetDateTime.now())))
 
         val response = doAuthenticatedRequest(GET, s"/v1/answers/${answer.id}")
         status(response) must equal(FORBIDDEN)
@@ -360,10 +403,6 @@ class AnswerControllerSpec extends PlaySpec
   }
 
   private def answerJson(questionId: Long, text: String, createdLocal: String): JsValue = {
-    Json.obj(
-      "questionId" -> questionId,
-      "content" -> text,
-      "createdLocal" -> createdLocal
-    )
+    Json.obj("questionId" -> questionId, "content" -> text, "createdLocal" -> createdLocal)
   }
 }

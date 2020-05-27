@@ -20,11 +20,8 @@ object StudyAccess {
   val LevelJsonKey = "level"
 
   implicit val implicitWrites = new Writes[StudyAccess] {
-    override def writes(sa: StudyAccess): JsValue = Json.obj(
-      "userId" -> sa.userId,
-      "studyId" -> sa.studyId,
-      "level" -> sa.level.toString
-    )
+    override def writes(sa: StudyAccess): JsValue =
+      Json.obj("userId" -> sa.userId, "studyId" -> sa.studyId, "level" -> sa.level.toString)
   }
 
   val tupled = (this.apply _).tupled
@@ -39,7 +36,7 @@ class StudyAccessTable(tag: Tag) extends Table[StudyAccess](tag, "study_access")
 }
 
 @Singleton
-class StudyAccessRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) {
+class StudyAccessRepository @Inject() (dbConfigProvider: DatabaseConfigProvider) {
 
   private def studyAccesses = TableQuery[StudyAccessTable]
 

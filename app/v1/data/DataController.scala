@@ -24,7 +24,7 @@ import util.JsonError
 import v1.RestBaseController
 import v1.RestControllerComponents
 
-class DataController @Inject()(
+class DataController @Inject() (
   rcc: RestControllerComponents,
   silhouette: Silhouette[DefaultEnv],
   studiesRepo: StudyRepository,
@@ -33,7 +33,7 @@ class DataController @Inject()(
   answersRepo: AnswersRepository,
   schedulesRepo: SchedulesRepository
 )(implicit ec: ExecutionContext)
-  extends RestBaseController(rcc) {
+    extends RestBaseController(rcc) {
 
   def getCsvZipped(studyId: Long) = silhouette.SecuredAction(ForEditors).async {
     for {

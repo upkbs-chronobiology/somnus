@@ -10,8 +10,13 @@ import testutil.Authenticated
 import testutil.FreshDatabase
 import testutil.TestUtils
 
-class ScheduleSpec extends PlaySpec
-  with GuiceOneAppPerSuite with Injecting with FreshDatabase with TestUtils with Authenticated {
+class ScheduleSpec
+    extends PlaySpec
+    with GuiceOneAppPerSuite
+    with Injecting
+    with FreshDatabase
+    with TestUtils
+    with Authenticated {
 
   val schedules = inject[SchedulesRepository]
   val questionnaires = inject[QuestionnairesRepository]
@@ -20,9 +25,16 @@ class ScheduleSpec extends PlaySpec
 
   "ScheduleRepository" should {
     "create, read, update, delete items" in {
-      val schedule = Schedule(0, questionnaire.id, baseUser.id,
-        LocalDate.of(2018, 4, 1), LocalDate.of(2018, 4, 7),
-        LocalTime.of(8, 0), LocalTime.of(22, 30), 5)
+      val schedule = Schedule(
+        0,
+        questionnaire.id,
+        baseUser.id,
+        LocalDate.of(2018, 4, 1),
+        LocalDate.of(2018, 4, 7),
+        LocalTime.of(8, 0),
+        LocalTime.of(22, 30),
+        5
+      )
 
       val createdSchedule = doSync(schedules.create(schedule))
 
@@ -39,9 +51,16 @@ class ScheduleSpec extends PlaySpec
 
       readSchedule must equal(createdSchedule)
 
-      val secondSchedule = Schedule(createdSchedule.id, questionnaire.id, researchUser.id,
-        LocalDate.of(2018, 4, 1), LocalDate.of(2018, 4, 20),
-        LocalTime.of(8, 30), LocalTime.of(22, 30), 5)
+      val secondSchedule = Schedule(
+        createdSchedule.id,
+        questionnaire.id,
+        researchUser.id,
+        LocalDate.of(2018, 4, 1),
+        LocalDate.of(2018, 4, 20),
+        LocalTime.of(8, 30),
+        LocalTime.of(22, 30),
+        5
+      )
 
       val updatedSchedule = doSync(schedules.update(secondSchedule))
 
@@ -60,9 +79,16 @@ class ScheduleSpec extends PlaySpec
     }
 
     "reject schedules with bad questionnaire ids" in {
-      val schedule = Schedule(0, 999, baseUser.id,
-        LocalDate.of(2018, 4, 1), LocalDate.of(2018, 4, 7),
-        LocalTime.of(8, 0), LocalTime.of(22, 30), 5)
+      val schedule = Schedule(
+        0,
+        999,
+        baseUser.id,
+        LocalDate.of(2018, 4, 1),
+        LocalDate.of(2018, 4, 7),
+        LocalTime.of(8, 0),
+        LocalTime.of(22, 30),
+        5
+      )
 
       an[IllegalArgumentException] mustBe thrownBy {
         doSync(schedules.create(schedule))
@@ -70,9 +96,16 @@ class ScheduleSpec extends PlaySpec
     }
 
     "reject schedules with bad user ids" in {
-      val schedule = Schedule(0, questionnaire.id, 888,
-        LocalDate.of(2018, 4, 1), LocalDate.of(2018, 4, 7),
-        LocalTime.of(8, 0), LocalTime.of(22, 30), 5)
+      val schedule = Schedule(
+        0,
+        questionnaire.id,
+        888,
+        LocalDate.of(2018, 4, 1),
+        LocalDate.of(2018, 4, 7),
+        LocalTime.of(8, 0),
+        LocalTime.of(22, 30),
+        5
+      )
 
       an[IllegalArgumentException] mustBe thrownBy {
         doSync(schedules.create(schedule))

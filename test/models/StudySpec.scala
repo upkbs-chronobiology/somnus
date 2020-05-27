@@ -6,8 +6,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.test.Injecting
 import testutil.TestUtils
 
-class StudySpec extends PlaySpec
-  with GuiceOneAppPerSuite with Injecting with TestUtils {
+class StudySpec extends PlaySpec with GuiceOneAppPerSuite with Injecting with TestUtils {
 
   val authService = inject[AuthService]
   val studies = inject[StudyRepository]

@@ -11,10 +11,7 @@ case class InclusiveRange[T](min: T, max: T)
 object InclusiveRange {
 
   private def buildJson(min: BigDecimal, max: BigDecimal) = {
-    Json.obj(
-      "min" -> JsNumber(min),
-      "max" -> JsNumber(max)
-    )
+    Json.obj("min" -> JsNumber(min), "max" -> JsNumber(max))
   }
 
   implicit val implicitWrites = new Writes[InclusiveRange[BigDecimal]] {

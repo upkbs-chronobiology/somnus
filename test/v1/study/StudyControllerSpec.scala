@@ -24,9 +24,14 @@ import testutil.FreshDatabase
 import testutil.TestUtils
 import util.Futures.TraversableFutureExtensions
 
-class StudyControllerSpec extends PlaySpec
-  with GuiceOneAppPerSuite with Injecting with FreshDatabase with TestUtils with Authenticated
-  with BeforeAndAfterEach {
+class StudyControllerSpec
+    extends PlaySpec
+    with GuiceOneAppPerSuite
+    with Injecting
+    with FreshDatabase
+    with TestUtils
+    with Authenticated
+    with BeforeAndAfterEach {
 
   private val studyAccessRepo = inject[StudyAccessRepository]
   private val studyRepo = inject[StudyRepository]
@@ -38,15 +43,22 @@ class StudyControllerSpec extends PlaySpec
     super.afterEach()
 
     // delete all studies (and their participants, and questionnaires)
-    doSync(studyRepo.listAll().mapTraversableAsync(s => {
-      studyRepo.listParticipants(s.id)
-        .mapTraversableAsync(p => studyRepo.removeParticipant(s.id, p.id))
-        .flatMap(_ =>
-          questionnairesRepo.listByStudy(s.id)
-            .mapTraversableAsync(q => questionnairesRepo.delete(q.id))
-            .flatMap(_ =>
-              studyRepo.delete(s.id)))
-    }))
+    doSync(
+      studyRepo
+        .listAll()
+        .mapTraversableAsync(s => {
+          studyRepo
+            .listParticipants(s.id)
+            .mapTraversableAsync(p => studyRepo.removeParticipant(s.id, p.id))
+            .flatMap(
+              _ =>
+                questionnairesRepo
+                  .listByStudy(s.id)
+                  .mapTraversableAsync(q => questionnairesRepo.delete(q.id))
+                  .flatMap(_ => studyRepo.delete(s.id))
+            )
+        })
+    )
   }
 
   "StudyController" when {
@@ -91,7 +103,7 @@ class StudyControllerSpec extends PlaySpec
         val response = doAuthenticatedRequest(GET, "/v1/studies")
 
         status(response) must equal(OK)
-        val ids = contentAsJson(response).as[JsArray].value.map(_ ("id").as[Long])
+        val ids = contentAsJson(response).as[JsArray].value.map(_("id").as[Long])
         ids must contain theSameElementsAs Seq(readStudy.id, writeStudy.id, ownStudy.id)
       }
 
@@ -123,7 +135,7 @@ class StudyControllerSpec extends PlaySpec
 
         val list = contentAsJson(response).as[JsArray].value
         list.length must equal(2)
-        list.map(item => item("name").as[String]) must contain allOf("Questionnaire A", "Questionnaire B")
+        list.map(item => item("name").as[String]) must contain allOf ("Questionnaire A", "Questionnaire B")
       }
 
       "reject questionnaire listing without study access" in {
@@ -143,11 +155,15 @@ class StudyControllerSpec extends PlaySpec
         val createdId = contentAsJson(creationResult).apply("id").as[Long]
 
         contentAsJson(doAuthenticatedRequest(GET, "/v1/studies")).as[JsArray].value.length must equal(1)
-        contentAsJson(doAuthenticatedRequest(GET, s"/v1/studies/$createdId")).apply("name").as[String] must equal("Foo Bar")
+        contentAsJson(doAuthenticatedRequest(GET, s"/v1/studies/$createdId")).apply("name").as[String] must equal(
+          "Foo Bar"
+        )
 
         status(doAuthenticatedRequest(PUT, s"/v1/studies/$createdId", Some(studyJson("My New Name")))) must equal(200)
 
-        contentAsJson(doAuthenticatedRequest(GET, s"/v1/studies/$createdId")).apply("name").as[String] must equal("My New Name")
+        contentAsJson(doAuthenticatedRequest(GET, s"/v1/studies/$createdId")).apply("name").as[String] must equal(
+          "My New Name"
+        )
 
         status(doAuthenticatedRequest(DELETE, s"/v1/studies/$createdId")) must equal(200)
 
@@ -158,14 +174,18 @@ class StudyControllerSpec extends PlaySpec
         val study = doSync(studyRepo.create(Study(0, "my study")))
         doSync(studyAccessRepo.upsert(StudyAccess(researchUser.id, study.id, AccessLevel.Read)))
 
-        status(doAuthenticatedRequest(PUT, s"/v1/studies/${study.id}", Some(studyJson("my new name")))) must equal(FORBIDDEN)
+        status(doAuthenticatedRequest(PUT, s"/v1/studies/${study.id}", Some(studyJson("my new name")))) must equal(
+          FORBIDDEN
+        )
         status(doAuthenticatedRequest(DELETE, s"/v1/studies/${study.id}")) must equal(FORBIDDEN)
       }
 
       "reject modification requests with no access" in {
         val study = doSync(studyRepo.create(Study(0, "my study")))
 
-        status(doAuthenticatedRequest(PUT, s"/v1/studies/${study.id}", Some(studyJson("my new name")))) must equal(FORBIDDEN)
+        status(doAuthenticatedRequest(PUT, s"/v1/studies/${study.id}", Some(studyJson("my new name")))) must equal(
+          FORBIDDEN
+        )
         status(doAuthenticatedRequest(DELETE, s"/v1/studies/${study.id}")) must equal(FORBIDDEN)
       }
 
@@ -195,7 +215,8 @@ class StudyControllerSpec extends PlaySpec
 
         status(doAuthenticatedRequest(DELETE, s"/v1/studies/$createdId/participants/${george.id}")) must equal(200)
 
-        val finalList = contentAsJson(doAuthenticatedRequest(GET, s"/v1/studies/$createdId/participants")).as[JsArray].value
+        val finalList =
+          contentAsJson(doAuthenticatedRequest(GET, s"/v1/studies/$createdId/participants")).as[JsArray].value
         finalList.length must equal(0)
       }
 
@@ -228,9 +249,7 @@ class StudyControllerSpec extends PlaySpec
   }
 
   private def studyJson(name: String): JsValue = {
-    Json.obj(
-      "name" -> name
-    )
+    Json.obj("name" -> name)
   }
 
 }

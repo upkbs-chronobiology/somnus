@@ -16,16 +16,20 @@ import play.api.test.Injecting
 import testutil.FreshDatabase
 import testutil.TestUtils
 
-class TokenRepositorySpec extends PlaySpec
-  with GuiceOneAppPerSuite with FreshDatabase with Injecting with TestUtils {
+class TokenRepositorySpec extends PlaySpec with GuiceOneAppPerSuite with FreshDatabase with Injecting with TestUtils {
 
   val repo = inject[TokenRepository]
   val credentialsProvider = inject[CredentialsProvider]
 
   "UserSession" should {
     "convert to authenticator correctly" in {
-      val session = UserSession("abc", "Ronnie O'Sullivan",
-        Instant.now(), Instant.now().plus(java.time.Duration.ofDays(5)), Some(123456))
+      val session = UserSession(
+        "abc",
+        "Ronnie O'Sullivan",
+        Instant.now(),
+        Instant.now().plus(java.time.Duration.ofDays(5)),
+        Some(123456)
+      )
       val authenticator = UserSession.toBearerTokenAuthenticator(session, credentialsProvider)
 
       session.id mustEqual authenticator.id
@@ -36,10 +40,13 @@ class TokenRepositorySpec extends PlaySpec
     }
 
     "convert from authenticator correctly" in {
-      val authenticator = BearerTokenAuthenticator("xyz",
+      val authenticator = BearerTokenAuthenticator(
+        "xyz",
         new LoginInfo("my-provider", "Siya Kolisi"),
         DateTime.now().minus(Duration.standardHours(4)),
-        DateTime.now().plus(Duration.standardDays(3)), Some(FiniteDuration(2, TimeUnit.DAYS)))
+        DateTime.now().plus(Duration.standardDays(3)),
+        Some(FiniteDuration(2, TimeUnit.DAYS))
+      )
 
       val session = UserSession.fromBearerTokenAuthenticator(authenticator)
 
@@ -53,10 +60,13 @@ class TokenRepositorySpec extends PlaySpec
 
   "TokenRepository" should {
     "add, find, update, and remove authenticator" in {
-      val authenticator = BearerTokenAuthenticator("xyz",
+      val authenticator = BearerTokenAuthenticator(
+        "xyz",
         new LoginInfo(credentialsProvider.id, "Siya Kolisi"),
         DateTime.now().minus(Duration.standardHours(4)),
-        DateTime.now().plus(Duration.standardDays(3)), Some(FiniteDuration(654321, TimeUnit.SECONDS)))
+        DateTime.now().plus(Duration.standardDays(3)),
+        Some(FiniteDuration(654321, TimeUnit.SECONDS))
+      )
 
       doSync(repo.add(authenticator)) mustEqual authenticator
       doSync(repo.find("xyz")) mustEqual Some(authenticator)
@@ -70,10 +80,13 @@ class TokenRepositorySpec extends PlaySpec
     }
 
     "throw if adding the same twice" in {
-      val authenticator = BearerTokenAuthenticator("foo-id",
+      val authenticator = BearerTokenAuthenticator(
+        "foo-id",
         new LoginInfo("my-provider", "Siya Kolisi"),
         DateTime.now().minus(Duration.standardHours(4)),
-        DateTime.now().plus(Duration.standardDays(3)), Some(FiniteDuration(654321, TimeUnit.SECONDS)))
+        DateTime.now().plus(Duration.standardDays(3)),
+        Some(FiniteDuration(654321, TimeUnit.SECONDS))
+      )
 
       doSync(repo.add(authenticator)) mustEqual authenticator
       intercept[IllegalArgumentException] {

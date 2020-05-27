@@ -59,9 +59,9 @@ class SerializationSpec extends PlaySpec {
 
     "de-serialize float ranges" in {
       Serialization.parseFloatRange("0,1") must equal(InclusiveRange(0, 1))
-      Serialization.parseFloatRange("0.1,1.2") must equal(InclusiveRange(0.1F, 1.2F))
+      Serialization.parseFloatRange("0.1,1.2") must equal(InclusiveRange(0.1f, 1.2f))
       Serialization.parseFloatRange("-5.,3") must equal(InclusiveRange(-5, 3))
-      Serialization.parseFloatRange("99.99,99.99") must equal(InclusiveRange(99.99F, 99.99F))
+      Serialization.parseFloatRange("99.99,99.99") must equal(InclusiveRange(99.99f, 99.99f))
 
       an[IllegalArgumentException] must be thrownBy {
         Serialization.parseFloatRange("")
@@ -83,8 +83,8 @@ class SerializationSpec extends PlaySpec {
     "serialize ranges" in {
       Serialization.serialize(InclusiveRange(0, 1)) must equal("0,1")
       Serialization.serialize(InclusiveRange(-2, 5)) must equal("-2,5")
-      Serialization.serialize(InclusiveRange(1.1F, 3)) must equal("1.1,3.0")
-      Serialization.serialize(InclusiveRange(0.000F, 0.000)) must equal("0.0,0.0")
+      Serialization.serialize(InclusiveRange(1.1f, 3)) must equal("1.1,3.0")
+      Serialization.serialize(InclusiveRange(0.000f, 0.000)) must equal("0.0,0.0")
     }
   }
 }

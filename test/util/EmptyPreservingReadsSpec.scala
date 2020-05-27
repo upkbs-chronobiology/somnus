@@ -14,7 +14,7 @@ class EmptyPreservingReadsSpec extends PlaySpec {
       val seq = json.validate[Option[Seq[String]]].get.get
 
       seq.size must equal(3)
-      seq must contain allOf("a", "bb", "ccc")
+      seq must contain allOf ("a", "bb", "ccc")
     }
 
     "preserve empty strings" in {

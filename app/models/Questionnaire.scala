@@ -21,11 +21,7 @@ case class Questionnaire(id: Long, name: String, studyId: Option[Long])
 object Questionnaire {
   implicit val implicitWrites = new Writes[Questionnaire] {
     def writes(questionnaire: Questionnaire): JsValue = {
-      Json.obj(
-        "id" -> questionnaire.id,
-        "name" -> questionnaire.name,
-        "studyId" -> questionnaire.studyId
-      )
+      Json.obj("id" -> questionnaire.id, "name" -> questionnaire.name, "studyId" -> questionnaire.studyId)
     }
   }
 
@@ -36,10 +32,9 @@ case class QuestionnaireFormData(name: String, studyId: Option[Long])
 
 object QuestionnaireForm {
   val form = Form(
-    mapping(
-      "name" -> nonEmptyText,
-      "studyId" -> optional(longNumber)
-    )(QuestionnaireFormData.apply)(QuestionnaireFormData.unapply)
+    mapping("name" -> nonEmptyText, "studyId" -> optional(longNumber))(QuestionnaireFormData.apply)(
+      QuestionnaireFormData.unapply
+    )
   )
 }
 
@@ -52,7 +47,10 @@ class QuestionnaireTable(tag: Tag) extends Table[Questionnaire](tag, "questionna
 }
 
 @Singleton
-class QuestionnairesRepository @Inject()(dbConfigProvider: DatabaseConfigProvider, questionsRepository: QuestionsRepository) {
+class QuestionnairesRepository @Inject() (
+  dbConfigProvider: DatabaseConfigProvider,
+  questionsRepository: QuestionsRepository
+) {
 
   private def questionnaires = TableQuery[QuestionnaireTable]
   private def questions = TableQuery[QuestionTable]
@@ -69,15 +67,22 @@ class QuestionnairesRepository @Inject()(dbConfigProvider: DatabaseConfigProvide
 
   def create(questionnaire: Questionnaire): Future[Questionnaire] = {
     val query = (questionnaires returning questionnaires.map(_.id)) += questionnaire
-    dbConfig().db.run(query).flatMap(this.read(_)
-      .map(_.getOrElse(throw new IllegalStateException("Failed to load questionnaire after creation"))))
+    dbConfig().db
+      .run(query)
+      .flatMap(
+        this
+          .read(_)
+          .map(_.getOrElse(throw new IllegalStateException("Failed to load questionnaire after creation")))
+      )
   }
 
   def update(questionnaire: Questionnaire): Future[Questionnaire] = {
     val query = questionnaires.filter(_.id === questionnaire.id).update(questionnaire)
     dbConfig().db.run(query).flatMap {
-      case 1 => this.read(questionnaire.id)
-        .map(_.getOrElse(throw new IllegalStateException("Failed to load questionnaire after updating it")))
+      case 1 =>
+        this
+          .read(questionnaire.id)
+          .map(_.getOrElse(throw new IllegalStateException("Failed to load questionnaire after updating it")))
       case _ => Future.failed(new IllegalArgumentException(s"Study with id ${questionnaire.id} not found"))
     }
   }
@@ -85,7 +90,8 @@ class QuestionnairesRepository @Inject()(dbConfigProvider: DatabaseConfigProvide
   def delete(id: Long): Future[Int] = {
     dbConfig().db.run(questions.filter(_.questionnaireId === id).result).map(_.size).flatMap {
       case 0 => dbConfig().db.run(questionnaires.filter(_.id === id).delete)
-      case _ => Future.failed(new IllegalArgumentException(s"Cannot delete questionnaire $id because it contains questions"))
+      case _ =>
+        Future.failed(new IllegalArgumentException(s"Cannot delete questionnaire $id because it contains questions"))
     }
   }
 
@@ -95,8 +101,13 @@ class QuestionnairesRepository @Inject()(dbConfigProvider: DatabaseConfigProvide
       case Some(questionnaire) =>
         this.create(questionnaire) flatMap { newQuestionnaire =>
           questionsRepository.listByQuestionnaire(id) flatMap { qs =>
-            Future.sequence(qs.map(q => new Question(0, q.content, q.answerType, q.answerLabels, q.answerRange, Some(newQuestionnaire.id)))
-              .map(q => questionsRepository.add(q)))
+            Future.sequence(
+              qs.map(
+                  q =>
+                    new Question(0, q.content, q.answerType, q.answerLabels, q.answerRange, Some(newQuestionnaire.id))
+                )
+                .map(q => questionsRepository.add(q))
+            )
           } map { _ => newQuestionnaire }
         }
     }

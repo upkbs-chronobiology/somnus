@@ -10,8 +10,13 @@ import testutil.Authenticated
 import testutil.FreshDatabase
 import testutil.TestUtils
 
-class AnswerSpec extends PlaySpec
-  with GuiceOneAppPerSuite with Injecting with FreshDatabase with TestUtils with Authenticated {
+class AnswerSpec
+    extends PlaySpec
+    with GuiceOneAppPerSuite
+    with Injecting
+    with FreshDatabase
+    with TestUtils
+    with Authenticated {
 
   val questionnairesRepo = inject[QuestionnairesRepository]
   val questionsRepo = inject[QuestionsRepository]
@@ -52,12 +57,15 @@ class AnswerSpec extends PlaySpec
       val question = doSync(questionsRepo.add(Question(0, "My question X", AnswerType.RangeContinuous)))
 
       an[IllegalArgumentException] shouldBe thrownBy {
-        doSync(answersRepo.add(Answer(0, question.id, "This should not be text", this.baseUser.id, null, SampleCreatedLocal)))
+        doSync(
+          answersRepo.add(Answer(0, question.id, "This should not be text", this.baseUser.id, null, SampleCreatedLocal))
+        )
       }
     }
 
     "reject list answers to single-select multiple-choice questions" in {
-      val question = doSync(questionsRepo.add(Question(0, "My question X", AnswerType.MultipleChoiceSingle, Some("A,B,C"))))
+      val question =
+        doSync(questionsRepo.add(Question(0, "My question X", AnswerType.MultipleChoiceSingle, Some("A,B,C"))))
 
       an[IllegalArgumentException] shouldBe thrownBy {
         doSync(answersRepo.add(Answer(0, question.id, "1,2", this.baseUser.id, null, SampleCreatedLocal)))
@@ -65,14 +73,16 @@ class AnswerSpec extends PlaySpec
     }
 
     "accept list answers to many-select multiple-choice questions" in {
-      val question = doSync(questionsRepo.add(Question(0, "My question X", AnswerType.MultipleChoiceMany, Some("A,B,C"))))
+      val question =
+        doSync(questionsRepo.add(Question(0, "My question X", AnswerType.MultipleChoiceMany, Some("A,B,C"))))
 
       val answer = doSync(answersRepo.add(Answer(0, question.id, "0,1,2", this.baseUser.id, null, SampleCreatedLocal)))
       answer.id must be >= 0L
     }
 
     "reject out-of-range answers to many-select multiple-choice questions" in {
-      val question = doSync(questionsRepo.add(Question(0, "My question X", AnswerType.MultipleChoiceMany, Some("A,B,C"))))
+      val question =
+        doSync(questionsRepo.add(Question(0, "My question X", AnswerType.MultipleChoiceMany, Some("A,B,C"))))
 
       an[IllegalArgumentException] shouldBe thrownBy {
         doSync(answersRepo.add(Answer(0, question.id, "2,3", this.baseUser.id, null, SampleCreatedLocal)))
@@ -80,7 +90,8 @@ class AnswerSpec extends PlaySpec
     }
 
     "reject duplicate answers to many-select multiple-choice questions" in {
-      val question = doSync(questionsRepo.add(Question(0, "My question X", AnswerType.MultipleChoiceMany, Some("A,B,C"))))
+      val question =
+        doSync(questionsRepo.add(Question(0, "My question X", AnswerType.MultipleChoiceMany, Some("A,B,C"))))
 
       an[IllegalArgumentException] shouldBe thrownBy {
         doSync(answersRepo.add(Answer(0, question.id, "1,1", this.baseUser.id, null, SampleCreatedLocal)))
@@ -88,10 +99,13 @@ class AnswerSpec extends PlaySpec
     }
 
     "reject text answers to discrete-number type questions" in {
-      val question = doSync(questionsRepo.add(Question(0, "My question X", AnswerType.RangeDiscrete, answerRange = Some("1,3"))))
+      val question =
+        doSync(questionsRepo.add(Question(0, "My question X", AnswerType.RangeDiscrete, answerRange = Some("1,3"))))
 
       an[IllegalArgumentException] shouldBe thrownBy {
-        doSync(answersRepo.add(Answer(0, question.id, "This should not be text", this.baseUser.id, null, SampleCreatedLocal)))
+        doSync(
+          answersRepo.add(Answer(0, question.id, "This should not be text", this.baseUser.id, null, SampleCreatedLocal))
+        )
       }
     }
 
@@ -101,7 +115,8 @@ class AnswerSpec extends PlaySpec
       val answerA = doSync(answersRepo.add(Answer(0, question.id, "13:37", this.baseUser.id, null, SampleCreatedLocal)))
       answerA.id must be >= 0L
 
-      val answerB = doSync(answersRepo.add(Answer(0, question.id, "10:31:42", this.baseUser.id, null, SampleCreatedLocal)))
+      val answerB =
+        doSync(answersRepo.add(Answer(0, question.id, "10:31:42", this.baseUser.id, null, SampleCreatedLocal)))
       answerB.id must be >= 0L
     }
 
@@ -124,10 +139,12 @@ class AnswerSpec extends PlaySpec
     "accept well-formatted date answers" in {
       val question = doSync(questionsRepo.add(Question(0, "Can I get a date?", AnswerType.Date)))
 
-      val answerB = doSync(answersRepo.add(Answer(0, question.id, "1990-01-25", this.baseUser.id, null, SampleCreatedLocal)))
+      val answerB =
+        doSync(answersRepo.add(Answer(0, question.id, "1990-01-25", this.baseUser.id, null, SampleCreatedLocal)))
       answerB.id must be >= 0L
 
-      val answerA = doSync(answersRepo.add(Answer(0, question.id, "1898-03-14", this.baseUser.id, null, SampleCreatedLocal)))
+      val answerA =
+        doSync(answersRepo.add(Answer(0, question.id, "1898-03-14", this.baseUser.id, null, SampleCreatedLocal)))
       answerA.id must be >= 0L
     }
 
@@ -151,8 +168,10 @@ class AnswerSpec extends PlaySpec
       val questionnaire1 = doSync(questionnairesRepo.create(Questionnaire(0, "Questionnnaire 1", None)))
       val questionnaire2 = doSync(questionnairesRepo.create(Questionnaire(0, "Questionnnaire 2", None)))
 
-      val question1 = doSync(questionsRepo.add(Question(0, "Question 1", AnswerType.Text, questionnaireId = Some(questionnaire1.id))))
-      val question2 = doSync(questionsRepo.add(Question(0, "Question 2", AnswerType.Text, questionnaireId = Some(questionnaire2.id))))
+      val question1 =
+        doSync(questionsRepo.add(Question(0, "Question 1", AnswerType.Text, questionnaireId = Some(questionnaire1.id))))
+      val question2 =
+        doSync(questionsRepo.add(Question(0, "Question 2", AnswerType.Text, questionnaireId = Some(questionnaire2.id))))
       val dummyQuestion = doSync(questionsRepo.add(Question(0, "Dummy", AnswerType.Text)))
 
       doSync(answersRepo.add(Answer(0, question1.id, "Answer 1 base", baseUser.id, null, SampleCreatedLocal)))
@@ -170,11 +189,13 @@ class AnswerSpec extends PlaySpec
       answersBase2.length must equal(1)
       answersBase2.head must equal("Answer 2 base")
 
-      val answersResearch1 = doSync(answersRepo.listByUserAndQuestionnaire(researchUser.id, questionnaire1.id)).map(_.content)
+      val answersResearch1 =
+        doSync(answersRepo.listByUserAndQuestionnaire(researchUser.id, questionnaire1.id)).map(_.content)
       answersResearch1.length must equal(1)
       answersResearch1.head must equal("Answer 1 researcher")
 
-      val answersResearch2 = doSync(answersRepo.listByUserAndQuestionnaire(researchUser.id, questionnaire2.id)).map(_.content)
+      val answersResearch2 =
+        doSync(answersRepo.listByUserAndQuestionnaire(researchUser.id, questionnaire2.id)).map(_.content)
       answersResearch2.length must equal(1)
       answersResearch2.head must equal("Answer 2 researcher")
     }

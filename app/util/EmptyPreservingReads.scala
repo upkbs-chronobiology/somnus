@@ -12,10 +12,16 @@ object EmptyPreservingReads {
 
   private def parseArrayStrings(seq: Seq[JsValue]): JsResult[Seq[String]] = {
     try {
-      JsSuccess(seq.map(item => item.validate[String] match {
-        case s: JsSuccess[String] => s.get
-        case e: JsError => throw new IllegalArgumentException(s"Expected string, got: $item\nErrors: ${e.errors.mkString(", ")}")
-      }))
+      JsSuccess(
+        seq.map(
+          item =>
+            item.validate[String] match {
+              case s: JsSuccess[String] => s.get
+              case e: JsError =>
+                throw new IllegalArgumentException(s"Expected string, got: $item\nErrors: ${e.errors.mkString(", ")}")
+            }
+        )
+      )
     } catch {
       case e: IllegalArgumentException =>
         JsError(e.getMessage)

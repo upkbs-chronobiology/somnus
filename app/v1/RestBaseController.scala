@@ -20,7 +20,7 @@ import play.api.mvc.PlayBodyParsers
 import play.api.mvc.Result
 import util.JsonError
 
-case class RestControllerComponents @Inject()(
+case class RestControllerComponents @Inject() (
   actionBuilder: DefaultActionBuilder,
   parsers: PlayBodyParsers,
   messagesApi: MessagesApi,
@@ -29,7 +29,7 @@ case class RestControllerComponents @Inject()(
   executionContext: scala.concurrent.ExecutionContext
 ) extends ControllerComponents
 
-class RestBaseController @Inject()(rcc: RestControllerComponents) extends BaseController with I18nSupport {
+class RestBaseController @Inject() (rcc: RestControllerComponents) extends BaseController with I18nSupport {
 
   override protected def controllerComponents: ControllerComponents = rcc
 
@@ -38,9 +38,10 @@ class RestBaseController @Inject()(rcc: RestControllerComponents) extends BaseCo
   ): Future[Result] = {
     form.bindFromRequest.fold(
       badForm => Future.successful(BadRequest(badForm.errorsAsJson)),
-      formData => validCallback(formData).recover {
-        case e: IllegalArgumentException => BadRequest(JsonError(e.getMessage))
-      }
+      formData =>
+        validCallback(formData).recover {
+          case e: IllegalArgumentException => BadRequest(JsonError(e.getMessage))
+        }
     )
   }
 }

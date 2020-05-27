@@ -7,8 +7,7 @@ import play.api.test.Injecting
 import testutil.FreshDatabase
 import testutil.TestUtils
 
-class StudyAccessSpec extends PlaySpec
-  with GuiceOneAppPerSuite with Injecting with FreshDatabase with TestUtils {
+class StudyAccessSpec extends PlaySpec with GuiceOneAppPerSuite with Injecting with FreshDatabase with TestUtils {
 
   val repo = inject[StudyAccessRepository]
   val users = inject[UserRepository]

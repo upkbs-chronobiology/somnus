@@ -17,8 +17,9 @@ import play.api.mvc.Request
   */
 case class WithRole(roles: Role*) extends Authorization[User, BearerTokenAuthenticator] {
 
-  override def isAuthorized[B](user: User, authenticator: BearerTokenAuthenticator)
-    (implicit request: Request[B]): Future[Boolean] = {
+  override def isAuthorized[B](user: User, authenticator: BearerTokenAuthenticator)(
+    implicit request: Request[B]
+  ): Future[Boolean] = {
     Future.successful(roles.exists(_.toString === user.role.getOrElse("")))
   }
 }
@@ -29,8 +30,9 @@ class WithAdminRole extends WithRole(Role.Admin)
 
 class ForAnyEditorOrUser(userId: Long) extends WithEditorRole {
 
-  override def isAuthorized[B](identity: User, authenticator: BearerTokenAuthenticator)
-    (implicit request: Request[B]): Future[Boolean] = {
+  override def isAuthorized[B](identity: User, authenticator: BearerTokenAuthenticator)(
+    implicit request: Request[B]
+  ): Future[Boolean] = {
     super.isAuthorized[B](identity, authenticator).map(authorized => authorized || identity.id === userId)
   }
 }

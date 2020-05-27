@@ -31,9 +31,7 @@ class AuthServiceSpec extends PlaySpec with GuiceOneAppPerSuite with Injecting w
       doSync(authService.unregister("User B"))
 
       val authFuture = credentialsProvider.authenticate(Credentials("User B", "12345678"))
-      ScalaFutures.whenReady(authFuture.failed) { e =>
-        e mustBe an[IllegalArgumentException]
-      }
+      ScalaFutures.whenReady(authFuture.failed) { e => e mustBe an[IllegalArgumentException] }
     }
 
     "refuse to register with existing names, case-insensitively" in {

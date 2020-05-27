@@ -21,8 +21,13 @@ import testutil.Authenticated
 import testutil.FreshDatabase
 import testutil.TestUtils
 
-class AclControllerSpec extends PlaySpec
-  with GuiceOneAppPerSuite with FreshDatabase with Injecting with TestUtils with Authenticated {
+class AclControllerSpec
+    extends PlaySpec
+    with GuiceOneAppPerSuite
+    with FreshDatabase
+    with Injecting
+    with TestUtils
+    with Authenticated {
 
   val studyRepo = inject[StudyRepository]
   val userRepo = inject[UserRepository]
@@ -73,12 +78,14 @@ class AclControllerSpec extends PlaySpec
         status(initialReadResponse) must equal(OK)
         contentAsJson(initialReadResponse).as[JsArray].value.size must equal(0)
 
-        val setResponse1 = doAuthenticatedRequest(PUT, s"/v1/studies/${study.id}/acls/${user.id}", Some(levelJson(AccessLevel.Write)))
+        val setResponse1 =
+          doAuthenticatedRequest(PUT, s"/v1/studies/${study.id}/acls/${user.id}", Some(levelJson(AccessLevel.Write)))
         status(setResponse1) must equal(OK)
 
         assertSingleAcl(doAuthenticatedRequest(GET, s"/v1/studies/${study.id}/acls"), "write")
 
-        val setResponse2 = doAuthenticatedRequest(PUT, s"/v1/studies/${study.id}/acls/${user.id}", Some(levelJson(AccessLevel.Read)))
+        val setResponse2 =
+          doAuthenticatedRequest(PUT, s"/v1/studies/${study.id}/acls/${user.id}", Some(levelJson(AccessLevel.Read)))
         //        val setResponse2 = doAuthenticatedRequest(PUT, s"/v1/users/${user.id}/acls/${study.id}", Some(levelJson(AccessLevel.Read)))
         status(setResponse2) must equal(OK)
 
@@ -97,12 +104,14 @@ class AclControllerSpec extends PlaySpec
         status(initialReadResponse) must equal(OK)
         contentAsJson(initialReadResponse).as[JsArray].value.size must equal(0)
 
-        val setResponse1 = doAuthenticatedRequest(PUT, s"/v1/users/${user.id}/acls/${study.id}", Some(levelJson(AccessLevel.Write)))
+        val setResponse1 =
+          doAuthenticatedRequest(PUT, s"/v1/users/${user.id}/acls/${study.id}", Some(levelJson(AccessLevel.Write)))
         status(setResponse1) must equal(OK)
 
         assertSingleAcl(doAuthenticatedRequest(GET, s"/v1/users/${user.id}/acls"), "write")
 
-        val setResponse2 = doAuthenticatedRequest(PUT, s"/v1/users/${user.id}/acls/${study.id}", Some(levelJson(AccessLevel.Read)))
+        val setResponse2 =
+          doAuthenticatedRequest(PUT, s"/v1/users/${user.id}/acls/${study.id}", Some(levelJson(AccessLevel.Read)))
         status(setResponse2) must equal(OK)
 
         assertSingleAcl(doAuthenticatedRequest(GET, s"/v1/users/${user.id}/acls"), "read")
@@ -118,7 +127,9 @@ class AclControllerSpec extends PlaySpec
       "behave equally through studies and users path" in {
         contentAsJson(doAuthenticatedRequest(GET, s"/v1/studies/${study.id}/acls")).as[JsArray].value.size must equal(0)
 
-        doSync(doAuthenticatedRequest(PUT, s"/v1/users/${user.id}/acls/${study.id}", Some(levelJson(AccessLevel.Write))))
+        doSync(
+          doAuthenticatedRequest(PUT, s"/v1/users/${user.id}/acls/${study.id}", Some(levelJson(AccessLevel.Write)))
+        )
 
         assertSingleAcl(doAuthenticatedRequest(GET, s"/v1/studies/${study.id}/acls"), "write")
         assertSingleAcl(doAuthenticatedRequest(GET, s"/v1/users/${user.id}/acls"), "write")
@@ -142,11 +153,7 @@ class AclControllerSpec extends PlaySpec
 
     val acls3 = contentAsJson(response).as[JsArray].value
     acls3.size must equal(1)
-    acls3(0) must equal(Json.obj(
-      "userId" -> user.id,
-      "studyId" -> study.id,
-      "level" -> level
-    ))
+    acls3(0) must equal(Json.obj("userId" -> user.id, "studyId" -> study.id, "level" -> level))
   }
 
   private def levelJson(level: AccessLevel): JsValue = Json.obj("level" -> level.toString)

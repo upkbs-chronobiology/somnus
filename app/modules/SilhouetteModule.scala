@@ -41,9 +41,7 @@ class SilhouetteModule extends AbstractModule with ScalaModule {
   }
 
   @Provides
-  def providePasswordHasherRegistry(
-    passwordHasher: PasswordHasher
-  ): PasswordHasherRegistry = {
+  def providePasswordHasherRegistry(passwordHasher: PasswordHasher): PasswordHasherRegistry = {
     PasswordHasherRegistry(passwordHasher)
   }
 
@@ -51,26 +49,24 @@ class SilhouetteModule extends AbstractModule with ScalaModule {
   def provideEnvironment(
     userService: UserService,
     authenticatorService: AuthenticatorService[BearerTokenAuthenticator],
-    eventBus: EventBus): Environment[DefaultEnv] = {
+    eventBus: EventBus
+  ): Environment[DefaultEnv] = {
 
-    Environment[DefaultEnv](
-      userService,
-      authenticatorService,
-      Seq(),
-      eventBus
-    )
+    Environment[DefaultEnv](userService, authenticatorService, Seq(), eventBus)
   }
 
   @Provides
   def provideAuthenticatorService(
     idGenerator: IDGenerator,
     tokenRepository: TokenRepository,
-    clock: Clock): AuthenticatorService[BearerTokenAuthenticator] = {
+    clock: Clock
+  ): AuthenticatorService[BearerTokenAuthenticator] = {
 
     // XXX: Should we read from configuration here?
     val maxTimeout = 10 * 7 days // 10 weeks
     val idleTimeout = Some(2 * 7 days) // 2 weeks
-    val config = BearerTokenAuthenticatorSettings(authenticatorExpiry = maxTimeout, authenticatorIdleTimeout = idleTimeout)
+    val config =
+      BearerTokenAuthenticatorSettings(authenticatorExpiry = maxTimeout, authenticatorIdleTimeout = idleTimeout)
 
     new BearerTokenAuthenticatorService(config, tokenRepository, idGenerator, clock)
   }
@@ -78,7 +74,8 @@ class SilhouetteModule extends AbstractModule with ScalaModule {
   @Provides
   def provideCredentialsProvider(
     authInfoRepository: AuthInfoRepository,
-    passwordHasherRegistry: PasswordHasherRegistry): CredentialsProvider = {
+    passwordHasherRegistry: PasswordHasherRegistry
+  ): CredentialsProvider = {
 
     new CredentialsProvider(authInfoRepository, passwordHasherRegistry)
   }

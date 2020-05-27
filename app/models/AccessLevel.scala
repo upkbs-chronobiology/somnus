@@ -18,10 +18,8 @@ object AccessLevel extends Enumeration {
       this.level == Read || other == Own || this.level == other
   }
 
-  implicit val accessLevelMapper = MappedColumnType.base[AccessLevel, String](
-    level => level.toString,
-    levelString => AccessLevel.withName(levelString)
-  )
+  implicit val accessLevelMapper = MappedColumnType
+    .base[AccessLevel, String](level => level.toString, levelString => AccessLevel.withName(levelString))
 
   implicit val implicitReads = Reads.enumNameReads(AccessLevel)
 }

@@ -1,6 +1,5 @@
 package models
 
-
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -22,10 +21,7 @@ case class Study(id: Long, name: String)
 object Study {
   implicit val implicitWrites = new Writes[Study] {
     def writes(study: Study): JsValue = {
-      Json.obj(
-        "id" -> study.id,
-        "name" -> study.name
-      )
+      Json.obj("id" -> study.id, "name" -> study.name)
     }
   }
 
@@ -35,11 +31,7 @@ object Study {
 case class StudyFormData(name: String)
 
 object StudyForm {
-  val form = Form(
-    mapping(
-      "name" -> nonEmptyText
-    )(StudyFormData.apply)(StudyFormData.unapply)
-  )
+  val form = Form(mapping("name" -> nonEmptyText)(StudyFormData.apply)(StudyFormData.unapply))
 }
 
 class StudyTable(tag: Tag) extends Table[Study](tag, "study") {
@@ -50,7 +42,7 @@ class StudyTable(tag: Tag) extends Table[Study](tag, "study") {
 }
 
 @Singleton
-class StudyRepository @Inject()(
+class StudyRepository @Inject() (
   dbConfigProvider: DatabaseConfigProvider,
   questionnaires: QuestionnairesRepository,
   studyAccessRepo: StudyAccessRepository
@@ -72,8 +64,14 @@ class StudyRepository @Inject()(
       case Some(_) => throw new IllegalArgumentException("A study with the same name already exists")
       case None =>
         val query = (studies returning studies.map(_.id)) += study
-        dbConfig.db.run(query).flatMap(id => this.read(id)
-          .map(_.getOrElse(throw new IllegalStateException("Failed to load study after creation"))))
+        dbConfig.db
+          .run(query)
+          .flatMap(
+            id =>
+              this
+                .read(id)
+                .map(_.getOrElse(throw new IllegalStateException("Failed to load study after creation")))
+          )
     }
   }
 
@@ -84,8 +82,10 @@ class StudyRepository @Inject()(
   def update(study: Study): Future[Study] = {
     val query = studies.filter(_.id === study.id).update(study)
     dbConfig.db.run(query).flatMap {
-      case 1 => this.read(study.id)
-        .map(_.getOrElse(throw new IllegalStateException("Failed to load study after updating it")))
+      case 1 =>
+        this
+          .read(study.id)
+          .map(_.getOrElse(throw new IllegalStateException("Failed to load study after updating it")))
       case _ => throw new IllegalArgumentException(s"Study with id ${study.id} not found")
     }
   }
@@ -94,18 +94,19 @@ class StudyRepository @Inject()(
     for {
       participants <- listParticipants(id)
       questionnaires <- questionnaires.listByStudy(id)
-      result <-
-        if (questionnaires.nonEmpty)
-          Future.failed(new IllegalArgumentException(s"Cannot delete study with id $id because it contains questionnaires"))
-        else if (participants.nonEmpty)
-          Future.failed(new IllegalArgumentException(s"Cannot delete study with id $id because it contains participants"))
-        else {
-          for {
-            sas <- studyAccessRepo.listByStudy(id)
-            _ <- Future.sequence(sas.map(sa => studyAccessRepo.delete(sa)))
-            deleted <- dbConfig.db.run(studies.filter(_.id === id).delete)
-          } yield deleted
-        }
+      result <- if (questionnaires.nonEmpty)
+        Future.failed(
+          new IllegalArgumentException(s"Cannot delete study with id $id because it contains questionnaires")
+        )
+      else if (participants.nonEmpty)
+        Future.failed(new IllegalArgumentException(s"Cannot delete study with id $id because it contains participants"))
+      else {
+        for {
+          sas <- studyAccessRepo.listByStudy(id)
+          _ <- Future.sequence(sas.map(sa => studyAccessRepo.delete(sa)))
+          deleted <- dbConfig.db.run(studies.filter(_.id === id).delete)
+        } yield deleted
+      }
     } yield result
   }
 

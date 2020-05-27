@@ -5,15 +5,20 @@ import play.api.data.Mapping
 import play.api.data.validation.Constraint
 
 // XXX: Adopted and adjusted from OptionalMapping, since not modular enough to allow extension/modification
-case class EmptyPreservingOptionalMapping[T](val wrapped: Mapping[T], val constraints: Seq[Constraint[Option[T]]] = Nil) extends Mapping[Option[T]] {
+case class EmptyPreservingOptionalMapping[T](val wrapped: Mapping[T], val constraints: Seq[Constraint[Option[T]]] = Nil)
+    extends Mapping[Option[T]] {
   def bind(data: Map[String, String]): Either[Seq[FormError], Option[T]] = {
-    data.keys.filter(p => p == key || p.startsWith(key + ".") || p.startsWith(key + "["))
+    data.keys
+      .filter(p => p == key || p.startsWith(key + ".") || p.startsWith(key + "["))
       .map(k => data.get(k))
-      .collect { case Some(v) => v }.headOption.map { _ =>
-      wrapped.bind(data).right.map(Some(_))
-    }.getOrElse {
-      Right(None)
-    }.right.flatMap(applyConstraints)
+      .collect { case Some(v) => v }
+      .headOption
+      .map { _ => wrapped.bind(data).right.map(Some(_)) }
+      .getOrElse {
+        Right(None)
+      }
+      .right
+      .flatMap(applyConstraints)
   }
 
   // XXX: Everything below this line is untouched (coming from OptionalMapping)

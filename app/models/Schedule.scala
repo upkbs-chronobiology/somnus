@@ -21,9 +21,12 @@ import util.TemporalSqlMappings
 
 case class Schedule(
   id: Long,
-  questionnaireId: Long, userId: Long,
-  startDate: LocalDate, endDate: LocalDate,
-  startTime: LocalTime, endTime: LocalTime,
+  questionnaireId: Long,
+  userId: Long,
+  startDate: LocalDate,
+  endDate: LocalDate,
+  startTime: LocalTime,
+  endTime: LocalTime,
   frequency: Int
 )
 
@@ -47,9 +50,12 @@ object Schedule {
 }
 
 case class ScheduleFormData(
-  questionnaireId: Long, userId: Long,
-  startDate: LocalDate, endDate: LocalDate,
-  startTime: LocalTime, endTime: LocalTime,
+  questionnaireId: Long,
+  userId: Long,
+  startDate: LocalDate,
+  endDate: LocalDate,
+  startTime: LocalTime,
+  endTime: LocalTime,
   frequency: Int
 )
 
@@ -86,7 +92,7 @@ class ScheduleTable(tag: Tag) extends Table[Schedule](tag, "schedule") with Temp
 }
 
 @Singleton
-class SchedulesRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) {
+class SchedulesRepository @Inject() (dbConfigProvider: DatabaseConfigProvider) {
 
   val creationSemaphore = new Semaphore(1)
 
@@ -112,25 +118,36 @@ class SchedulesRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) {
     // FIXME: Not really atomic/transactional (why?)
     // We just sync in code for now, as it's the only db manipulator anyway so far
     creationSemaphore.acquire()
-    val exists = schedules.filter(s => s.userId === schedule.userId.bind &&
-      s.questionnaireId === schedule.questionnaireId.bind).exists
+    val exists = schedules
+      .filter(
+        s =>
+          s.userId === schedule.userId.bind &&
+            s.questionnaireId === schedule.questionnaireId.bind
+      )
+      .exists
     validate(schedule) flatMap { _ =>
-      dbConfig.db.run((exists.result flatMap {
-        case true => throw new IllegalArgumentException(
-          s"Schedule for user ${schedule.userId} and questionnaire ${schedule.questionnaireId} already exists")
-        case false => (schedules returning schedules.map(_.id)) += schedule
-      }).transactionally)
+      dbConfig.db
+        .run((exists.result flatMap {
+          case true =>
+            throw new IllegalArgumentException(
+              s"Schedule for user ${schedule.userId} and questionnaire ${schedule.questionnaireId} already exists"
+            )
+          case false => (schedules returning schedules.map(_.id)) += schedule
+        }).transactionally)
         .flatMap(this.get(_).map(_.getOrElse(throw new IllegalStateException("Failed to load just created schedule"))))
-    } andThen { case _ =>
-      creationSemaphore.release()
+    } andThen {
+      case _ =>
+        creationSemaphore.release()
     }
   }
 
   def update(schedule: Schedule): Future[Schedule] = {
     validate(schedule) flatMap { _ =>
       dbConfig.db.run(schedules.filter(_.id === schedule.id).update(schedule)).flatMap {
-        case 1 => this.get(schedule.id)
-          .map(_.getOrElse(throw new IllegalStateException("Failed to load just created schedule")))
+        case 1 =>
+          this
+            .get(schedule.id)
+            .map(_.getOrElse(throw new IllegalStateException("Failed to load just created schedule")))
         case 0 => throw new IllegalArgumentException(s"Failed to update schedule with id ${schedule.id}")
       }
     }
@@ -141,10 +158,12 @@ class SchedulesRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) {
   }
 
   def validate(schedule: Schedule): Future[Unit] = {
-    val questionnaireCheck = dbConfig.db.run(questionnaires.filter(_.id === schedule.questionnaireId).result.headOption) map {
-      case Some(_) =>
-      case None => throw new IllegalArgumentException(s"Questionnaire with id ${schedule.questionnaireId} does not exist")
-    }
+    val questionnaireCheck =
+      dbConfig.db.run(questionnaires.filter(_.id === schedule.questionnaireId).result.headOption) map {
+        case Some(_) =>
+        case None =>
+          throw new IllegalArgumentException(s"Questionnaire with id ${schedule.questionnaireId} does not exist")
+      }
     val userCheck = dbConfig.db.run(users.filter(_.id === schedule.userId).result.headOption) map {
       case Some(_) =>
       case None => throw new IllegalArgumentException(s"User with id ${schedule.userId} does not exist")

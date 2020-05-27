@@ -18,8 +18,7 @@ import play.api.test.Injecting
 import testutil.Authenticated
 import testutil.TestUtils
 
-class AuthControllerSpec extends PlaySpec
-  with GuiceOneAppPerSuite with Injecting with TestUtils with Authenticated {
+class AuthControllerSpec extends PlaySpec with GuiceOneAppPerSuite with Injecting with TestUtils with Authenticated {
 
   private val userRepository = inject[UserRepository]
   private val passwordRepository = inject[PasswordRepository]
@@ -40,9 +39,10 @@ class AuthControllerSpec extends PlaySpec
 
       val users = userRepository.listAll()
       users.map(_.map(_.name)).map(_ must contain("John Karcis"))
-      users.map(
-        _.filter(_.name == "John Karcis").map(_.passwordId.get).head
-      ).flatMap(passwordRepository.get).map(_ must contain("notagoat"))
+      users
+        .map(_.filter(_.name == "John Karcis").map(_.passwordId.get).head)
+        .flatMap(passwordRepository.get)
+        .map(_ must contain("notagoat"))
     }
   }
 
@@ -195,10 +195,7 @@ class AuthControllerSpec extends PlaySpec
     }
   }
 
-  private def signUpJson(name: String, password: String) = Json.obj(
-    "name" -> name,
-    "password" -> password
-  )
+  private def signUpJson(name: String, password: String) = Json.obj("name" -> name, "password" -> password)
 
   private def pwResetJson(password: String) = Json.obj("password" -> password)
 }

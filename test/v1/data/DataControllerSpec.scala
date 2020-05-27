@@ -18,8 +18,13 @@ import testutil.Authenticated
 import testutil.FreshDatabase
 import testutil.TestUtils
 
-class DataControllerSpec extends PlaySpec
-  with GuiceOneAppPerSuite with Injecting with FreshDatabase with TestUtils with Authenticated {
+class DataControllerSpec
+    extends PlaySpec
+    with GuiceOneAppPerSuite
+    with Injecting
+    with FreshDatabase
+    with TestUtils
+    with Authenticated {
 
   val study = doSync(inject[StudyRepository].create(Study(0, "Foo Bar Study")))
 
@@ -59,7 +64,7 @@ class DataControllerSpec extends PlaySpec
         zipStream.close()
 
         entries.length must equal(6)
-        entries.map(_.getName) must contain allOf(
+        entries.map(_.getName) must contain allOf (
           "studies.csv",
           "questionnaires.csv",
           "questions.csv",

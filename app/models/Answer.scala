@@ -24,7 +24,14 @@ import util.Serialization
 import util.TemporalSqlMappings
 import util.form.FormOffsetDateTime.offsetDateTime
 
-case class Answer(id: Long, questionId: Long, content: String, userId: Long, created: Timestamp, createdLocal: OffsetDateTime)
+case class Answer(
+  id: Long,
+  questionId: Long,
+  content: String,
+  userId: Long,
+  created: Timestamp,
+  createdLocal: OffsetDateTime
+)
 
 object Answer {
   implicit val implicitWrites = new Writes[Answer] {
@@ -73,7 +80,7 @@ class AnswerTable(tag: Tag) extends Table[Answer](tag, "answer") with TemporalSq
 }
 
 @Singleton
-class AnswersRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) {
+class AnswersRepository @Inject() (dbConfigProvider: DatabaseConfigProvider) {
 
   def dbConfig() = dbConfigProvider.get[JdbcProfile]
 
@@ -95,54 +102,64 @@ class AnswersRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) {
     val query = questions.filter(_.id === answer.questionId).result.headOption
     dbConfig().db.run(query).map {
       case None => throw new IllegalArgumentException("Question id for answer not found")
-      case Some(question) => question.answerType match {
-        case AnswerType.RangeContinuous =>
-          val range = Serialization.parseFloatRange(
-            question.answerRange.getOrElse(throw new IllegalArgumentException("Range is missing on continuous-range question")))
-          val value = answer.content.toDouble
-          if (value < range.min || value > range.max)
-            throw new IllegalArgumentException(s"Bad number format - expected real number ${range.min} <= x <= ${range.max}")
-        case AnswerType.RangeDiscrete =>
-          val range = Serialization.parseIntRange(
-            question.answerRange.getOrElse(throw new IllegalArgumentException("Range is missing on discrete-range question")))
-          val value = answer.content.toLong
-          if (value < range.min || value > range.max)
-            throw new IllegalArgumentException(s"Bad number format - expected natural number ${range.min} <= x <= ${range.max}")
-        case AnswerType.MultipleChoiceSingle =>
-          val value = answer.content.toLong
-          val numOptions = question.answerLabels.map(Serialization.parseList(_).length).getOrElse(-1)
-          if (value < 0 || value >= numOptions)
-            throw new IllegalArgumentException("Answer option index doesn't match answer options")
-        case AnswerType.MultipleChoiceMany =>
-          val numOptions = question.answerLabels.map(Serialization.parseList(_).length).getOrElse(-1)
-          val values = Serialization.parseList(answer.content).map(_.toLong)
-          if (values.distinct.length < values.length)
-            throw new IllegalArgumentException("There are duplicate answer option indices")
-          values foreach { value =>
+      case Some(question) =>
+        question.answerType match {
+          case AnswerType.RangeContinuous =>
+            val range = Serialization.parseFloatRange(
+              question.answerRange
+                .getOrElse(throw new IllegalArgumentException("Range is missing on continuous-range question"))
+            )
+            val value = answer.content.toDouble
+            if (value < range.min || value > range.max)
+              throw new IllegalArgumentException(
+                s"Bad number format - expected real number ${range.min} <= x <= ${range.max}"
+              )
+          case AnswerType.RangeDiscrete =>
+            val range = Serialization.parseIntRange(
+              question.answerRange
+                .getOrElse(throw new IllegalArgumentException("Range is missing on discrete-range question"))
+            )
+            val value = answer.content.toLong
+            if (value < range.min || value > range.max)
+              throw new IllegalArgumentException(
+                s"Bad number format - expected natural number ${range.min} <= x <= ${range.max}"
+              )
+          case AnswerType.MultipleChoiceSingle =>
+            val value = answer.content.toLong
+            val numOptions = question.answerLabels.map(Serialization.parseList(_).length).getOrElse(-1)
             if (value < 0 || value >= numOptions)
-              throw new IllegalArgumentException("At least one answer option index doesn't match answer options")
-          }
-        case AnswerType.TimeOfDay =>
-          try {
-            LocalTime.parse(answer.content)
-          } catch {
-            case e: DateTimeParseException => throw new IllegalArgumentException(e)
-          }
-        case AnswerType.Date =>
-          try {
-            LocalDate.parse(answer.content)
-          } catch {
-            case e: DateTimeParseException => throw new IllegalArgumentException(e)
-          }
-        case _ => Unit
-      }
+              throw new IllegalArgumentException("Answer option index doesn't match answer options")
+          case AnswerType.MultipleChoiceMany =>
+            val numOptions = question.answerLabels.map(Serialization.parseList(_).length).getOrElse(-1)
+            val values = Serialization.parseList(answer.content).map(_.toLong)
+            if (values.distinct.length < values.length)
+              throw new IllegalArgumentException("There are duplicate answer option indices")
+            values foreach { value =>
+              if (value < 0 || value >= numOptions)
+                throw new IllegalArgumentException("At least one answer option index doesn't match answer options")
+            }
+          case AnswerType.TimeOfDay =>
+            try {
+              LocalTime.parse(answer.content)
+            } catch {
+              case e: DateTimeParseException => throw new IllegalArgumentException(e)
+            }
+          case AnswerType.Date =>
+            try {
+              LocalDate.parse(answer.content)
+            } catch {
+              case e: DateTimeParseException => throw new IllegalArgumentException(e)
+            }
+          case _ => Unit
+        }
     }
   }
 
   def add(answer: Answer): Future[Answer] = {
     // XXX: See above (AutoInc hack)
     assureTypeConsistency(answer).flatMap { _ =>
-      dbConfig().db.run((answers returning answers.map(_.id)) += answer)
+      dbConfig().db
+        .run((answers returning answers.map(_.id)) += answer)
         .flatMap(this.get(_).flatMap {
           case Some(a) => Future.successful(a)
           case None => Future.failed(new IllegalStateException("Failed to load answer after creation"))
@@ -160,11 +177,15 @@ class AnswersRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) {
   def addAll(newAnswers: Seq[Answer]): Future[Seq[Answer]] = {
     // XXX: See above (AutoInc hack)
     Future.sequence(newAnswers.map(answer => assureTypeConsistency(answer))).flatMap { _ =>
-      dbConfig().db.run(((answers returning answers.map(_.id)) ++= newAnswers).transactionally)
-        .flatMap(createdSeq => Future.sequence(createdSeq.map(this.get(_).map {
-          case Some(a) => a
-          case None => throw new IllegalStateException("Failed to load an answer after creation")
-        })))
+      dbConfig().db
+        .run(((answers returning answers.map(_.id)) ++= newAnswers).transactionally)
+        .flatMap(
+          createdSeq =>
+            Future.sequence(createdSeq.map(this.get(_).map {
+              case Some(a) => a
+              case None => throw new IllegalStateException("Failed to load an answer after creation")
+            }))
+        )
     }
     //    Future.sequence(newAnswers.map(answer => assureTypeConsistency(answer))).flatMap { _ =>
     //      dbConfig().db.run(((mapToInsertColumns(answers) returning answers.map(_.id)) ++= newAnswers.map(InsertValuesMap)).transactionally)

@@ -33,8 +33,9 @@ object Futures {
     def toOptionFuture: Future[Option[T]] = futureOption.map(_.map(Some(_))).getOrElse(Future.successful(None))
   }
 
-  implicit class TraversableFutureExtensions[T](traversableFuture: Future[Traversable[T]])
-    (implicit ec: ExecutionContext) {
+  implicit class TraversableFutureExtensions[T](traversableFuture: Future[Traversable[T]])(
+    implicit ec: ExecutionContext
+  ) {
 
     def mapTraversable[B](mapping: T => B): Future[Traversable[B]] =
       traversableFuture.map(_.map(mapping))
@@ -47,14 +48,19 @@ object Futures {
 
     def filterTraversableAsync(filter: T => Future[Boolean]): Future[Traversable[T]] = {
       traversableFuture
-        .map(seq => seq.map(t => filter(t).map {
-          case true => Some(t)
-          case false => None
-        }))
+        .map(
+          seq =>
+            seq.map(
+              t =>
+                filter(t).map {
+                  case true => Some(t)
+                  case false => None
+                }
+            )
+        )
         .flatMap(futures => Future.sequence(futures))
         .map(_.filter(_.isDefined))
-        .map(_.map(_.getOrElse(
-          throw new IllegalStateException("Undefined options should have been filtered out"))))
+        .map(_.map(_.getOrElse(throw new IllegalStateException("Undefined options should have been filtered out"))))
     }
   }
 

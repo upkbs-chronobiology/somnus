@@ -79,7 +79,8 @@ trait Authenticated extends BeforeAndAfterAll with GuiceOneAppPerSuite with Inje
   private def registerTestUser(name: String, role: Option[Role] = None): Future[User] = {
     // XXX: Unregistering in afterAll would be cleaner, but doesn't work because of threading issues
     assureDeletionOfTestUser(name).flatMap({ _ =>
-      authService.register(name, Some(TestPassword))
+      authService
+        .register(name, Some(TestPassword))
         .map(user => {
           userRepository.setRole(name, role)
           user
@@ -95,10 +96,7 @@ trait Authenticated extends BeforeAndAfterAll with GuiceOneAppPerSuite with Inje
   }
 
   private def logInTestUser(name: Json.JsValueWrapper): String = {
-    val user = Json.obj(
-      "name" -> name,
-      "password" -> TestPassword
-    )
+    val user = Json.obj("name" -> name, "password" -> TestPassword)
     val request = FakeRequest(POST, "/v1/auth/login").withBody(user)
     val result = route(app, request).get
     header("X-Auth-Token", result)
@@ -116,7 +114,8 @@ trait Authenticated extends BeforeAndAfterAll with GuiceOneAppPerSuite with Inje
   }
 
   // XXX: The following is a bit hacky
-  class AuthenticatedFakeRequestFactory(requestFactory: RequestFactory)(implicit val role: Option[Role] = None) extends FakeRequestFactory(requestFactory) {
+  class AuthenticatedFakeRequestFactory(requestFactory: RequestFactory)(implicit val role: Option[Role] = None)
+      extends FakeRequestFactory(requestFactory) {
 
     def apply(role: Role): AuthenticatedFakeRequestFactory = {
       new AuthenticatedFakeRequestFactory(requestFactory)(Some(role))
@@ -135,10 +134,23 @@ trait Authenticated extends BeforeAndAfterAll with GuiceOneAppPerSuite with Inje
       clientCertificateChain: Option[Seq[X509Certificate]],
       attrs: TypedMap
     ): FakeRequest[A] = {
-      super.apply(method, uri, addToken(headers, role), body, remoteAddress, version, id, tags, secure, clientCertificateChain, attrs)
+      super.apply(
+        method,
+        uri,
+        addToken(headers, role),
+        body,
+        remoteAddress,
+        version,
+        id,
+        tags,
+        secure,
+        clientCertificateChain,
+        attrs
+      )
     }
   }
 
-  object AuthenticatedFakeRequest extends AuthenticatedFakeRequestFactory(new DefaultRequestFactory(HttpConfiguration()))
+  object AuthenticatedFakeRequest
+      extends AuthenticatedFakeRequestFactory(new DefaultRequestFactory(HttpConfiguration()))
 
 }

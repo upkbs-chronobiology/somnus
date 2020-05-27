@@ -34,8 +34,13 @@ import util.InclusiveRange
 import util.Serialization
 
 class QuestionControllerSpec
-  extends PlaySpec with GuiceOneAppPerSuite with FreshDatabase with Injecting with Authenticated
-    with BeforeAndAfterAll with BeforeAndAfterEach {
+    extends PlaySpec
+    with GuiceOneAppPerSuite
+    with FreshDatabase
+    with Injecting
+    with Authenticated
+    with BeforeAndAfterAll
+    with BeforeAndAfterEach {
 
   private val hiddenStudy = doSync(inject[StudyRepository].create(Study(0, "Hidden Study")))
   private val readableStudy = doSync(inject[StudyRepository].create(Study(0, "Readable Study")))
@@ -81,7 +86,8 @@ class QuestionControllerSpec
   "QuestionController" when {
     "logged in as basic user" should {
       "refuse adding or deleting question" in {
-        val resultCreation = doAuthenticatedRequest(POST, "/v1/questions", Some(questionJson("This won't get through?")))
+        val resultCreation =
+          doAuthenticatedRequest(POST, "/v1/questions", Some(questionJson("This won't get through?")))
         status(resultCreation) must equal(FORBIDDEN)
 
         val resultDeletion = doAuthenticatedRequest(DELETE, "/v1/questions/321")
@@ -92,7 +98,8 @@ class QuestionControllerSpec
 
       "reject updates" in {
         val question = doSync(createQuestion("Before?"))
-        val putResponse = doAuthenticatedRequest(PUT, s"/v1/questions/${question.id}", Some(questionJson("After?")), role = None)
+        val putResponse =
+          doAuthenticatedRequest(PUT, s"/v1/questions/${question.id}", Some(questionJson("After?")), role = None)
         status(putResponse) must equal(FORBIDDEN)
       }
     }
@@ -120,8 +127,8 @@ class QuestionControllerSpec
 
         val foundList = contentAsJson(listResult).as[JsArray].value
         foundList.size must equal(3)
-        foundList.map(_ ("id")).map(_.as[Long]) must equal(Seq(secondId - 1, secondId, secondId + 1))
-        foundList.map(_ ("content").as[String]) must equal(Seq("Huh A?", "Huh B?", "Huh C?"))
+        foundList.map(_("id")).map(_.as[Long]) must equal(Seq(secondId - 1, secondId, secondId + 1))
+        foundList.map(_("content").as[String]) must equal(Seq("Huh A?", "Huh B?", "Huh C?"))
 
         status(deleteQuestion(secondId - 1)) must equal(200)
         status(deleteQuestion(secondId)) must equal(200)
@@ -138,12 +145,14 @@ class QuestionControllerSpec
       }
 
       "reject questions with non-existent questionnaire id" in {
-        val response = doAuthenticatedRequest(POST, "/v1/questions", Some(questionJson("Foo bar?", questionnaireId = Some(666))))
+        val response =
+          doAuthenticatedRequest(POST, "/v1/questions", Some(questionJson("Foo bar?", questionnaireId = Some(666))))
         status(response) must equal(FORBIDDEN)
       }
 
       "update existing questions" in {
-        val questionnaire = doSync(inject[QuestionnairesRepository].create(Questionnaire(0, "Test Questionnaire", None)))
+        val questionnaire =
+          doSync(inject[QuestionnairesRepository].create(Questionnaire(0, "Test Questionnaire", None)))
 
         val questionResult = postQuestion("Before?")
         status(questionResult) must equal(201)
@@ -152,7 +161,12 @@ class QuestionControllerSpec
         val jsonBefore = contentAsJson(doAuthenticatedRequest(GET, s"/v1/questions/$id"))
         jsonBefore("content").as[String] must equal("Before?")
 
-        val putResponse = doAuthenticatedRequest(PUT, s"/v1/questions/$id", Some(questionJson("After?", questionnaireId = Some(questionnaire.id))), role = Some(Role.Researcher))
+        val putResponse = doAuthenticatedRequest(
+          PUT,
+          s"/v1/questions/$id",
+          Some(questionJson("After?", questionnaireId = Some(questionnaire.id))),
+          role = Some(Role.Researcher)
+        )
         status(putResponse) must equal(200)
         contentAsJson(putResponse).apply("content").as[String] must equal("After?")
         contentAsJson(putResponse).apply("questionnaireId").as[Long] must equal(questionnaire.id)
@@ -168,8 +182,12 @@ class QuestionControllerSpec
       }
 
       "refuse questions with invalid answer type" in {
-        val request = doAuthenticatedRequest(POST, "/v1/questions",
-          Some(questionJson("Nanana batman?", "non-existent-type")), role = Some(Role.Researcher))
+        val request = doAuthenticatedRequest(
+          POST,
+          "/v1/questions",
+          Some(questionJson("Nanana batman?", "non-existent-type")),
+          role = Some(Role.Researcher)
+        )
         status(request) must equal(400)
       }
 
@@ -179,14 +197,17 @@ class QuestionControllerSpec
       }
 
       "refuse discrete-range questions with wrong number of labels" in {
-        val questionResult = postQuestion("Test?", AnswerType.RangeDiscrete, Some(Seq("a", "b", "c")), Some(InclusiveRange(1, 10)))
+        val questionResult =
+          postQuestion("Test?", AnswerType.RangeDiscrete, Some(Seq("a", "b", "c")), Some(InclusiveRange(1, 10)))
         status(questionResult) must equal(BAD_REQUEST)
       }
 
       "accept questions of all possible answer types" in {
         status(postQuestion("A?", AnswerType.Text)) must equal(201)
         status(postQuestion("B1?", AnswerType.RangeContinuous)) must equal(201)
-        status(postQuestion("B2?", AnswerType.RangeContinuous, answerRange = Some(InclusiveRange(0.2, 3.5)))) must equal(201)
+        status(postQuestion("B2?", AnswerType.RangeContinuous, answerRange = Some(InclusiveRange(0.2, 3.5)))) must equal(
+          201
+        )
         status(postQuestion("C?", AnswerType.RangeDiscrete, answerRange = Some(InclusiveRange(1, 5)))) must equal(201)
         status(postQuestion("D?", AnswerType.MultipleChoiceSingle)) must equal(201)
         status(postQuestion("D?", AnswerType.MultipleChoiceMany)) must equal(201)
@@ -197,25 +218,26 @@ class QuestionControllerSpec
         status(responseA) must equal(CREATED)
         val listA = contentAsJson(responseA).apply("answerLabels").as[JsArray].value.map(_.as[String])
         listA.length must equal(2)
-        listA must contain allOf("this is min", "this is max")
+        listA must contain allOf ("this is min", "this is max")
 
-        val responseB = postQuestion("Bar?", AnswerType.RangeDiscrete, Some(Seq("a", "b", "c", "d", "e")), Some(InclusiveRange(3, 7)))
+        val responseB =
+          postQuestion("Bar?", AnswerType.RangeDiscrete, Some(Seq("a", "b", "c", "d", "e")), Some(InclusiveRange(3, 7)))
         status(responseB) must equal(CREATED)
         val listB = contentAsJson(responseB).apply("answerLabels").as[JsArray].value.map(_.as[String])
         listB.length must equal(5)
-        listB must contain allOf("a", "b", "c", "d", "e")
+        listB must contain allOf ("a", "b", "c", "d", "e")
 
         val responseC = postQuestion("Baz?", AnswerType.MultipleChoiceSingle, Some(Seq("I", "II", "III")))
         status(responseC) must equal(CREATED)
         val listC = contentAsJson(responseC).apply("answerLabels").as[JsArray].value.map(_.as[String])
         listC.length must equal(3)
-        listC must contain allOf("I", "II", "III")
+        listC must contain allOf ("I", "II", "III")
 
         val responseD = postQuestion("Baz?", AnswerType.MultipleChoiceMany, Some(Seq("I", "II", "III")))
         status(responseD) must equal(CREATED)
         val listD = contentAsJson(responseD).apply("answerLabels").as[JsArray].value.map(_.as[String])
         listD.length must equal(3)
-        listD must contain allOf("I", "II", "III")
+        listD must contain allOf ("I", "II", "III")
       }
 
       "preserve empty answer labels" in {
@@ -239,25 +261,31 @@ class QuestionControllerSpec
         val question = doSync(createQuestion("This is not accessible?", questionnaireId = Some(hiddenQuestionnaire.id)))
 
         val response = doAuthenticatedRequest(GET, s"/v1/questions")
-        val ids = contentAsJson(response).as[JsArray].value.map(_ ("id").as[Long])
+        val ids = contentAsJson(response).as[JsArray].value.map(_("id").as[Long])
         ids must not contain question.id
       }
 
       "reject adding questions to non-writeable study" in {
-        val response = doAuthenticatedRequest(POST, s"/v1/questions",
-          Some(questionJson("Sample Question", questionnaireId = Some(readableQuestionnaire.id))))
+        val response = doAuthenticatedRequest(
+          POST,
+          s"/v1/questions",
+          Some(questionJson("Sample Question", questionnaireId = Some(readableQuestionnaire.id)))
+        )
         status(response) must equal(FORBIDDEN)
       }
 
       "reject updating questions in non-writeable study" in {
-        val question = doSync(createQuestion("This is not accessible?", questionnaireId = Some(readableQuestionnaire.id)))
+        val question =
+          doSync(createQuestion("This is not accessible?", questionnaireId = Some(readableQuestionnaire.id)))
 
-        val response = doAuthenticatedRequest(PUT, s"/v1/questions/${question.id}", Some(questionJson("Sample Question")))
+        val response =
+          doAuthenticatedRequest(PUT, s"/v1/questions/${question.id}", Some(questionJson("Sample Question")))
         status(response) must equal(FORBIDDEN)
       }
 
       "reject removing questions from non-writeable study" in {
-        val question = doSync(createQuestion("This is not accessible?", questionnaireId = Some(readableQuestionnaire.id)))
+        val question =
+          doSync(createQuestion("This is not accessible?", questionnaireId = Some(readableQuestionnaire.id)))
 
         val response = doAuthenticatedRequest(DELETE, s"/v1/questions/${question.id}")
         status(response) must equal(FORBIDDEN)
@@ -268,7 +296,8 @@ class QuestionControllerSpec
       implicit val _ = Role.Admin
 
       "reject questions with non-existent questionnaire id" in {
-        val response = doAuthenticatedRequest(POST, "/v1/questions", Some(questionJson("Foo bar?", questionnaireId = Some(666))))
+        val response =
+          doAuthenticatedRequest(POST, "/v1/questions", Some(questionJson("Foo bar?", questionnaireId = Some(666))))
         status(response) must equal(BAD_REQUEST)
       }
     }
@@ -281,8 +310,16 @@ class QuestionControllerSpec
     answerRange: Option[InclusiveRange[BigDecimal]] = None,
     questionnaireId: Option[Long] = None
   ): Future[Question] =
-    questionsRepo.add(Question(0, text, answerType,
-      answerLabels.map(Serialization.serialize), answerRange.map(r => Json.toJson(r).toString()), questionnaireId))
+    questionsRepo.add(
+      Question(
+        0,
+        text,
+        answerType,
+        answerLabels.map(Serialization.serialize),
+        answerRange.map(r => Json.toJson(r).toString()),
+        questionnaireId
+      )
+    )
 
   private def postQuestion(
     text: String,
@@ -307,10 +344,7 @@ class QuestionControllerSpec
     answerRange: Option[InclusiveRange[BigDecimal]] = None,
     questionnaireId: Option[Long] = None
   ): JsValue = {
-    var obj: JsObject = Json.obj(
-      "content" -> text,
-      "answerType" -> answerType
-    )
+    var obj: JsObject = Json.obj("content" -> text, "answerType" -> answerType)
     obj = if (answerLabels.isDefined) obj + ("answerLabels" -> JsArray(answerLabels.get.map(JsString))) else obj
     obj = if (questionnaireId.isDefined) obj + ("questionnaireId" -> Json.toJson(questionnaireId.get)) else obj
     obj = if (answerRange.isDefined) obj + ("answerRange" -> Json.toJson(answerRange.get)) else obj

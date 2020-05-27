@@ -25,7 +25,7 @@ import util.Futures
 import util.Futures.OptionFutureExtensions
 
 @Singleton
-class AccessRules @Inject()(
+class AccessRules @Inject() (
   userRepository: UserRepository,
   studyAccessRepo: StudyAccessRepository,
   studyRepo: StudyRepository,
@@ -62,19 +62,23 @@ class AccessRules @Inject()(
     user match {
       case _ if user.hasRole(Role.Admin) => Future.successful(true)
       case _ =>
-        questionnairesRepo.read(questionnaireId)
+        questionnairesRepo
+          .read(questionnaireId)
           .flatMapOption(q => mayAccessQuestionnaire(user, q, level))
           .map(_.getOrElse(false))
     }
   }
 
   def mayAccessQuestionnaire[B](user: User, questionnaire: Questionnaire, level: AccessLevel): Future[Boolean] = {
-    Future.successful(questionnaire.studyId)
-      .flatMapOption(studyId =>
-        Futures.parallel(
-          isStudyParticipant(user, studyId), mayAccessStudy(user, studyId, level)
-        ) map tupled((p, a) => p && level <= AccessLevel.Read || a)
-      ).map(_.getOrElse(DisconnectedEntitiesPublic))
+    Future
+      .successful(questionnaire.studyId)
+      .flatMapOption(
+        studyId =>
+          Futures.parallel(isStudyParticipant(user, studyId), mayAccessStudy(user, studyId, level)) map tupled(
+            (p, a) => p && level <= AccessLevel.Read || a
+          )
+      )
+      .map(_.getOrElse(DisconnectedEntitiesPublic))
   }
 
   private def isStudyParticipant(user: User, studyId: Long): Future[Boolean] =
@@ -91,7 +95,8 @@ class AccessRules @Inject()(
     user match {
       case _ if user.hasRole(Role.Admin) => Future.successful(true)
       case _ =>
-        questionsRepo.get(questionId)
+        questionsRepo
+          .get(questionId)
           .mapOptionFlat(_.questionnaireId)
           .flatMapOption(mayAccessQuestionnaire(user, _, level))
           .map(_.getOrElse(DisconnectedEntitiesPublic))
@@ -107,7 +112,8 @@ class AccessRules @Inject()(
   }
 
   def mayAccessAnswer[B](user: User, answerId: Long, level: AccessLevel): Future[Boolean] = {
-    answersRepo.get(answerId)
+    answersRepo
+      .get(answerId)
       .flatMapOption(a => mayAccessAnswer(user, a, level))
       .map(_.getOrElse(false))
   }
@@ -119,7 +125,8 @@ class AccessRules @Inject()(
   }
 
   def mayAccessSchedule(user: User, scheduleId: Long, level: AccessLevel): Future[Boolean] = {
-    schedulesRepo.get(scheduleId)
+    schedulesRepo
+      .get(scheduleId)
       .flatMapOption(s => mayAccessSchedule(user, s, level))
       .map(_.getOrElse(false))
   }

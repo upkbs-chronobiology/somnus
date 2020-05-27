@@ -68,10 +68,11 @@ object QuestionForm {
       "content" -> nonEmptyText,
       "answerType" -> enum(AnswerType),
       "answerLabels" -> emptyPreservingOptional(seq(text)),
-      "answerRange" -> optional(mapping(
-        "min" -> of(bigDecimalFormat),
-        "max" -> of(bigDecimalFormat)
-      )(RangeFormData.apply)(RangeFormData.unapply)),
+      "answerRange" -> optional(
+        mapping("min" -> of(bigDecimalFormat), "max" -> of(bigDecimalFormat))(RangeFormData.apply)(
+          RangeFormData.unapply
+        )
+      ),
       "questionnaireId" -> optional(longNumber)
     )(QuestionFormData.apply)(QuestionFormData.unapply)
   )
@@ -85,11 +86,12 @@ class QuestionTable(tag: Tag) extends Table[Question](tag, "question") {
   def answerRange = column[String]("answer_range")
   def questionnaireId = column[Long]("questionnaire_id")
 
-  override def * = (id, content, answerType, answerLabels.?, answerRange.?, questionnaireId.?) <> (Question.tupled, Question.unapply)
+  override def * =
+    (id, content, answerType, answerLabels.?, answerRange.?, questionnaireId.?) <> (Question.tupled, Question.unapply)
 }
 
 @Singleton
-class QuestionsRepository @Inject()(dbConfigProvider: DatabaseConfigProvider, answersRepo: AnswersRepository) {
+class QuestionsRepository @Inject() (dbConfigProvider: DatabaseConfigProvider, answersRepo: AnswersRepository) {
 
   private def questions = TableQuery[QuestionTable]
   private def questionnaires = TableQuery[QuestionnaireTable]
@@ -110,9 +112,12 @@ class QuestionsRepository @Inject()(dbConfigProvider: DatabaseConfigProvider, an
   def update(question: Question): Future[Question] = {
     validate(question) flatMap { _ =>
       val query = questions.filter(_.id === question.id).update(question)
-      dbConfig.db.run(query).flatMap(_ =>
-        this.get(question.id).map(_.getOrElse(throw new IllegalStateException("Question not found after update")))
-      )
+      dbConfig.db
+        .run(query)
+        .flatMap(
+          _ =>
+            this.get(question.id).map(_.getOrElse(throw new IllegalStateException("Question not found after update")))
+        )
     }
   }
 

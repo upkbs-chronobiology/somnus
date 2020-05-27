@@ -6,7 +6,7 @@ import javax.inject.Singleton
 import models.AccessLevel.AccessLevel
 
 @Singleton
-class Acls @Inject()(implicit accessRules: AccessRules) {
+class Acls @Inject() (implicit accessRules: AccessRules) {
 
   def withUserAccess(userId: Long, level: AccessLevel) = WithUserAccess(userId, level)
 

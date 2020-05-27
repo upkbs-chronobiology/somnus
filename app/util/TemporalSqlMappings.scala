@@ -11,36 +11,30 @@ import java.time.format.DateTimeFormatter
 
 import slick.jdbc.H2Profile.api._
 
-
 trait TemporalSqlMappings {
 
   // TODO: Find a better solution for this.
-  protected val H2_INCLUDING_ISO_8601 = DateTimeFormatter.ofPattern("yyyy-MM-dd[ ]['T']HH:mm:ss" +
-    "[.SSSSSSSSS]" +
-    "[.SSSSSSSS]" +
-    "[.SSSSSSS]" +
-    "[.SSSSSS]" +
-    "[.SSSSS]" +
-    "[.SSSS]" +
-    "[.SSS]" +
-    "[.SS]" +
-    "[.S]" +
-    "[XXX][X]")
-
-  implicit def localDate = MappedColumnType.base[LocalDate, Date](
-    localDate => Date.valueOf(localDate),
-    date => date.toLocalDate
+  protected val H2_INCLUDING_ISO_8601 = DateTimeFormatter.ofPattern(
+    "yyyy-MM-dd[ ]['T']HH:mm:ss" +
+      "[.SSSSSSSSS]" +
+      "[.SSSSSSSS]" +
+      "[.SSSSSSS]" +
+      "[.SSSSSS]" +
+      "[.SSSSS]" +
+      "[.SSSS]" +
+      "[.SSS]" +
+      "[.SS]" +
+      "[.S]" +
+      "[XXX][X]"
   )
 
-  implicit def localTime = MappedColumnType.base[LocalTime, Time](
-    localTime => java.sql.Time.valueOf(localTime),
-    time => time.toLocalTime
-  )
+  implicit def localDate =
+    MappedColumnType.base[LocalDate, Date](localDate => Date.valueOf(localDate), date => date.toLocalDate)
 
-  implicit def instant = MappedColumnType.base[Instant, Timestamp](
-    Timestamp.from,
-    _.toInstant
-  )
+  implicit def localTime =
+    MappedColumnType.base[LocalTime, Time](localTime => java.sql.Time.valueOf(localTime), time => time.toLocalTime)
+
+  implicit def instant = MappedColumnType.base[Instant, Timestamp](Timestamp.from, _.toInstant)
 
   implicit def offsetDateTime = MappedColumnType.base[OffsetDateTime, String](
     _.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),

@@ -12,18 +12,14 @@ import models.Password
 import models.PasswordRepository
 import models.UserRepository
 
-class PasswordAuthInfoDAO @Inject()(
-  userRepository: UserRepository,
-  passwordRepository: PasswordRepository
-) extends DelegableAuthInfoDAO[PasswordInfo] {
+class PasswordAuthInfoDAO @Inject() (userRepository: UserRepository, passwordRepository: PasswordRepository)
+    extends DelegableAuthInfoDAO[PasswordInfo] {
 
   override def find(loginInfo: LoginInfo): Future[Option[PasswordInfo]] = {
     this.findPasswordId(loginInfo).flatMap {
       case None => Future.successful(None)
       case Some(pwId) =>
-        passwordRepository.get(pwId).map(_.map(
-          password => PasswordInfo(password.hasher, password.hash, password.salt)
-        ))
+        passwordRepository.get(pwId).map(_.map(password => PasswordInfo(password.hasher, password.hash, password.salt)))
     }
   }
 
@@ -63,12 +59,15 @@ class PasswordAuthInfoDAO @Inject()(
   }
 
   override def remove(loginInfo: LoginInfo): Future[Unit] = {
-    this.findPasswordId(loginInfo).flatMap {
-      case None => Future.failed(new IllegalArgumentException(s"Password entry for loginInfo $loginInfo not found"))
-      case Some(pwId) =>
-        // pw table entry deletion is not sync-critical, therefore not waited upon
-        val _ = passwordRepository.delete(pwId)
-        userRepository.removePassword(loginInfo)
-    }.map(_ => {}) // XXX: Can we avoid this?
+    this
+      .findPasswordId(loginInfo)
+      .flatMap {
+        case None => Future.failed(new IllegalArgumentException(s"Password entry for loginInfo $loginInfo not found"))
+        case Some(pwId) =>
+          // pw table entry deletion is not sync-critical, therefore not waited upon
+          val _ = passwordRepository.delete(pwId)
+          userRepository.removePassword(loginInfo)
+      }
+      .map(_ => {}) // XXX: Can we avoid this?
   }
 }

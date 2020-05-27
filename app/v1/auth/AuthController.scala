@@ -39,10 +39,7 @@ object SignUpForm {
   val passwordField: Mapping[String] = nonEmptyText.verifying(minLength(PasswordMinLength))
 
   val form = Form(
-    mapping(
-      "name" -> nonEmptyText,
-      "password" -> passwordField
-    )(SignUpFormData.apply)(SignUpFormData.unapply)
+    mapping("name" -> nonEmptyText, "password" -> passwordField)(SignUpFormData.apply)(SignUpFormData.unapply)
   )
 }
 
@@ -50,24 +47,17 @@ case class LoginFormData(name: String, password: String)
 
 object LoginForm {
   val form = Form(
-    mapping(
-      "name" -> nonEmptyText,
-      "password" -> nonEmptyText
-    )(SignUpFormData.apply)(SignUpFormData.unapply)
+    mapping("name" -> nonEmptyText, "password" -> nonEmptyText)(SignUpFormData.apply)(SignUpFormData.unapply)
   )
 }
 
 case class PwResetFormData(password: String)
 
 object PwResetForm {
-  val form = Form(
-    mapping(
-      "password" -> SignUpForm.passwordField
-    )(PwResetFormData.apply)(PwResetFormData.unapply)
-  )
+  val form = Form(mapping("password" -> SignUpForm.passwordField)(PwResetFormData.apply)(PwResetFormData.unapply))
 }
 
-class AuthController @Inject()(
+class AuthController @Inject() (
   val environment: Environment[DefaultEnv],
   rcc: RestControllerComponents,
   userRepo: UserRepository,
@@ -76,7 +66,8 @@ class AuthController @Inject()(
   silhouette: Silhouette[DefaultEnv],
   authService: AuthService
 )(implicit ec: ExecutionContext)
-  extends RestBaseController(rcc) with Logging {
+    extends RestBaseController(rcc)
+    with Logging {
 
   private val ResetTokenValidityDays = 14
 
@@ -84,7 +75,8 @@ class AuthController @Inject()(
     SignUpForm.form.bindFromRequest.fold(
       badForm => Future.successful(BadRequest(badForm.errorsAsJson)), // XXX: More info?
       formData => {
-        authService.register(formData.name, Some(formData.password))
+        authService
+          .register(formData.name, Some(formData.password))
           .map(user => Created(Json.toJson(user)))
           .recover {
             case e: Exception => BadRequest(e.getMessage)
@@ -96,30 +88,32 @@ class AuthController @Inject()(
   def logIn = Action.async { implicit request =>
     val credentialsWrong = BadRequest("Credentials are not correct")
 
-    LoginForm.form.bindFromRequest.fold(
-      badForm => Future.successful(BadRequest("Login failed")),
-      formData => {
-        val credentials = Credentials(formData.name, formData.password)
-        credentialsProvider.authenticate(credentials).flatMap { loginInfo =>
-          userRepo.retrieve(loginInfo).flatMap {
-            case None => Future.successful(credentialsWrong) // user not found
-            case Some(user) => for {
-              authenticator <- environment.authenticatorService.create(loginInfo)
-              value <- environment.authenticatorService.init(authenticator)
-              result <- environment.authenticatorService.embed(value, Ok(Json.toJson(user)))
-            } yield result
+    LoginForm.form.bindFromRequest
+      .fold(
+        badForm => Future.successful(BadRequest("Login failed")),
+        formData => {
+          val credentials = Credentials(formData.name, formData.password)
+          credentialsProvider.authenticate(credentials).flatMap { loginInfo =>
+            userRepo.retrieve(loginInfo).flatMap {
+              case None => Future.successful(credentialsWrong) // user not found
+              case Some(user) =>
+                for {
+                  authenticator <- environment.authenticatorService.create(loginInfo)
+                  value <- environment.authenticatorService.init(authenticator)
+                  result <- environment.authenticatorService.embed(value, Ok(Json.toJson(user)))
+                } yield result
+            }
+          } recover {
+            case _: IllegalArgumentException => credentialsWrong
+            case _: IdentityNotFoundException => credentialsWrong
+            case _: InvalidPasswordException => credentialsWrong
+            case e: Exception =>
+              e.printStackTrace()
+              logger.error("Exception during login attempt", e)
+              credentialsWrong
           }
-        } recover {
-          case _: IllegalArgumentException => credentialsWrong
-          case _: IdentityNotFoundException => credentialsWrong
-          case _: InvalidPasswordException => credentialsWrong
-          case e: Exception =>
-            e.printStackTrace()
-            logger.error("Exception during login attempt", e)
-            credentialsWrong
         }
-      }
-    )
+      )
   }
 
   def createResetToken(userId: Long) = silhouette.SecuredAction(ForEditors).async { implicit request =>
@@ -127,11 +121,13 @@ class AuthController @Inject()(
     userRepo.get(userId) flatMap {
       case None => Future.successful(NotFound(JsonError(s"User with id $userId not found")))
       case Some(user) if Role.level(user.role.map(Role.withName)) >= currentUserLevel =>
-        Future.successful(Forbidden(JsonError(
-          "Generating reset tokens for users of same or higher permission level is not allowed")))
+        Future.successful(
+          Forbidden(JsonError("Generating reset tokens for users of same or higher permission level is not allowed"))
+        )
       case Some(_) =>
         val inTwoWeeks = Timestamp.from(Instant.now().plus(Duration.ofDays(ResetTokenValidityDays)))
-        authService.generateResetToken(userId, inTwoWeeks)
+        authService
+          .generateResetToken(userId, inTwoWeeks)
           .map(pwReset => Created(Json.toJson(pwReset)))
           .recover {
             case e: ItemNotFoundException => NotFound(JsonError(e.getMessage))
@@ -142,25 +138,29 @@ class AuthController @Inject()(
   def getUserForToken(token: String) = Action.async { implicit request =>
     pwResetsRepo.getByToken(token) flatMap {
       case None => Future.successful(NotFound(JsonError("Token not valid")))
-      case Some(pwReset) => userRepo.get(pwReset.userId) map {
-        case None => NotFound(JsonError("User for token does not exist"))
-        case Some(user) => Ok(Json.toJson(user))
-      }
+      case Some(pwReset) =>
+        userRepo.get(pwReset.userId) map {
+          case None => NotFound(JsonError("User for token does not exist"))
+          case Some(user) => Ok(Json.toJson(user))
+        }
     }
   }
 
   def resetPassword(token: String) = Action.async { implicit request =>
-    PwResetForm.form.bindFromRequest().fold(
-      badForm => Future.successful(BadRequest(badForm.errorsAsJson)),
-      formData =>
-        authService.resetPassword(token, formData.password)
-          .map(_ => Ok(JsonSuccess("Password successfully reset")))
-          .recover {
-            case e: ItemNotFoundException =>
-              NotFound(JsonError(e.getMessage))
-            case e: IllegalArgumentException =>
-              BadRequest(JsonError(e.getMessage))
-          }
-    )
+    PwResetForm.form
+      .bindFromRequest()
+      .fold(
+        badForm => Future.successful(BadRequest(badForm.errorsAsJson)),
+        formData =>
+          authService
+            .resetPassword(token, formData.password)
+            .map(_ => Ok(JsonSuccess("Password successfully reset")))
+            .recover {
+              case e: ItemNotFoundException =>
+                NotFound(JsonError(e.getMessage))
+              case e: IllegalArgumentException =>
+                BadRequest(JsonError(e.getMessage))
+            }
+      )
   }
 }

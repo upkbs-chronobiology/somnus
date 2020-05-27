@@ -23,13 +23,14 @@ class PasswordTable(tag: Tag) extends Table[Password](tag, "password") {
 }
 
 @Singleton
-class PasswordRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) {
+class PasswordRepository @Inject() (dbConfigProvider: DatabaseConfigProvider) {
   def passwords = TableQuery[PasswordTable]
 
   def dbConfig = dbConfigProvider.get[JdbcProfile]
 
   def add(password: Password): Future[Password] = {
-    dbConfig.db.run((passwords returning passwords.map(_.id)) += password)
+    dbConfig.db
+      .run((passwords returning passwords.map(_.id)) += password)
       .flatMap(this.get(_).flatMap {
         case None => Future.failed(new IllegalStateException("Failed to load password after creation"))
         case Some(pw) => Future.successful(pw)

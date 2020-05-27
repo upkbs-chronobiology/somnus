@@ -13,10 +13,17 @@ object PlayFormsEnum {
   def enumFormat[E <: Enumeration](enum: E): Formatter[E#Value] = new Formatter[E#Value] {
 
     def bind(key: String, data: Map[String, String]): Either[Seq[FormError], E#Value] = {
-      Formats.stringFormat.bind(key, data).right.flatMap(s =>
-        scala.util.control.Exception.allCatch[E#Value]
-          .either(enum.withName(s))
-          .left.map(_ => Seq(FormError(key, "error.enum", Nil))))
+      Formats.stringFormat
+        .bind(key, data)
+        .right
+        .flatMap(
+          s =>
+            scala.util.control.Exception
+              .allCatch[E#Value]
+              .either(enum.withName(s))
+              .left
+              .map(_ => Seq(FormError(key, "error.enum", Nil)))
+        )
     }
 
     override def unbind(key: String, value: E#Value): Map[String, String] = Map(key -> value.toString)

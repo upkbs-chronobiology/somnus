@@ -18,8 +18,12 @@ import play.api.test.Helpers._
 import play.api.test.Injecting
 import testutil.Authenticated
 
-class UserControllerSpec extends PlaySpec
-  with GuiceOneAppPerSuite with Injecting with BeforeAndAfterAll with Authenticated {
+class UserControllerSpec
+    extends PlaySpec
+    with GuiceOneAppPerSuite
+    with Injecting
+    with BeforeAndAfterAll
+    with Authenticated {
 
   val donald = doSync(inject[AuthService].register("Donald Duck", Some("00112233")))
 
@@ -86,7 +90,7 @@ class UserControllerSpec extends PlaySpec
 
         val list = contentAsJson(response).as[JsArray].value
         list.length must be >= 0
-        list.map(_ ("name").as[String]) must contain(donald.name)
+        list.map(_("name").as[String]) must contain(donald.name)
       }
 
       "list studies of other users based on ACLs" in {
@@ -100,8 +104,8 @@ class UserControllerSpec extends PlaySpec
       }
 
       "reject updating users" in {
-        val response = doAuthenticatedRequest(
-          PUT, s"/v1/users/${donald.id}", Some(userUpdateJson(Role.Researcher.toString)))
+        val response =
+          doAuthenticatedRequest(PUT, s"/v1/users/${donald.id}", Some(userUpdateJson(Role.Researcher.toString)))
 
         status(response) must equal(403)
       }
@@ -112,30 +116,38 @@ class UserControllerSpec extends PlaySpec
 
       "reject invalid roles" in {
         val response = doAuthenticatedRequest(
-          PUT, s"/v1/users/${donald.id}", Some(userUpdateJson("fooRole")), role = Some(Role.Admin))
+          PUT,
+          s"/v1/users/${donald.id}",
+          Some(userUpdateJson("fooRole")),
+          role = Some(Role.Admin)
+        )
 
         status(response) must equal(400)
       }
 
       "allow updating users" in {
         val response = doAuthenticatedRequest(
-          PUT, s"/v1/users/${donald.id}", Some(userUpdateJson(Role.Researcher.toString)), role = Some(Role.Admin))
+          PUT,
+          s"/v1/users/${donald.id}",
+          Some(userUpdateJson(Role.Researcher.toString)),
+          role = Some(Role.Admin)
+        )
 
         status(response) must equal(200)
         doSync(inject[UserRepository].get(donald.id)).get.role must equal(Some(Role.Researcher.toString))
       }
 
       "accept user updates with null-role" in {
-        val response = doAuthenticatedRequest(
-          PUT, s"/v1/users/${donald.id}", Some(userUpdateJson(null)), role = Some(Role.Admin))
+        val response =
+          doAuthenticatedRequest(PUT, s"/v1/users/${donald.id}", Some(userUpdateJson(null)), role = Some(Role.Admin))
 
         status(response) must equal(200)
         doSync(inject[UserRepository].get(donald.id)).get.role must equal(None)
       }
 
       "reject removing own admin rights" in {
-        val response = doAuthenticatedRequest(
-          PUT, s"/v1/users/${adminUser.id}", Some(userUpdateJson(null)), role = Some(Role.Admin))
+        val response =
+          doAuthenticatedRequest(PUT, s"/v1/users/${adminUser.id}", Some(userUpdateJson(null)), role = Some(Role.Admin))
 
         status(response) must equal(400)
         doSync(inject[UserRepository].get(adminUser.id)).get.role must equal(Some(Role.Admin.toString))
@@ -172,12 +184,8 @@ class UserControllerSpec extends PlaySpec
   }
 
   def userUpdateJson(role: String): JsObject = {
-    Json.obj(
-      "role" -> role
-    )
+    Json.obj("role" -> role)
   }
 
-  def userCreationJson(name: String): JsObject = Json.obj(
-    "name" -> name
-  )
+  def userCreationJson(name: String): JsObject = Json.obj("name" -> name)
 }

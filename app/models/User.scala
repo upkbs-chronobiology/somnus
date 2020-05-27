@@ -26,11 +26,7 @@ case class User(id: Long, name: String, passwordId: Option[Long], role: Option[S
 object User {
   implicit val implicitWrites = new Writes[User] {
     def writes(user: User): JsValue = {
-      Json.obj(
-        "name" -> user.name,
-        "role" -> user.role,
-        "id" -> user.id
-      )
+      Json.obj("name" -> user.name, "role" -> user.role, "id" -> user.id)
     }
   }
 
@@ -50,7 +46,7 @@ class UserTable(tag: Tag) extends Table[User](tag, "user") {
 trait UserService extends IdentityService[User]
 
 @Singleton
-class UserRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) extends UserService {
+class UserRepository @Inject() (dbConfigProvider: DatabaseConfigProvider) extends UserService {
 
   def users = TableQuery[UserTable]
 
@@ -63,7 +59,8 @@ class UserRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) extends
     this.get(user.name) flatMap {
       case Some(_) => throw new IllegalArgumentException("User already exists")
       case None =>
-        dbConfig.db.run((users returning users.map(_.id)) += user)
+        dbConfig.db
+          .run((users returning users.map(_.id)) += user)
           .flatMap(this.get(_).flatMap {
             case None => Future.failed(new IllegalStateException("User could not be loaded after creation"))
             case Some(u) => Future.successful(u)
@@ -85,7 +82,8 @@ class UserRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) extends
 
   def updatePassword(loginInfo: LoginInfo, passwordId: Option[Long]): Future[Int] = {
     val query = userByName(loginInfo.providerKey)
-      .map(_.passwordId.?).update(passwordId)
+      .map(_.passwordId.?)
+      .update(passwordId)
     dbConfig.db.run(query)
   }
 

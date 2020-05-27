@@ -5,4 +5,6 @@ import play.api.mvc._
 
 trait RestRequestHeader extends MessagesRequestHeader with PreferredMessagesProvider
 
-class RestRequest[A](request: Request[A], val messagesApi: MessagesApi) extends WrappedRequest(request) with RestRequestHeader
+class RestRequest[A](request: Request[A], val messagesApi: MessagesApi)
+    extends WrappedRequest(request)
+    with RestRequestHeader

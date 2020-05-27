@@ -16,9 +16,11 @@ object FormOffsetDateTime {
   private def offsetDateTimeFormat: Formatter[OffsetDateTime] = new Formatter[OffsetDateTime] {
     override def bind(key: String, data: Map[String, String]): Either[Seq[FormError], OffsetDateTime] = {
       Formats.stringFormat.bind(key, data).right flatMap { s =>
-        scala.util.control.Exception.allCatch[OffsetDateTime]
+        scala.util.control.Exception
+          .allCatch[OffsetDateTime]
           .either(OffsetDateTime.parse(s))
-          .left.map(e => Seq(FormError(key, s"Offset date time error: ${e.getMessage}", Nil)))
+          .left
+          .map(e => Seq(FormError(key, s"Offset date time error: ${e.getMessage}", Nil)))
       }
     }
     override def unbind(key: String, value: OffsetDateTime): Map[String, String] =

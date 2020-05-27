@@ -14,7 +14,7 @@ import util.Logging
 /** Generator for default users, like the initial admin.
   */
 @Singleton
-class UserGenerator @Inject()(userRepository: UserRepository, authService: AuthService) extends Logging {
+class UserGenerator @Inject() (userRepository: UserRepository, authService: AuthService) extends Logging {
 
   private val AdminName = "somnus"
   private val PasswordLength = 10
