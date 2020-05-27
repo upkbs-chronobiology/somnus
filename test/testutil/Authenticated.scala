@@ -76,7 +76,7 @@ trait Authenticated extends BeforeAndAfterAll with GuiceOneAppPerSuite with Inje
     }, Timeout)
   }
 
-  private def registerTestUser(name: String, role: Option[Role] = None): Future[User] = {
+  def registerTestUser(name: String, role: Option[Role] = None): Future[User] = {
     // XXX: Unregistering in afterAll would be cleaner, but doesn't work because of threading issues
     assureDeletionOfTestUser(name).flatMap({ _ =>
       authService
@@ -95,7 +95,7 @@ trait Authenticated extends BeforeAndAfterAll with GuiceOneAppPerSuite with Inje
     }
   }
 
-  private def logInTestUser(name: Json.JsValueWrapper): String = {
+  def logInTestUser(name: String): String = {
     val user = Json.obj("name" -> name, "password" -> TestPassword)
     val request = FakeRequest(POST, "/v1/auth/login").withBody(user)
     val result = route(app, request).get

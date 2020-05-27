@@ -17,6 +17,7 @@ GET           /v1/poke                                   v1.GeneralController.po
 # Auth
 POST          /v1/auth/signup                            v1.auth.AuthController.signUp
 POST          /v1/auth/login                             v1.auth.AuthController.logIn
+GET           /v1/auth/logout                            v1.auth.AuthController.logOut
 GET           /v1/auth/password/reset/new/:uId           v1.auth.AuthController.createResetToken(uId: Long)
 POST          /v1/auth/password/reset/:token             v1.auth.AuthController.resetPassword(token: String)
 GET           /v1/auth/password/reset/:token/user        v1.auth.AuthController.getUserForToken(token: String)

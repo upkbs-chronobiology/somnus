@@ -13,6 +13,8 @@ import auth.DefaultEnv
 import auth.roles.ForEditors
 import auth.roles.Role
 import com.mohiva.play.silhouette.api.Environment
+import com.mohiva.play.silhouette.api.LoginEvent
+import com.mohiva.play.silhouette.api.LogoutEvent
 import com.mohiva.play.silhouette.api.Silhouette
 import com.mohiva.play.silhouette.api.util.Credentials
 import com.mohiva.play.silhouette.impl.exceptions.IdentityNotFoundException
@@ -93,16 +95,20 @@ class AuthController @Inject() (
         badForm => Future.successful(BadRequest("Login failed")),
         formData => {
           val credentials = Credentials(formData.name, formData.password)
-          credentialsProvider.authenticate(credentials).flatMap { loginInfo =>
-            userRepo.retrieve(loginInfo).flatMap {
-              case None => Future.successful(credentialsWrong) // user not found
-              case Some(user) =>
-                for {
-                  authenticator <- environment.authenticatorService.create(loginInfo)
-                  value <- environment.authenticatorService.init(authenticator)
-                  result <- environment.authenticatorService.embed(value, Ok(Json.toJson(user)))
-                } yield result
-            }
+          credentialsProvider.authenticate(credentials).flatMap {
+            loginInfo =>
+              userRepo.retrieve(loginInfo).flatMap {
+                case None => Future.successful(credentialsWrong) // user not found
+                case Some(user) =>
+                  for {
+                    authenticator <- environment.authenticatorService.create(loginInfo)
+                    value <- environment.authenticatorService.init(authenticator)
+                    result <- environment.authenticatorService.embed(value, Ok(Json.toJson(user)))
+                  } yield {
+                    environment.eventBus.publish(LoginEvent(user, request))
+                    result
+                  }
+              }
           } recover {
             case _: IllegalArgumentException => credentialsWrong
             case _: IdentityNotFoundException => credentialsWrong
@@ -114,6 +120,11 @@ class AuthController @Inject() (
           }
         }
       )
+  }
+
+  def logOut = silhouette.SecuredAction.async { implicit request =>
+    environment.eventBus.publish(LogoutEvent(request.identity, request))
+    environment.authenticatorService.discard(request.authenticator, Ok(JsonSuccess("Logged out")))
   }
 
   def createResetToken(userId: Long) = silhouette.SecuredAction(ForEditors).async { implicit request =>

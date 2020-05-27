@@ -13,6 +13,7 @@ import models.UserRepository
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.libs.json.Json
+import play.api.mvc.Headers
 import play.api.test.Helpers._
 import play.api.test.Injecting
 import testutil.Authenticated
@@ -68,6 +69,30 @@ class AuthControllerSpec extends PlaySpec with GuiceOneAppPerSuite with Injectin
       val response = doRequest(POST, "/v1/auth/login", Some(signUpJson("john KARCIS", "notagoat")))
       status(response) must equal(OK)
       header("X-Auth-Token", response).get.length must equal(256)
+    }
+  }
+
+  "AuthController logout endpoint" should {
+    val logoutPath = "/v1/auth/logout"
+
+    "reject unauthenticated users" in {
+      val response = doRequest(GET, logoutPath)
+      status(response) must equal(UNAUTHORIZED)
+    }
+
+    "sign out user" in {
+      val user = doSync(registerTestUser("Fleeting Star"))
+      val token = logInTestUser(user.name)
+      val authHeaders = Headers(("X-Auth-Token", token))
+
+      val canaryBefore = doRequest(GET, "/v1/users/me/schedules", headers = authHeaders)
+      status(canaryBefore) must equal(OK)
+
+      val response = doRequest(GET, logoutPath, headers = authHeaders)
+      status(response) must equal(OK)
+
+      val canaryAfter = doRequest(GET, "/v1/users/me/schedules", headers = authHeaders)
+      status(canaryAfter) must equal(UNAUTHORIZED)
     }
   }
 
