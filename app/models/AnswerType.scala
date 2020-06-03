@@ -1,6 +1,6 @@
 package models
 
-import slick.jdbc.H2Profile.api._
+import slick.jdbc.MySQLProfile.api._
 
 object AnswerType extends Enumeration {
   type AnswerType = Value

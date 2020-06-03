@@ -47,18 +47,18 @@ class AnswerControllerSpec
   val answersRepo = inject[AnswersRepository]
 
   // TODO: Somewhat boilerplatey - extract to trait?
-  private val hiddenStudy = doSync(inject[StudyRepository].create(Study(0, "Hidden Study")))
-  private val readableStudy = doSync(inject[StudyRepository].create(Study(0, "Readable Study")))
+  private lazy val hiddenStudy = doSync(inject[StudyRepository].create(Study(0, "Hidden Study")))
+  private lazy val readableStudy = doSync(inject[StudyRepository].create(Study(0, "Readable Study")))
 
-  private val hiddenQuestionnaire =
+  private lazy val hiddenQuestionnaire =
     doSync(inject[QuestionnairesRepository].create(Questionnaire(0, "Hidden Questionnaire", Some(hiddenStudy.id))))
-  private val readableQuestionnaire =
+  private lazy val readableQuestionnaire =
     doSync(inject[QuestionnairesRepository].create(Questionnaire(0, "Readable Questionnaire", Some(readableStudy.id))))
 
-  private val hiddenQuestion = doSync(
+  private lazy val hiddenQuestion = doSync(
     questionsRepo.add(Question(0, "hidden question", AnswerType.Text, questionnaireId = Some(hiddenQuestionnaire.id)))
   )
-  private val readableQuestion = doSync(
+  private lazy val readableQuestion = doSync(
     questionsRepo
       .add(Question(0, "readable question", AnswerType.Text, questionnaireId = Some(readableQuestionnaire.id)))
   )

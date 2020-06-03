@@ -12,8 +12,8 @@ import play.api.db.slick.DatabaseConfigProvider
 import play.api.libs.json.Json
 import play.api.libs.json.JsValue
 import play.api.libs.json.Writes
-import slick.jdbc.H2Profile.api._
-import slick.jdbc.JdbcProfile
+import slick.jdbc.MySQLProfile
+import slick.jdbc.MySQLProfile.api._
 import slick.lifted.Tag
 
 case class Questionnaire(id: Long, name: String, studyId: Option[Long])
@@ -55,7 +55,7 @@ class QuestionnairesRepository @Inject() (
   private def questionnaires = TableQuery[QuestionnaireTable]
   private def questions = TableQuery[QuestionTable]
 
-  private def dbConfig() = dbConfigProvider.get[JdbcProfile]
+  private def dbConfig() = dbConfigProvider.get[MySQLProfile]
 
   def listAll(): Future[Seq[Questionnaire]] = {
     dbConfig().db.run(questionnaires.result)

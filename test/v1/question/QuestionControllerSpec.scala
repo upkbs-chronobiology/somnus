@@ -42,12 +42,12 @@ class QuestionControllerSpec
     with BeforeAndAfterAll
     with BeforeAndAfterEach {
 
-  private val hiddenStudy = doSync(inject[StudyRepository].create(Study(0, "Hidden Study")))
-  private val readableStudy = doSync(inject[StudyRepository].create(Study(0, "Readable Study")))
+  private lazy val hiddenStudy = doSync(inject[StudyRepository].create(Study(0, "Hidden Study")))
+  private lazy val readableStudy = doSync(inject[StudyRepository].create(Study(0, "Readable Study")))
 
-  private val hiddenQuestionnaire =
+  private lazy val hiddenQuestionnaire =
     doSync(inject[QuestionnairesRepository].create(Questionnaire(0, "Hidden Questionnaire", Some(hiddenStudy.id))))
-  private val readableQuestionnaire =
+  private lazy val readableQuestionnaire =
     doSync(inject[QuestionnairesRepository].create(Questionnaire(0, "Readable Questionnaire", Some(readableStudy.id))))
 
   val questionsRepo = inject[QuestionsRepository]

@@ -3,9 +3,13 @@ language: scala
 branches:
   only:
   - master
+  - mysql # TODO: remove
 
 # Use container-based infrastructure
 sudo: false
+
+services:
+  - mysql
 
 cache:
   directories:
@@ -17,5 +21,8 @@ before_cache:
   - find $HOME/.ivy2/cache -name "ivydata-*.properties" -print -delete
   - find $HOME/.sbt        -name "*.lock"               -print -delete
 
+before_install:
+  - mysql -e 'CREATE DATABASE somnus;'
+
 script:
-  - sbt scalafmtCheckAll ++$TRAVIS_SCALA_VERSION test
+  - sbt scalafmtCheckAll ++$TRAVIS_SCALA_VERSION test-ci

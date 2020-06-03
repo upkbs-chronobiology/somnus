@@ -1,7 +1,7 @@
 package models
 
 import play.api.libs.json.Reads
-import slick.jdbc.H2Profile.api._
+import slick.jdbc.MySQLProfile.api._
 
 object AccessLevel extends Enumeration {
   type AccessLevel = Value

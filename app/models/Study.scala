@@ -12,8 +12,8 @@ import play.api.db.slick.DatabaseConfigProvider
 import play.api.libs.json.Json
 import play.api.libs.json.JsValue
 import play.api.libs.json.Writes
-import slick.jdbc.H2Profile.api._
-import slick.jdbc.JdbcProfile
+import slick.jdbc.MySQLProfile
+import slick.jdbc.MySQLProfile.api._
 import slick.lifted.Tag
 
 case class Study(id: Long, name: String)
@@ -52,7 +52,7 @@ class StudyRepository @Inject() (
   def studyParticipants = TableQuery[StudyParticipantsTable]
   def users = TableQuery[UserTable]
 
-  def dbConfig = dbConfigProvider.get[JdbcProfile]
+  def dbConfig = dbConfigProvider.get[MySQLProfile]
 
   def listAll(): Future[Seq[Study]] = dbConfig.db.run(studies.result)
 

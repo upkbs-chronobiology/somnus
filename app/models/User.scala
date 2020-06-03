@@ -14,8 +14,8 @@ import play.api.db.slick.DatabaseConfigProvider
 import play.api.libs.json.Json
 import play.api.libs.json.JsValue
 import play.api.libs.json.Writes
-import slick.jdbc.H2Profile.api._
-import slick.jdbc.JdbcProfile
+import slick.jdbc.MySQLProfile
+import slick.jdbc.MySQLProfile.api._
 import slick.lifted.Tag
 
 // TODO: Consider directly using Role enum instead of String
@@ -52,7 +52,7 @@ class UserRepository @Inject() (dbConfigProvider: DatabaseConfigProvider) extend
 
   private def userByName(name: String) = users.filter(_.name.toLowerCase === name.toLowerCase)
 
-  def dbConfig = dbConfigProvider.get[JdbcProfile]
+  def dbConfig = dbConfigProvider.get[MySQLProfile]
 
   def create(user: User): Future[User] = {
     // FIXME: Potential race condition (and not very efficient) - try to do everything in a single query/transaction

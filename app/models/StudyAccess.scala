@@ -10,8 +10,8 @@ import play.api.db.slick.DatabaseConfigProvider
 import play.api.libs.json.Json
 import play.api.libs.json.JsValue
 import play.api.libs.json.Writes
-import slick.jdbc.H2Profile.api._
-import slick.jdbc.JdbcProfile
+import slick.jdbc.MySQLProfile
+import slick.jdbc.MySQLProfile.api._
 import slick.lifted.Tag
 
 case class StudyAccess(userId: Long, studyId: Long, level: AccessLevel)
@@ -40,7 +40,7 @@ class StudyAccessRepository @Inject() (dbConfigProvider: DatabaseConfigProvider)
 
   private def studyAccesses = TableQuery[StudyAccessTable]
 
-  private def dbConfig = dbConfigProvider.get[JdbcProfile]
+  private def dbConfig = dbConfigProvider.get[MySQLProfile]
 
   private def find(userId: Long, studyId: Long) =
     studyAccesses.filter(sa => sa.userId === userId && sa.studyId === studyId)

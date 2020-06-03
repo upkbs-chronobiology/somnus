@@ -29,11 +29,11 @@ class AclControllerSpec
     with TestUtils
     with Authenticated {
 
-  val studyRepo = inject[StudyRepository]
-  val userRepo = inject[UserRepository]
+  private lazy val studyRepo = inject[StudyRepository]
+  private lazy val userRepo = inject[UserRepository]
 
-  val study = doSync(studyRepo.create(Study(0, "Sample Study")))
-  val user = doSync(userRepo.create(User(0, "Sample User", None)))
+  private lazy val study = doSync(studyRepo.create(Study(0, "Sample Study")))
+  private lazy val user = doSync(userRepo.create(User(0, "Sample User", None)))
 
   "AclController" when {
     "not logged in" should {

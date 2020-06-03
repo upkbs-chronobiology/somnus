@@ -17,8 +17,8 @@ import play.api.db.slick.DatabaseConfigProvider
 import play.api.libs.json.Json
 import play.api.libs.json.JsValue
 import play.api.libs.json.Writes
-import slick.jdbc.H2Profile.api._
-import slick.jdbc.JdbcProfile
+import slick.jdbc.MySQLProfile
+import slick.jdbc.MySQLProfile.api._
 import slick.sql.SqlProfile.ColumnOption.SqlType
 import util.Serialization
 import util.TemporalSqlMappings
@@ -82,7 +82,7 @@ class AnswerTable(tag: Tag) extends Table[Answer](tag, "answer") with TemporalSq
 @Singleton
 class AnswersRepository @Inject() (dbConfigProvider: DatabaseConfigProvider) {
 
-  def dbConfig() = dbConfigProvider.get[JdbcProfile]
+  def dbConfig() = dbConfigProvider.get[MySQLProfile]
 
   val answers = TableQuery[AnswerTable]
   val questions = TableQuery[QuestionTable]

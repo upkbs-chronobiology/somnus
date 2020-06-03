@@ -26,7 +26,7 @@ class DataControllerSpec
     with TestUtils
     with Authenticated {
 
-  val study = doSync(inject[StudyRepository].create(Study(0, "Foo Bar Study")))
+  private lazy val study = doSync(inject[StudyRepository].create(Study(0, "Foo Bar Study")))
 
   "DataController" when {
     "not logged in" should {

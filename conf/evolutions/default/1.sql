@@ -2,93 +2,94 @@
 
 # --- !Ups
 
-create table "password" (
-  "id" IDENTITY PRIMARY KEY,
-  "hash" VARCHAR NOT NULL,
-  "salt" VARCHAR,
-  "hasher" VARCHAR
+create table `password` (
+  `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+  `hash` VARCHAR(255) NOT NULL,
+  `salt` VARCHAR(255),
+  `hasher` VARCHAR(255)
 );
 
-create table "user" (
-  "id" IDENTITY PRIMARY KEY,
-  "name" VARCHAR NOT NULL UNIQUE,
-  "password_id" BIGINT UNIQUE,
-  "role" VARCHAR,
-  "created" TIMESTAMP NOT NULL DEFAULT current_timestamp(),
-  FOREIGN KEY("password_id") REFERENCES "password"("id")
+create table `user` (
+  `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+  `name` VARCHAR(255) NOT NULL UNIQUE,
+  `password_id` BIGINT UNIQUE,
+  `role` VARCHAR(255),
+  `created` TIMESTAMP NOT NULL DEFAULT current_timestamp(),
+  FOREIGN KEY(`password_id`) REFERENCES `password`(`id`)
 );
 
-create table "pw_reset" (
-  "id" IDENTITY PRIMARY KEY,
-  "token" VARCHAR NOT NULL UNIQUE,
-  "expiry" TIMESTAMP NOT NULL,
-  "user_id" BIGINT NOT NULL,
-  FOREIGN KEY("user_id") REFERENCES "user"("id")
+create table `pw_reset` (
+  `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+  `token` VARCHAR(255) NOT NULL UNIQUE,
+  `expiry` TIMESTAMP NOT NULL,
+  `user_id` BIGINT NOT NULL,
+  FOREIGN KEY(`user_id`) REFERENCES `user`(`id`)
 );
 
-create table "study" (
-  "id" IDENTITY PRIMARY KEY,
-  "name" VARCHAR NOT NULL UNIQUE
+create table `study` (
+  `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+  `name` VARCHAR(255) NOT NULL UNIQUE
 );
 
-create table "study_participants" (
-  "user_id" BIGINT NOT NULL,
-  "study_id" BIGINT NOT NULL,
-  FOREIGN KEY("user_id") REFERENCES "user"("id"),
-  FOREIGN KEY("study_id") REFERENCES "study"("id")
+create table `study_participants` (
+  `user_id` BIGINT NOT NULL,
+  `study_id` BIGINT NOT NULL,
+  FOREIGN KEY(`user_id`) REFERENCES `user`(`id`),
+  FOREIGN KEY(`study_id`) REFERENCES `study`(`id`)
 );
 
-create table "questionnaire" (
-  "id" IDENTITY PRIMARY KEY,
-  "name" VARCHAR NOT NULL,
-  "study_id" BIGINT,
-  FOREIGN KEY("study_id") REFERENCES "study"("id")
+create table `questionnaire` (
+  `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+  `name` VARCHAR(255) NOT NULL,
+  `study_id` BIGINT,
+  FOREIGN KEY(`study_id`) REFERENCES `study`(`id`)
 );
 
-create table "schedule" (
-  "id" IDENTITY PRIMARY KEY,
-  "questionnaire_id" BIGINT NOT NULL,
-  "user_id" BIGINT NOT NULL,
-  "start_date" DATE NOT NULL,
-  "end_date" DATE NOT NULL,
-  "start_time" TIME NOT NULL,
-  "end_time" TIME NOT NULL,
-  "frequency" INT NOT NULL CHECK("frequency" >= 0),
-  FOREIGN KEY("questionnaire_id") REFERENCES "questionnaire"("id"),
-  FOREIGN KEY("user_id") REFERENCES "user"("id")
+create table `schedule` (
+  `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+  `questionnaire_id` BIGINT NOT NULL,
+  `user_id` BIGINT NOT NULL,
+  `start_date` DATE NOT NULL,
+  `end_date` DATE NOT NULL,
+  `start_time` TIME NOT NULL,
+  `end_time` TIME NOT NULL,
+  `frequency` INT NOT NULL CHECK(`frequency` >= 0),
+  FOREIGN KEY(`questionnaire_id`) REFERENCES `questionnaire`(`id`),
+  FOREIGN KEY(`user_id`) REFERENCES `user`(`id`)
 );
 
-create table "question" (
-  "id" IDENTITY PRIMARY KEY,
-  "content" VARCHAR NOT NULL,
-  "answer_type" ENUM('text', 'range-continuous', 'range-discrete', 'multiple-choice-single', 'multiple-choice-many') NOT NULL,
-  "answer_labels" VARCHAR,
-  /* "<min>,<max>", inclusive */
-  "answer_range" VARCHAR,
-  "questionnaire_id" BIGINT,
-  FOREIGN KEY("questionnaire_id") REFERENCES "questionnaire"("id")
+create table `question` (
+  `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+  `content` VARCHAR(500) NOT NULL,
+  `answer_type` ENUM('text', 'range-continuous', 'range-discrete', 'multiple-choice-single', 'multiple-choice-many') NOT NULL,
+  `answer_labels` VARCHAR(500),
+  /* `<min>,<max>`, inclusive */
+  `answer_range` VARCHAR(255),
+  `questionnaire_id` BIGINT,
+  FOREIGN KEY(`questionnaire_id`) REFERENCES `questionnaire`(`id`)
 );
 
-create table "answer" (
-  "id" IDENTITY PRIMARY KEY,
-  "question_id" BIGINT NOT NULL,
-  "content" VARCHAR NOT NULL,
-  "user_id" BIGINT NOT NULL,
-  "created" TIMESTAMP NOT NULL DEFAULT current_timestamp(),
-  "created_local" TIMESTAMP WITH TIME ZONE NOT NULL,
-  FOREIGN KEY("question_id") REFERENCES "question"("id"),
-  FOREIGN KEY("user_id") REFERENCES "user"("id")
+create table `answer` (
+  `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+  `question_id` BIGINT NOT NULL,
+  `content` VARCHAR(500) NOT NULL,
+  `user_id` BIGINT NOT NULL,
+  `created` TIMESTAMP NOT NULL DEFAULT current_timestamp(),
+  /* TODO: Use stronger type than VARCHAR for this (H2 had TIMESTAMP WITH TIME ZONE) */
+  `created_local` VARCHAR(50) NOT NULL,
+  FOREIGN KEY(`question_id`) REFERENCES `question`(`id`),
+  FOREIGN KEY(`user_id`) REFERENCES `user`(`id`)
 );
 
 
 # --- !Downs
 
-drop table "answer";
-drop table "question";
-drop table "schedule";
-drop table "questionnaire";
-drop table "study_participants";
-drop table "study";
-drop table "pw_reset";
-drop table "user";
-drop table "password";
+drop table if exists `answer`;
+drop table if exists `question`;
+drop table if exists `schedule`;
+drop table if exists `questionnaire`;
+drop table if exists `study_participants`;
+drop table if exists `study`;
+drop table if exists `pw_reset`;
+drop table if exists `user`;
+drop table if exists `password`;

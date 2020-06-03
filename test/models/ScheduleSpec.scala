@@ -18,10 +18,10 @@ class ScheduleSpec
     with TestUtils
     with Authenticated {
 
-  val schedules = inject[SchedulesRepository]
-  val questionnaires = inject[QuestionnairesRepository]
+  private lazy val schedules = inject[SchedulesRepository]
+  private lazy val questionnaires = inject[QuestionnairesRepository]
 
-  val questionnaire = doSync(questionnaires.create(Questionnaire(0, "Testionnaire", None)))
+  private lazy val questionnaire = doSync(questionnaires.create(Questionnaire(0, "Testionnaire", None)))
 
   "ScheduleRepository" should {
     "create, read, update, delete items" in {

@@ -1,9 +1,6 @@
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
-import scala.io.Source
-import scala.tools.nsc.io.File
-
 import com.typesafe.sbt.packager.docker.DockerVersion
 
 name := """somnus"""
@@ -20,6 +17,13 @@ resolvers += Resolver.jcenterRepo
 libraryDependencies += guice
 libraryDependencies += "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.2" % Test
 javaOptions in Test += "-Dconfig.file=conf/application.test.conf"
+
+addCommandAlias(
+  "test-ci",
+  """;set Test/javaOptions --= Seq("-Dconfig.file=conf/application.test.conf")""" +
+    """;set Test/javaOptions ++= Seq("-Dconfig.file=conf/application.test-ci.conf")""" +
+    ";test"
+)
 
 libraryDependencies += "com.h2database" % "h2" % "1.4.197"
 libraryDependencies ++= Seq(
@@ -91,29 +95,15 @@ dockerExposedPorts := Seq(9000)
 dockerRepository := Some("docker.pkg.github.com/upkbs-chronobiology")
 dockerUsername := Some("somnus")
 
-val prepConfigForDocker = taskKey[Unit]("Append db password to target dist config file")
-prepConfigForDocker := {
-  val stageLocation = (Docker / stage).value
+// Database password should be provided through a command line flag (-Dslick.dbs.default.db.password) or environment
+// variable (slick.dbs.default.db.password).
 
-  val configFile = File(s"$stageLocation/opt/docker/conf/application.dist.conf")
-
-  val dbPseudoDomain = "somnus-db"
-  val mappedLines = Source.fromFile(configFile.path).getLines()
-    .map(_.replaceAll("tcp://localhost", s"tcp://$dbPseudoDomain")).toSeq
-
-  // Database password should be provided through a command line flag (-Dslick.dbs.default.db.password) or environment
-  // variable (slick.dbs.default.db.password).
-
-  // Application secret should be provided through a command line flag (-Dplay.http.secret.key) or environment variable
-  // (play.http.secret.key).
-
-  configFile.writeAll(mappedLines.mkString("\n"))
-}
+// Application secret should be provided through a command line flag (-Dplay.http.secret.key) or environment variable
+// (play.http.secret.key).
 
 val now = Instant.now().truncatedTo(ChronoUnit.SECONDS)
 val timestamp = now.toString.replace(":", "-")
 (version in Docker) := (version in Docker).value + "_" + timestamp
-(Docker / publishLocal) := ((Docker / publishLocal) dependsOn prepConfigForDocker).value
 
 
 // ~ Releasing ~
