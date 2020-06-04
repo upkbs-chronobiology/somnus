@@ -32,6 +32,8 @@ This uses test configuration (in particular a volatile, in-memory db) and auto-c
 
 ## Release
 
+*We're now building docker images regularly from master, so this mechanism is now only relevant for version bumping.*
+
 A new docker prod release can be done by running `sbt release`.
 This should be the standard procedure for releasing, so we always have reliable versioning.
 This does most of what's necessary for a release, including version bumping, tagging, and locally publishing docker images.
@@ -48,7 +50,9 @@ The resulting image's name should be printed to the console; it has the form `so
 In order to run it, you'll have to make sure the database container  is reachable under `somnus-db`,
 e.g. by running starting the app container with `docker run -d --link <db-container-name>:somnus-db --name SomnusBE somnus:<version>`.
 
-### Database docker image
+### Database docker image (legacy)
+
+*This is not the preferred production setup anymore, but has been left here for reference.*
 
 The database runs in a separate container than the main application in production.
 As main application updates usually shouldn't affect the db image (short of schema changes), hence building that image is rarely necessary.
@@ -64,7 +68,9 @@ However, to build a complete fresh H2 docker image, do the following:
 Now, set a password for the "SA" user: `alter user SA set password '<new-password>'` (again, make sure to write it down).
 - Stop the container, create an image out of it (`docker commit`) and put it into production, either through an online repository or by using `docker save`.
 
-## Production setup
+## Production setup (legacy)
+
+*This is not the preferred production setup anymore, but has been left here for reference.*
 
 When running the two containers (db and application) in production, either link them as described above, or properly set up networking:
 

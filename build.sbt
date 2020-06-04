@@ -1,6 +1,10 @@
-import scala.io.StdIn.readLine
+import java.time.Instant
+import java.time.temporal.ChronoUnit
+
 import scala.io.Source
 import scala.tools.nsc.io.File
+
+import com.typesafe.sbt.packager.docker.DockerVersion
 
 name := """somnus"""
 organization := "ch.chronobiology"
@@ -80,8 +84,12 @@ addCommandAlias("testServe", "testProd -Dplay.http.secret.key='dummy-secret' " +
 
 // ~ Docker publication ~
 
+dockerVersion := Some(DockerVersion(19, 3, 11, Some("ce")))
 dockerEntrypoint := Seq("bin/somnus", "-Dconfig.file=conf/application.dist.conf")
 dockerExposedPorts := Seq(9000)
+
+dockerRepository := Some("docker.pkg.github.com/upkbs-chronobiology")
+dockerUsername := Some("somnus")
 
 val prepConfigForDocker = taskKey[Unit]("Append db password to target dist config file")
 prepConfigForDocker := {
@@ -93,22 +101,24 @@ prepConfigForDocker := {
   val mappedLines = Source.fromFile(configFile.path).getLines()
     .map(_.replaceAll("tcp://localhost", s"tcp://$dbPseudoDomain")).toSeq
 
-  // TODO: What if PW is already present (e.g. from previous build, without clean since)?
-  val dbPassword = readLine("Enter database user password: ")
-  val passwordLine = s"""slick.dbs.default.db.password="$dbPassword""""
+  // Database password should be provided through a command line flag (-Dslick.dbs.default.db.password) or environment
+  // variable (slick.dbs.default.db.password).
 
-  val applicationSecret = readLine("Enter application secret key: ")
-  val secretLine = s"""play.http.secret.key="$applicationSecret""""
+  // Application secret should be provided through a command line flag (-Dplay.http.secret.key) or environment variable
+  // (play.http.secret.key).
 
-  configFile.writeAll((mappedLines ++ Seq(passwordLine, secretLine)).mkString("\n"))
+  configFile.writeAll(mappedLines.mkString("\n"))
 }
 
+val now = Instant.now().truncatedTo(ChronoUnit.SECONDS)
+val timestamp = now.toString.replace(":", "-")
+(version in Docker) := (version in Docker).value + "_" + timestamp
 (Docker / publishLocal) := ((Docker / publishLocal) dependsOn prepConfigForDocker).value
 
 
 // ~ Releasing ~
 
-import ReleaseTransformations._
+import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
 
 releaseProcess := Seq[ReleaseStep](
   checkSnapshotDependencies,
