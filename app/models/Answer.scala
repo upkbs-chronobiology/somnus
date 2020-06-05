@@ -8,6 +8,7 @@ import java.time.format.DateTimeParseException
 import javax.inject.Inject
 import javax.inject.Singleton
 
+import scala.collection.Seq
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -150,7 +151,7 @@ class AnswersRepository @Inject() (dbConfigProvider: DatabaseConfigProvider) {
             } catch {
               case e: DateTimeParseException => throw new IllegalArgumentException(e)
             }
-          case _ => Unit
+          case _ => ()
         }
     }
   }

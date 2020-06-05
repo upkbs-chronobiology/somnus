@@ -1,9 +1,10 @@
 language: scala
+scala:
+  - 2.13.1
 
 branches:
   only:
-  - master
-  - mysql # TODO: remove
+    - master
 
 # Use container-based infrastructure
 sudo: false

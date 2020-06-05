@@ -24,9 +24,9 @@ import testutil.TestUtils
 class AclControllerSpec
     extends PlaySpec
     with GuiceOneAppPerSuite
-    with FreshDatabase
     with Injecting
     with TestUtils
+    with FreshDatabase
     with Authenticated {
 
   private lazy val studyRepo = inject[StudyRepository]
@@ -71,7 +71,7 @@ class AclControllerSpec
     // TODO: Test with non-admin authorized users
 
     "logged in as admin" should {
-      implicit val _ = Role.Admin
+      implicit val r = Role.Admin
 
       "list, set, delete acls (through studies)" in {
         val initialReadResponse = doAuthenticatedRequest(GET, s"/v1/studies/${study.id}/acls")

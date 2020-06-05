@@ -29,7 +29,7 @@ import play.api.test._
 import play.api.test.Helpers._
 import testutil.Authenticated
 import testutil.FreshDatabase
-import util.Futures.TraversableFutureExtensions
+import util.Futures.IterableFutureExtensions
 import util.InclusiveRange
 import util.Serialization
 
@@ -62,7 +62,7 @@ class QuestionControllerSpec
     super.afterEach()
 
     // delete all questions
-    doSync(questionsRepo.listAll.mapTraversableAsync(q => questionsRepo.delete(q.id)))
+    doSync(questionsRepo.listAll.mapIterableAsync(q => questionsRepo.delete(q.id)))
   }
 
   "QuestionController index" should {
@@ -105,7 +105,7 @@ class QuestionControllerSpec
     }
 
     "logged in as researcher" should {
-      implicit val _ = Role.Researcher
+      implicit val r = Role.Researcher
 
       // XXX: Split into multiple tests? Would order be guaranteed?
       "create, serve and delete questions" in {
@@ -293,7 +293,7 @@ class QuestionControllerSpec
     }
 
     "logged in as admin" should {
-      implicit val _ = Role.Admin
+      implicit val r = Role.Admin
 
       "reject questions with non-existent questionnaire id" in {
         val response =

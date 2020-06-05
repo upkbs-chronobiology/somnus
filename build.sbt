@@ -2,20 +2,21 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 
 import com.typesafe.sbt.packager.docker.DockerVersion
+import wartremover.WartRemover.autoImport.Wart
 
 name := """somnus"""
 organization := "ch.chronobiology"
 
 lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
-scalaVersion := "2.12.10"
+scalaVersion := "2.13.1"
 
 scalacOptions ++= Seq("-Ywarn-unused")
 
 resolvers += Resolver.jcenterRepo
 
 libraryDependencies += guice
-libraryDependencies += "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.2" % Test
+libraryDependencies += "org.scalatestplus.play" %% "scalatestplus-play" % "5.0.0" % Test
 javaOptions in Test += "-Dconfig.file=conf/application.test.conf"
 
 addCommandAlias(
@@ -25,23 +26,25 @@ addCommandAlias(
     ";test"
 )
 
-libraryDependencies += "com.h2database" % "h2" % "1.4.197"
+libraryDependencies += "com.h2database" % "h2" % "1.4.200"
 libraryDependencies ++= Seq(
-  "com.typesafe.play" %% "play-slick" % "3.0.3",
-  "com.typesafe.play" %% "play-slick-evolutions" % "3.0.3"
+  "com.typesafe.play" %% "play-slick" % "5.0.0",
+  "com.typesafe.play" %% "play-slick-evolutions" % "5.0.0",
+  "com.typesafe.slick" %% "slick-hikaricp" % "3.3.2"
+)
+libraryDependencies += "mysql" % "mysql-connector-java" % "8.0.20"
+
+libraryDependencies ++= Seq(
+  "com.mohiva" %% "play-silhouette" % "7.0.0",
+  "com.mohiva" %% "play-silhouette-password-bcrypt" % "7.0.0",
+  "com.mohiva" %% "play-silhouette-crypto-jca" % "7.0.0",
+  "com.mohiva" %% "play-silhouette-persistence" % "7.0.0",
+  "com.mohiva" %% "play-silhouette-testkit" % "7.0.0" % "test"
 )
 
-libraryDependencies ++= Seq(
-  "com.mohiva" %% "play-silhouette" % "5.0.0",
-  "com.mohiva" %% "play-silhouette-password-bcrypt" % "5.0.0",
-  "com.mohiva" %% "play-silhouette-crypto-jca" % "5.0.0",
-  "com.mohiva" %% "play-silhouette-persistence" % "5.0.0",
-  "com.mohiva" %% "play-silhouette-testkit" % "5.0.0" % "test"
-)
+libraryDependencies += "net.codingwell" %% "scala-guice" % "4.2.6"
 
-libraryDependencies += "net.codingwell" %% "scala-guice" % "4.1.1"
-
-libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.2.18"
+libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.2.30"
 
 libraryDependencies += "com.opencsv" % "opencsv" % "4.1"
 
@@ -53,7 +56,9 @@ wartremoverErrors in(Compile, compile) ++= Warts.unsafe diff List(
   Wart.NonUnitStatements,
   Wart.DefaultArguments,
   Wart.Throw,
-  Wart.Null
+  Wart.Null,
+  Wart.StringPlusAny,
+  Wart.Any // FIXME: Should probably be enabled, but too many (false?) positives
 )
 wartremoverErrors in Test ++= Warts.unsafe diff List(
   Wart.NonUnitStatements,
@@ -63,7 +68,8 @@ wartremoverErrors in Test ++= Warts.unsafe diff List(
   Wart.Throw,
   Wart.Any,
   Wart.TraversableOps,
-  Wart.Var
+  Wart.Var,
+  Wart.StringPlusAny
 )
 wartremoverExcluded ++= routes.in(Compile).value
 

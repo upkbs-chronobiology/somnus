@@ -126,7 +126,7 @@ class ScheduleControllerSpec
     }
 
     "logged in as researcher" should {
-      implicit val _ = Role.Researcher
+      implicit val r = Role.Researcher
 
       "create, update and delete items" in {
         val schedule =
@@ -285,7 +285,7 @@ class ScheduleControllerSpec
     }
 
     "logged in as admin" should {
-      implicit val _ = Role.Admin
+      implicit val r = Role.Admin
 
       "grant read access to non-assigned questionnaires" in {
         val response = doAuthenticatedRequest(GET, s"/v1/questionnaires/${unrelatedQuestionnaire.id}/schedules")

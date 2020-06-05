@@ -17,7 +17,7 @@ import models.ScheduleFormData
 import models.SchedulesRepository
 import models.User
 import play.api.libs.json.Json
-import util.Futures.TraversableFutureExtensions
+import util.Futures.IterableFutureExtensions
 import util.JsonError
 import util.JsonSuccess
 import v1.RestBaseController
@@ -53,7 +53,7 @@ class ScheduleController @Inject() (
   private def listUserSchedules(userId: Long, reader: User) = {
     schedulesRepo
       .getByUser(userId)
-      .filterTraversableAsync(schedule => accessRules.mayAccessSchedule(reader, schedule, AccessLevel.Read))
+      .filterIterableAsync(schedule => accessRules.mayAccessSchedule(reader, schedule, AccessLevel.Read))
       .map(schedules => Ok(Json.toJson(schedules)))
       .recover {
         case e: IllegalArgumentException => NotFound(JsonError(e.getMessage))

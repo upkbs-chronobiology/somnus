@@ -19,7 +19,7 @@ import models.User
 import play.api.libs.json.Json
 import play.api.mvc.Result
 import util.EmptyPreservingReads
-import util.Futures.TraversableFutureExtensions
+import util.Futures.IterableFutureExtensions
 import util.InclusiveRange
 import util.JsonError
 import util.JsonSuccess
@@ -36,12 +36,12 @@ class QuestionController @Inject() (
 )(implicit ec: ExecutionContext)
     extends RestBaseController(rcc) {
 
-  implicit val _ = EmptyPreservingReads.readsStringSeq
+  implicit val emptyPreservingReads = EmptyPreservingReads.readsStringSeq
 
   def index = silhouette.SecuredAction(ForEditors).async { implicit request =>
     // XXX: This could be done more efficiently if listing by readable questionnaires/studies rather than all and then filtering
     questionsRepo.listAll
-      .filterTraversableAsync(q => accessRules.mayAccessQuestion(request.identity, q.id, AccessLevel.Read))
+      .filterIterableAsync(q => accessRules.mayAccessQuestion(request.identity, q.id, AccessLevel.Read))
       .map(questions => Ok(Json.toJson(questions)))
   }
 

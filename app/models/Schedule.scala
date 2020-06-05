@@ -17,6 +17,7 @@ import play.api.libs.json.JsValue
 import play.api.libs.json.Writes
 import slick.jdbc.MySQLProfile
 import slick.jdbc.MySQLProfile.api._
+import slick.lifted.PrimaryKey
 import util.TemporalSqlMappings
 
 case class Schedule(

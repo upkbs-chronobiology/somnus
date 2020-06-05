@@ -17,7 +17,7 @@ import models.AnswerForm
 import models.AnswersRepository
 import play.api.libs.json.JsArray
 import play.api.libs.json.Json
-import util.Futures.TraversableFutureExtensions
+import util.Futures.IterableFutureExtensions
 import util.JsonError
 import util.JsonSuccess
 import util.Logging
@@ -37,7 +37,7 @@ class AnswerController @Inject() (
   def index = silhouette.SecuredAction(ForEditors).async { implicit request =>
     answersRepo
       .listAll()
-      .filterTraversableAsync(a => accessRules.mayAccessAnswer(request.identity, a, AccessLevel.Read))
+      .filterIterableAsync(a => accessRules.mayAccessAnswer(request.identity, a, AccessLevel.Read))
       .map(answers => Ok(Json.toJson(answers)))
   }
 

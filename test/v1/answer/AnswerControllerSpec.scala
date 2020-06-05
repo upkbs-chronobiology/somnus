@@ -31,7 +31,7 @@ import play.api.test.Helpers._
 import testutil.Authenticated
 import testutil.FreshDatabase
 import testutil.TestUtils
-import util.Futures.TraversableFutureExtensions
+import util.Futures.IterableFutureExtensions
 
 class AnswerControllerSpec
     extends PlaySpec
@@ -73,7 +73,7 @@ class AnswerControllerSpec
     super.afterEach()
 
     // delete all answers
-    doSync(answersRepo.listAll().mapTraversableAsync(a => answersRepo.delete(a.id)))
+    doSync(answersRepo.listAll().mapIterableAsync(a => answersRepo.delete(a.id)))
   }
 
   "AnswerController" when {
@@ -322,16 +322,16 @@ class AnswerControllerSpec
         val response = doAuthenticatedRequest(POST, "/v1/answers", Some(data))
 
         status(response) must equal(FORBIDDEN)
-        val answerQuestionIds = answersRepo.listAll().mapTraversable(_.questionId)
+        val answerQuestionIds = answersRepo.listAll().mapIterable(_.questionId)
         doSync(answerQuestionIds) must contain noneOf (hiddenQuestion.id, visibleQuestion.id)
       }
     }
 
     "logged in as researcher" should {
-      implicit val _ = Role.Researcher
+      implicit val r = Role.Researcher
 
       "accept, then serve and delete answers with valid question ids" in {
-        implicit val _ = Role.Researcher
+        implicit val r = Role.Researcher
 
         val initialList = contentAsJson(doAuthenticatedRequest(GET, s"/v1/answers")).as[JsArray].value
 

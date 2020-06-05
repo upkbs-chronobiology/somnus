@@ -22,7 +22,7 @@ import play.api.test.Injecting
 import testutil.Authenticated
 import testutil.FreshDatabase
 import testutil.TestUtils
-import util.Futures.TraversableFutureExtensions
+import util.Futures.IterableFutureExtensions
 
 class StudyControllerSpec
     extends PlaySpec
@@ -46,15 +46,15 @@ class StudyControllerSpec
     doSync(
       studyRepo
         .listAll()
-        .mapTraversableAsync(s => {
+        .mapIterableAsync(s => {
           studyRepo
             .listParticipants(s.id)
-            .mapTraversableAsync(p => studyRepo.removeParticipant(s.id, p.id))
+            .mapIterableAsync(p => studyRepo.removeParticipant(s.id, p.id))
             .flatMap(
               _ =>
                 questionnairesRepo
                   .listByStudy(s.id)
-                  .mapTraversableAsync(q => questionnairesRepo.delete(q.id))
+                  .mapIterableAsync(q => questionnairesRepo.delete(q.id))
                   .flatMap(_ => studyRepo.delete(s.id))
             )
         })
@@ -89,7 +89,7 @@ class StudyControllerSpec
     }
 
     "logged in as researcher" should {
-      implicit val _ = Role.Researcher
+      implicit val r = Role.Researcher
 
       "list only accessible studies" in {
         doSync(studyRepo.create(Study(0, "hidden study")))
@@ -240,7 +240,7 @@ class StudyControllerSpec
     }
 
     "logged in as admin" should {
-      implicit val _ = Role.Admin
+      implicit val r = Role.Admin
 
       "reject updates with non-existent ids" in {
         status(doAuthenticatedRequest(PUT, "/v1/studies/666", Some(studyJson("Out Of Ideas")))) must equal(BAD_REQUEST)

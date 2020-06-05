@@ -18,7 +18,7 @@ import models.StudyForm
 import models.StudyFormData
 import models.StudyRepository
 import play.api.libs.json.Json
-import util.Futures.TraversableFutureExtensions
+import util.Futures.IterableFutureExtensions
 import util.JsonError
 import util.JsonSuccess
 import v1.RestBaseController
@@ -38,7 +38,7 @@ class StudyController @Inject() (
   def index = silhouette.SecuredAction(ForEditors).async { implicit request =>
     studyRepository
       .listAll()
-      .filterTraversableAsync(s => accessRules.mayAccessStudy(request.identity, s.id, AccessLevel.Read))
+      .filterIterableAsync(s => accessRules.mayAccessStudy(request.identity, s.id, AccessLevel.Read))
       .map(studies => Ok(Json.toJson(studies)))
   }
 

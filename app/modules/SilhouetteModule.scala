@@ -2,6 +2,7 @@ package modules
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
+import scala.language.postfixOps
 
 import auth.DefaultEnv
 import auth.PasswordAuthInfoDAO
@@ -22,6 +23,7 @@ import com.mohiva.play.silhouette.impl.util.SecureRandomIDGenerator
 import com.mohiva.play.silhouette.password.BCryptPasswordHasher
 import com.mohiva.play.silhouette.persistence.daos.DelegableAuthInfoDAO
 import com.mohiva.play.silhouette.persistence.repositories.DelegableAuthInfoRepository
+import models.PasswordRepository
 import models.UserRepository
 import models.UserService
 import net.codingwell.scalaguice.ScalaModule
@@ -83,5 +85,13 @@ class SilhouetteModule extends AbstractModule with ScalaModule {
   @Provides
   def provideAuthInfoRepository(passwordInfoDAO: DelegableAuthInfoDAO[PasswordInfo]): AuthInfoRepository = {
     new DelegableAuthInfoRepository(passwordInfoDAO)
+  }
+
+  @Provides
+  def providePasswordService(
+    userRepository: UserRepository,
+    passwordRepository: PasswordRepository
+  ): PasswordAuthInfoDAO = {
+    new PasswordAuthInfoDAO(userRepository, passwordRepository)
   }
 }

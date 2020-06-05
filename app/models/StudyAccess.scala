@@ -12,6 +12,7 @@ import play.api.libs.json.JsValue
 import play.api.libs.json.Writes
 import slick.jdbc.MySQLProfile
 import slick.jdbc.MySQLProfile.api._
+import slick.lifted.PrimaryKey
 import slick.lifted.Tag
 
 case class StudyAccess(userId: Long, studyId: Long, level: AccessLevel)
@@ -31,6 +32,8 @@ class StudyAccessTable(tag: Tag) extends Table[StudyAccess](tag, "study_access")
   def userId = column[Long]("user_id")
   def studyId = column[Long]("study_id")
   def level = column[AccessLevel]("level")
+
+  def primaryKey: PrimaryKey = primaryKey("pk", (userId, studyId))
 
   override def * = (userId, studyId, level) <> (StudyAccess.tupled, StudyAccess.unapply)
 }

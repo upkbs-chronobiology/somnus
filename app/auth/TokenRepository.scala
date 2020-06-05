@@ -110,6 +110,6 @@ class TokenRepository @Inject() (dbConfigProvider: DatabaseConfigProvider, crede
 
   override def remove(id: String): Future[Unit] = {
     authCache.remove(id)
-    dbConfig.db.run(sessions.filter(_.id === id).delete).map(_ => Unit)
+    dbConfig.db.run(sessions.filter(_.id === id).delete).map(_ => ())
   }
 }

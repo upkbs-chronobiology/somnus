@@ -81,7 +81,7 @@ class UserControllerSpec
     }
 
     "logged in as editor" should {
-      implicit val _ = Role.Researcher
+      implicit val r = Role.Researcher
 
       "list users" in {
         val response = doAuthenticatedRequest(GET, "/v1/users")
@@ -112,7 +112,7 @@ class UserControllerSpec
     }
 
     "logged in as admin" should {
-      implicit val _ = Role.Admin
+      implicit val r = Role.Admin
 
       "reject invalid roles" in {
         val response = doAuthenticatedRequest(

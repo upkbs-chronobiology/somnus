@@ -115,7 +115,7 @@ class QuestionnaireControllerSpec
     }
 
     "logged in as researcher" should {
-      implicit val _ = Role.Researcher
+      implicit val r = Role.Researcher
 
       "list questionnaires with study access only" in {
         val result = doAuthenticatedRequest(GET, s"/v1/questionnaires")
@@ -240,7 +240,7 @@ class QuestionnaireControllerSpec
     }
 
     "logged in as admin" should {
-      implicit val _ = Role.Admin
+      implicit val r = Role.Admin
 
       "list all questionnaires" in {
         val ids =
