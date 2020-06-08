@@ -9,12 +9,12 @@ import testutil.TestUtils
 
 class StudyAccessSpec extends PlaySpec with GuiceOneAppPerSuite with Injecting with FreshDatabase with TestUtils {
 
-  val repo = inject[StudyAccessRepository]
-  val users = inject[UserRepository]
-  val studies = inject[StudyRepository]
+  private lazy val repo = inject[StudyAccessRepository]
+  private lazy val users = inject[UserRepository]
+  private lazy val studies = inject[StudyRepository]
 
-  val user = doSync(users.create(User(0, "Fooser", None, Some(Role.Researcher.toString))))
-  val study = doSync(studies.create(Study(0, "My study")))
+  private lazy val user = doSync(users.create(User(0, "Fooser", None, Some(Role.Researcher.toString))))
+  private lazy val study = doSync(studies.create(Study(0, "My study")))
 
   "StudyAccessRepository" should {
     "create, read, update, delete items" in {

@@ -129,7 +129,6 @@ trait Authenticated extends BeforeAndAfterAll with GuiceOneAppPerSuite with Inje
       remoteAddress: String,
       version: String,
       id: Long,
-      tags: Map[String, String],
       secure: Boolean,
       clientCertificateChain: Option[Seq[X509Certificate]],
       attrs: TypedMap
@@ -142,7 +141,6 @@ trait Authenticated extends BeforeAndAfterAll with GuiceOneAppPerSuite with Inje
         remoteAddress,
         version,
         id,
-        tags,
         secure,
         clientCertificateChain,
         attrs

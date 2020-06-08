@@ -15,8 +15,9 @@ import play.api.db.slick.DatabaseConfigProvider
 import play.api.libs.json.Json
 import play.api.libs.json.JsValue
 import play.api.libs.json.Writes
-import slick.jdbc.H2Profile.api._
-import slick.jdbc.JdbcProfile
+import slick.jdbc.MySQLProfile
+import slick.jdbc.MySQLProfile.api._
+import slick.lifted.PrimaryKey
 import util.TemporalSqlMappings
 
 case class Schedule(
@@ -100,7 +101,7 @@ class SchedulesRepository @Inject() (dbConfigProvider: DatabaseConfigProvider) {
   def questionnaires = TableQuery[QuestionnaireTable]
   def users = TableQuery[UserTable]
 
-  def dbConfig = dbConfigProvider.get[JdbcProfile]
+  def dbConfig = dbConfigProvider.get[MySQLProfile]
 
   def get(id: Long): Future[Option[Schedule]] = {
     dbConfig.db.run(schedules.filter(_.id === id).result.headOption)

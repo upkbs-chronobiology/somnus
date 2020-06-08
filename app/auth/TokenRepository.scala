@@ -17,8 +17,8 @@ import com.mohiva.play.silhouette.impl.providers.CredentialsProvider
 import org.apache.commons.collections4.map.LRUMap
 import org.joda.time.DateTime
 import play.api.db.slick.DatabaseConfigProvider
-import slick.jdbc.H2Profile.api._
-import slick.jdbc.JdbcProfile
+import slick.jdbc.MySQLProfile
+import slick.jdbc.MySQLProfile.api._
 import slick.lifted.Tag
 import util.TemporalSqlMappings
 import util.Time
@@ -69,7 +69,7 @@ class TokenRepository @Inject() (dbConfigProvider: DatabaseConfigProvider, crede
 
   def sessions = TableQuery[UserSessionTable]
 
-  def dbConfig = dbConfigProvider.get[JdbcProfile]
+  def dbConfig = dbConfigProvider.get[MySQLProfile]
 
   // ignore return wart as cache lookup is an intended side effect
   @SuppressWarnings(Array("org.wartremover.warts.Return"))
@@ -110,6 +110,6 @@ class TokenRepository @Inject() (dbConfigProvider: DatabaseConfigProvider, crede
 
   override def remove(id: String): Future[Unit] = {
     authCache.remove(id)
-    dbConfig.db.run(sessions.filter(_.id === id).delete).map(_ => Unit)
+    dbConfig.db.run(sessions.filter(_.id === id).delete).map(_ => ())
   }
 }

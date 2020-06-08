@@ -26,7 +26,7 @@ class DataControllerSpec
     with TestUtils
     with Authenticated {
 
-  val study = doSync(inject[StudyRepository].create(Study(0, "Foo Bar Study")))
+  private lazy val study = doSync(inject[StudyRepository].create(Study(0, "Foo Bar Study")))
 
   "DataController" when {
     "not logged in" should {
@@ -42,7 +42,7 @@ class DataControllerSpec
     }
 
     "logged in as researcher" should {
-      implicit val _ = Role.Researcher
+      implicit val r = Role.Researcher
 
       "404 on inexistent studies" in {
         status(doAuthenticatedRequest(GET, "/v1/data/studies/999/csv/zip")) must equal(NOT_FOUND)

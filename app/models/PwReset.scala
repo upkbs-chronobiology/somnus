@@ -11,8 +11,8 @@ import play.api.db.slick.DatabaseConfigProvider
 import play.api.libs.json.Json
 import play.api.libs.json.JsValue
 import play.api.libs.json.Writes
-import slick.jdbc.H2Profile.api._
-import slick.jdbc.JdbcProfile
+import slick.jdbc.MySQLProfile
+import slick.jdbc.MySQLProfile.api._
 import slick.lifted.Tag
 
 case class PwReset(id: Long, token: String, expiry: Timestamp, userId: Long)
@@ -43,7 +43,7 @@ class PwResetsRepository @Inject() (dbConfigProvider: DatabaseConfigProvider) {
 
   private def pwResets = TableQuery[PwResetTable]
 
-  private def dbConfig = dbConfigProvider.get[JdbcProfile]
+  private def dbConfig = dbConfigProvider.get[MySQLProfile]
 
   def getByToken(token: String): Future[Option[PwReset]] = {
     dbConfig.db.run(pwResets.filter(_.token === token).result.headOption)

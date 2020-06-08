@@ -6,12 +6,12 @@ import play.api.libs.json.Json
 class EmptyPreservingReadsSpec extends PlaySpec {
 
   "EmptyPreservingArrayReads" should {
-    implicit val _ = EmptyPreservingReads.readsStringSeq
+    implicit val emptyPreservingReads = EmptyPreservingReads.readsStringSeq
 
     "correctly parse standard string arrays" in {
       val json = Json.parse("""["a", "bb", "ccc"]""")
 
-      val seq = json.validate[Option[Seq[String]]].get.get
+      val seq = json.validateOpt[Seq[String]].get.get
 
       seq.size must equal(3)
       seq must contain allOf ("a", "bb", "ccc")
@@ -20,7 +20,7 @@ class EmptyPreservingReadsSpec extends PlaySpec {
     "preserve empty strings" in {
       val json = Json.parse("""["", ""]""")
 
-      val seq = json.validate[Option[Seq[String]]].get.get
+      val seq = json.validateOpt[Seq[String]].get.get
 
       seq.size must equal(2)
       seq must contain("")
@@ -29,7 +29,7 @@ class EmptyPreservingReadsSpec extends PlaySpec {
     "correctly parse empty arrays" in {
       val json = Json.parse("""[]""")
 
-      val seq = json.validate[Option[Seq[String]]].get.get
+      val seq = json.validateOpt[Seq[String]].get.get
 
       seq.size must equal(0)
     }
@@ -37,13 +37,13 @@ class EmptyPreservingReadsSpec extends PlaySpec {
     "map null to None" in {
       val json = Json.parse("""null""")
 
-      json.validate[Option[Seq[String]]].get must equal(None)
+      json.validateOpt[Seq[String]].get must equal(None)
     }
 
     "reject non-string arrays" in {
       val json = Json.parse("""["a", 33]""")
 
-      val result = json.validate[Option[Seq[String]]]
+      val result = json.validateOpt[Seq[String]]
 
       result.isSuccess must equal(false)
       result.isError must equal(true)

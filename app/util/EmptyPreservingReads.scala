@@ -1,5 +1,8 @@
 package util
 
+import scala.collection.Seq
+import scala.language.postfixOps
+
 import play.api.libs.json.JsArray
 import play.api.libs.json.JsError
 import play.api.libs.json.JsNull

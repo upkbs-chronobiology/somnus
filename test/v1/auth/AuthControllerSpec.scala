@@ -157,7 +157,7 @@ class AuthControllerSpec extends PlaySpec with GuiceOneAppPerSuite with Injectin
     }
 
     "logged in as researcher" should {
-      implicit val _ = Role.Researcher
+      implicit val r = Role.Researcher
 
       "reject generating tokens for inexistent users" in {
         status(doAuthenticatedRequest(GET, "/v1/auth/password/reset/new/999")) must equal(NOT_FOUND)
@@ -202,7 +202,7 @@ class AuthControllerSpec extends PlaySpec with GuiceOneAppPerSuite with Injectin
     }
 
     "logged in as admin" should {
-      implicit val _ = Role.Admin
+      implicit val r = Role.Admin
 
       "reject generating a token for another admin" in {
         val aaron = doSync(authService.register("Aaron Admin", None))

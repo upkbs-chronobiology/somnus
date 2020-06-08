@@ -19,7 +19,7 @@ import models.QuestionsRepository
 import models.User
 import play.api.libs.json.Json
 import util.Futures.FutureOptionExtensions
-import util.Futures.TraversableFutureExtensions
+import util.Futures.IterableFutureExtensions
 import util.JsonError
 import util.JsonSuccess
 import v1.RestBaseController
@@ -38,7 +38,7 @@ class QuestionnaireController @Inject() (
   def index() = silhouette.SecuredAction(ForEditors).async { implicit request =>
     questionnaires
       .listAll()
-      .filterTraversableAsync(accessRules.mayAccessQuestionnaire(request.identity, _, AccessLevel.Read))
+      .filterIterableAsync(accessRules.mayAccessQuestionnaire(request.identity, _, AccessLevel.Read))
       .map(q => Ok(Json.toJson(q)))
   }
 

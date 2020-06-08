@@ -1,28 +1,32 @@
 package testutil
 
-import scala.util.Random
-
+import org.scalatest.BeforeAndAfterAll
 import org.scalatest.TestSuite
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.Application
-import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.db.Database
+import play.api.db.DBApi
+import play.api.db.evolutions.Evolutions
+import play.api.test.Injecting
 
-trait FreshDatabase extends GuiceOneAppPerSuite {
+trait FreshDatabase extends GuiceOneAppPerSuite with Injecting with BeforeAndAfterAll {
   this: TestSuite =>
 
-  val BaseName = "somnus-test"
-  val UrlConfigKey = "slick.dbs.default.db.url"
+  private lazy val db = inject[DBApi]
 
-  // XXX: Can we somehow use parent application (config) and just "extend" here?
-  override def fakeApplication(): Application = {
-    val defaultUrl = super.fakeApplication().configuration.get[String](UrlConfigKey)
-    // if below throws, you might need to add a VM parameter to your run configuration (check README)
-    if (!defaultUrl.contains(BaseName))
-      throw new IllegalStateException("Missing db base name to replace in URL - are you really using test config?")
+  private val defaultDatabase: Database = db.database("default")
 
-    val random = Random.nextInt(Integer.MAX_VALUE)
-    val freshUrl = defaultUrl.replace(BaseName, s"$BaseName-$random")
+  override protected def beforeAll(): Unit = {
+    cleanupEvolutions(defaultDatabase)
+    initializeEvolutions(defaultDatabase)
+  }
 
-    GuiceApplicationBuilder().configure(UrlConfigKey -> freshUrl).build()
+  private def initializeEvolutions(database: Database): Unit = {
+    Evolutions.applyEvolutions(database)
+  }
+
+  private def cleanupEvolutions(database: Database): Unit = {
+    // TODO: Find a way to force this, even if Evolutions thinks the db is in an inconsistent state,
+    //  perhaps by marking it as resolved programmatically.
+    Evolutions.cleanupEvolutions(database)
   }
 }

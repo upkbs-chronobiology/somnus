@@ -39,23 +39,23 @@ class ScheduleControllerSpec
     with BeforeAndAfterEach
     with BeforeAndAfterAll {
 
-  private val schedulesRepo = inject[SchedulesRepository]
+  private lazy val schedulesRepo = inject[SchedulesRepository]
 
-  private val writeableStudy = doSync(inject[StudyRepository].create(Study(0, "My Study W")))
-  private val readableStudy = doSync(inject[StudyRepository].create(Study(0, "My Study R")))
-  private val unrelatedStudy = doSync(inject[StudyRepository].create(Study(0, "My Study N")))
+  private lazy val writeableStudy = doSync(inject[StudyRepository].create(Study(0, "My Study W")))
+  private lazy val readableStudy = doSync(inject[StudyRepository].create(Study(0, "My Study R")))
+  private lazy val unrelatedStudy = doSync(inject[StudyRepository].create(Study(0, "My Study N")))
 
-  private val questionnairesRepo: QuestionnairesRepository = inject[QuestionnairesRepository]
-  private val writeableQuestionnaire = doSync(
+  private lazy val questionnairesRepo: QuestionnairesRepository = inject[QuestionnairesRepository]
+  private lazy val writeableQuestionnaire = doSync(
     questionnairesRepo.create(Questionnaire(0, "Testionnaire W", Some(writeableStudy.id)))
   )
-  private val readableQuestionnaire = doSync(
+  private lazy val readableQuestionnaire = doSync(
     questionnairesRepo.create(Questionnaire(0, "Testionnaire R", Some(readableStudy.id)))
   )
-  private val unrelatedQuestionnaire = doSync(
+  private lazy val unrelatedQuestionnaire = doSync(
     questionnairesRepo.create(Questionnaire(0, "Testionnaire N", Some(unrelatedStudy.id)))
   )
-  private val disconnectedQuestionnaire = doSync(questionnairesRepo.create(Questionnaire(0, "Freeonaire", None)))
+  private lazy val disconnectedQuestionnaire = doSync(questionnairesRepo.create(Questionnaire(0, "Freeonaire", None)))
 
   override def beforeAll(): Unit = {
     super.beforeAll()
@@ -126,7 +126,7 @@ class ScheduleControllerSpec
     }
 
     "logged in as researcher" should {
-      implicit val _ = Role.Researcher
+      implicit val r = Role.Researcher
 
       "create, update and delete items" in {
         val schedule =
@@ -285,7 +285,7 @@ class ScheduleControllerSpec
     }
 
     "logged in as admin" should {
-      implicit val _ = Role.Admin
+      implicit val r = Role.Admin
 
       "grant read access to non-assigned questionnaires" in {
         val response = doAuthenticatedRequest(GET, s"/v1/questionnaires/${unrelatedQuestionnaire.id}/schedules")

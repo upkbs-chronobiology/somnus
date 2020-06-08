@@ -7,8 +7,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 import play.api.db.slick.DatabaseConfigProvider
-import slick.jdbc.H2Profile.api._
-import slick.jdbc.JdbcProfile
+import slick.jdbc.MySQLProfile
+import slick.jdbc.MySQLProfile.api._
 import slick.lifted.Tag
 
 case class Password(id: Long, hash: String, salt: Option[String], hasher: String)
@@ -26,7 +26,7 @@ class PasswordTable(tag: Tag) extends Table[Password](tag, "password") {
 class PasswordRepository @Inject() (dbConfigProvider: DatabaseConfigProvider) {
   def passwords = TableQuery[PasswordTable]
 
-  def dbConfig = dbConfigProvider.get[JdbcProfile]
+  def dbConfig = dbConfigProvider.get[MySQLProfile]
 
   def add(password: Password): Future[Password] = {
     dbConfig.db

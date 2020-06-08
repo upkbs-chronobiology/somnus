@@ -14,8 +14,8 @@ import play.api.db.slick.DatabaseConfigProvider
 import play.api.libs.json.Json
 import play.api.libs.json.JsValue
 import play.api.libs.json.Writes
-import slick.jdbc.H2Profile.api._
-import slick.jdbc.JdbcProfile
+import slick.jdbc.MySQLProfile
+import slick.jdbc.MySQLProfile.api._
 import util.Serialization
 import util.form.CustomForms._
 import util.form.PlayFormsEnum.enum
@@ -96,7 +96,7 @@ class QuestionsRepository @Inject() (dbConfigProvider: DatabaseConfigProvider, a
   private def questions = TableQuery[QuestionTable]
   private def questionnaires = TableQuery[QuestionnaireTable]
 
-  private def dbConfig = dbConfigProvider.get[JdbcProfile]
+  private def dbConfig = dbConfigProvider.get[MySQLProfile]
 
   def add(question: Question): Future[Question] = {
     validate(question) flatMap { _ =>

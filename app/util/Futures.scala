@@ -33,21 +33,19 @@ object Futures {
     def toOptionFuture: Future[Option[T]] = futureOption.map(_.map(Some(_))).getOrElse(Future.successful(None))
   }
 
-  implicit class TraversableFutureExtensions[T](traversableFuture: Future[Traversable[T]])(
-    implicit ec: ExecutionContext
-  ) {
+  implicit class IterableFutureExtensions[T](iterableFuture: Future[Iterable[T]])(implicit ec: ExecutionContext) {
 
-    def mapTraversable[B](mapping: T => B): Future[Traversable[B]] =
-      traversableFuture.map(_.map(mapping))
+    def mapIterable[B](mapping: T => B): Future[Iterable[B]] =
+      iterableFuture.map(_.map(mapping))
 
-    def mapTraversableAsync[B](mapping: T => Future[B]): Future[Traversable[B]] =
-      traversableFuture.flatMap(trav => Future.sequence(trav.map(mapping)))
+    def mapIterableAsync[B](mapping: T => Future[B]): Future[Iterable[B]] =
+      iterableFuture.flatMap(it => Future.sequence(it.map(mapping)))
 
-    def filterTraversable(filter: T => Boolean): Future[Traversable[T]] =
-      traversableFuture.map(_.filter(filter))
+    def filterIterable(filter: T => Boolean): Future[Iterable[T]] =
+      iterableFuture.map(_.filter(filter))
 
-    def filterTraversableAsync(filter: T => Future[Boolean]): Future[Traversable[T]] = {
-      traversableFuture
+    def filterIterableAsync(filter: T => Future[Boolean]): Future[Iterable[T]] = {
+      iterableFuture
         .map(
           seq =>
             seq.map(

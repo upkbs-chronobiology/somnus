@@ -25,7 +25,7 @@ import play.api.data.Forms._
 import play.api.data.validation.Constraints.pattern
 import play.api.libs.json.Json
 import util.Futures
-import util.Futures.TraversableFutureExtensions
+import util.Futures.IterableFutureExtensions
 import util.JsonError
 import util.JsonSuccess
 import v1.RestBaseController
@@ -64,7 +64,7 @@ class UserController @Inject() (
   def index = silhouette.SecuredAction(ForEditors).async { implicit request =>
     userRepository
       .listAll()
-      .filterTraversableAsync(user => accessRules.mayAccessUser(request.identity, user.id, AccessLevel.Read))
+      .filterIterableAsync(user => accessRules.mayAccessUser(request.identity, user.id, AccessLevel.Read))
       .map(users => Ok(Json.toJson(users)))
   }
 

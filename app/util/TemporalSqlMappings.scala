@@ -9,7 +9,7 @@ import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
-import slick.jdbc.H2Profile.api._
+import slick.jdbc.MySQLProfile.api._
 
 trait TemporalSqlMappings {
 

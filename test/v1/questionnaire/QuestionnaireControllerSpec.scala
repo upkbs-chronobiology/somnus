@@ -37,23 +37,23 @@ class QuestionnaireControllerSpec
   private val questionnairesRepo = inject[QuestionnairesRepository]
   private val questionsRepo = inject[QuestionsRepository]
 
-  private val hiddenStudy = doSync(studyRepo.create(Study(0, "Hidden Study")))
-  private val readableStudy = doSync(studyRepo.create(Study(0, "Readable Study")))
-  private val writeableStudy = doSync(studyRepo.create(Study(0, "Writeable Study")))
-  private val hiddenQuestionnaire = doSync(
+  private lazy val hiddenStudy = doSync(studyRepo.create(Study(0, "Hidden Study")))
+  private lazy val readableStudy = doSync(studyRepo.create(Study(0, "Readable Study")))
+  private lazy val writeableStudy = doSync(studyRepo.create(Study(0, "Writeable Study")))
+  private lazy val hiddenQuestionnaire = doSync(
     questionnairesRepo.create(Questionnaire(0, "Hidden Questionnaire", Some(hiddenStudy.id)))
   )
-  private val readableQuestionnaire = doSync(
+  private lazy val readableQuestionnaire = doSync(
     questionnairesRepo.create(Questionnaire(0, "Readable Questionnaire", Some(readableStudy.id)))
   )
-  private val writeableQuestionnaire = doSync(
+  private lazy val writeableQuestionnaire = doSync(
     questionnairesRepo.create(Questionnaire(0, "Writeable Questionnaire", Some(writeableStudy.id)))
   )
-  private val hiddenQuestion = doSync(
+  private lazy val hiddenQuestion = doSync(
     questionsRepo
       .add(Question(0, "Hidden Question", AnswerType.RangeDiscrete, None, Some("1,5"), Some(hiddenQuestionnaire.id)))
   )
-  private val readableQuestion = doSync(
+  private lazy val readableQuestion = doSync(
     questionsRepo.add(
       Question(0, "Readable Question", AnswerType.RangeDiscrete, None, Some("1,5"), Some(readableQuestionnaire.id))
     )
@@ -67,6 +67,9 @@ class QuestionnaireControllerSpec
     val aclRepo = inject[StudyAccessRepository]
     doSync(aclRepo.upsert(StudyAccess(researchUser.id, readableStudy.id, AccessLevel.Read)))
     doSync(aclRepo.upsert(StudyAccess(researchUser.id, writeableStudy.id, AccessLevel.Write)))
+
+    // touch those to make sure they get initialized
+    readableQuestion
   }
 
   "QuestionnaireController" when {
@@ -112,7 +115,7 @@ class QuestionnaireControllerSpec
     }
 
     "logged in as researcher" should {
-      implicit val _ = Role.Researcher
+      implicit val r = Role.Researcher
 
       "list questionnaires with study access only" in {
         val result = doAuthenticatedRequest(GET, s"/v1/questionnaires")
@@ -237,7 +240,7 @@ class QuestionnaireControllerSpec
     }
 
     "logged in as admin" should {
-      implicit val _ = Role.Admin
+      implicit val r = Role.Admin
 
       "list all questionnaires" in {
         val ids =
