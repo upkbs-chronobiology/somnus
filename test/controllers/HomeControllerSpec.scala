@@ -1,5 +1,6 @@
 package controllers
 
+import com.typesafe.config.Config
 import org.scalatestplus.play._
 import org.scalatestplus.play.guice._
 import play.api.test._
@@ -14,10 +15,12 @@ import play.api.test.Helpers._
   */
 class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
 
+  lazy val config = inject[Config]
+
   "HomeController GET" should {
 
     "render the index page from a new instance of controller" in {
-      val controller = new HomeController(stubControllerComponents())
+      val controller = new HomeController(stubControllerComponents(), config)
       val home = controller.index().apply(FakeRequest(GET, "/").withCSRFToken)
 
       status(home) mustBe OK

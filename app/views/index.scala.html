@@ -1,6 +1,6 @@
-@()(implicit requestHeader: RequestHeader)
+@(version: String)(implicit requestHeader: RequestHeader)
 
-@main("Somnus") {
+@main("Somnus", version) {
     <div class="heading">
         <img src="@routes.Assets.versioned("images/logo.svg")" alt="somnus logo" class="logo">
         <h1>Somnus</h1>

@@ -1,6 +1,8 @@
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
+import scala.reflect.io.File
+
 import com.typesafe.sbt.packager.docker.DockerVersion
 import wartremover.WartRemover.autoImport.Wart
 
@@ -52,7 +54,7 @@ libraryDependencies += "javax.xml.bind" % "jaxb-api" % "2.3.0"
 
 libraryDependencies += "org.apache.commons" % "commons-collections4" % "4.4"
 
-wartremoverErrors in(Compile, compile) ++= Warts.unsafe diff List(
+wartremoverErrors in (Compile, compile) ++= Warts.unsafe diff List(
   Wart.NonUnitStatements,
   Wart.DefaultArguments,
   Wart.Throw,
@@ -85,11 +87,40 @@ testScalastyle := scalastyle.in(Test).toTask("").value
 
 (scalastyleConfig in Test) := baseDirectory.value / "scalastyle-test-config.xml"
 
+// create suffixed version string
+val now = Instant.now().truncatedTo(ChronoUnit.SECONDS)
+val timestamp = now.toString.replace(":", "-")
+val versionSuffix = "_" + timestamp
+
+// append suffixed version string to (stage) config before compile
+// FIXME: A lot of shared boilerplate with docker build version inlining below
+val appendVersionToConf = taskKey[Unit]("Append (suffixed) version to application.conf for stage-based builds")
+appendVersionToConf := {
+  val suffixedVersion = (ThisBuild / version).value + versionSuffix
+  (ThisBuild / version) := suffixedVersion
+
+  val stageLocation = (Universal / stagingDirectory).value
+  val topLevelLocation = (Compile / classDirectory).value
+
+  // FIXME: This probably has no effect
+  val buildConfigFile = File(s"$topLevelLocation/application.conf")
+  if (buildConfigFile.exists)
+    buildConfigFile.appendAll(s"\napp.version=$suffixedVersion\n")
+
+  val stageConfigFile = File(s"$stageLocation/conf/application.conf")
+  if (stageConfigFile.exists)
+    stageConfigFile.appendAll(s"\napp.version=$suffixedVersion\n")
+}
+(Compile / compile) := ((Compile / compile) dependsOn appendVersionToConf).value
+
 
 // ~ Integration testing ~
 
-addCommandAlias("testServe", "testProd -Dplay.http.secret.key='dummy-secret' " +
-  "-Dconfig.file=conf/application.test.conf -DtestServe=true")
+addCommandAlias(
+  "testServe",
+  "testProd -Dplay.http.secret.key='dummy-secret' " +
+    "-Dconfig.file=conf/application.test.conf -DtestServe=true"
+)
 
 
 // ~ Docker publication ~
@@ -101,15 +132,25 @@ dockerExposedPorts := Seq(9000)
 dockerRepository := Some("docker.pkg.github.com/upkbs-chronobiology")
 dockerUsername := Some("somnus")
 
+(version in Docker) := (version in Docker).value + versionSuffix
+
+// FIXME: A lot of shared boilerplate with base build version inlining above
+val appendVersionToConfDocker = taskKey[Unit]("Append (suffixed) version to application.conf for docker builds")
+appendVersionToConfDocker := {
+  val versionString = (Docker / version).value
+
+  val stageLocation = (Docker / stage).value
+  val configFile = File(s"$stageLocation/opt/docker/conf/application.conf")
+  if (configFile.exists)
+    configFile.appendAll(s"\napp.version=$versionString\n")
+}
+(Docker / publishLocal) := ((Docker / publishLocal) dependsOn appendVersionToConfDocker).value
+
 // Database password should be provided through a command line flag (-Dslick.dbs.default.db.password) or environment
-// variable (slick.dbs.default.db.password).
+// variable (DB_PASSWORD).
 
 // Application secret should be provided through a command line flag (-Dplay.http.secret.key) or environment variable
-// (play.http.secret.key).
-
-val now = Instant.now().truncatedTo(ChronoUnit.SECONDS)
-val timestamp = now.toString.replace(":", "-")
-(version in Docker) := (version in Docker).value + "_" + timestamp
+// (APPLICATION_SECRET).
 
 
 // ~ Releasing ~
