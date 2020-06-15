@@ -41,6 +41,14 @@ class AnswerController @Inject() (
       .map(answers => Ok(Json.toJson(answers)))
   }
 
+  def listByQuestionnaire(questionnaireId: Long) =
+    silhouette.SecuredAction(ForEditors && acls.withQuestionnaireAccess(questionnaireId, AccessLevel.Read)).async {
+      implicit request =>
+        answersRepo
+          .listByQuestionnaire(questionnaireId)
+          .map(answers => Ok(Json.toJson(answers)))
+    }
+
   def listMineByQuestionnaire(questionnaireId: Long) = silhouette.SecuredAction.async { implicit request =>
     answersRepo
       .listByUserAndQuestionnaire(request.identity.id, questionnaireId)
