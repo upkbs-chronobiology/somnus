@@ -370,6 +370,24 @@ class AnswerControllerSpec
         list.map(_("id").as[Long]) must contain(answer.id)
       }
 
+      "reject listing answers by questionnaire on hidden studies" in {
+        doSync(answersRepo.add(Answer(0, hiddenQuestion.id, "Some answer", baseUser.id, null, OffsetDateTime.now())))
+
+        val response = doAuthenticatedRequest(GET, s"/v1/questionnaires/${hiddenQuestionnaire.id}/answers")
+        status(response) must equal(FORBIDDEN)
+      }
+
+      "list answers by questionnaire on readable studies" in {
+        val answer = doSync(
+          answersRepo.add(Answer(0, readableQuestion.id, "Some answer", baseUser.id, null, OffsetDateTime.now()))
+        )
+
+        val list = contentAsJson(doAuthenticatedRequest(GET, s"/v1/questionnaires/${readableQuestionnaire.id}/answers"))
+          .as[JsArray]
+          .value
+        list.map(_("id").as[Long]) must contain(answer.id)
+      }
+
       "omit answers on hidden studies from list" in {
         val answer =
           doSync(answersRepo.add(Answer(0, hiddenQuestion.id, "Some answer", baseUser.id, null, OffsetDateTime.now())))
