@@ -128,10 +128,12 @@ class AuthController @Inject() (
   }
 
   def createResetToken(userId: Long) = silhouette.SecuredAction(ForEditors).async { implicit request =>
-    val currentUserLevel = Role.level(request.identity.role.map(Role.withName))
+    val currentRole = request.identity.role.map(Role.withName)
+    val currentUserLevel = Role.level(currentRole)
     userRepo.get(userId) flatMap {
       case None => Future.successful(NotFound(JsonError(s"User with id $userId not found")))
-      case Some(user) if Role.level(user.role.map(Role.withName)) >= currentUserLevel =>
+      case Some(user)
+          if Role.level(user.role.map(Role.withName)) >= currentUserLevel && !currentRole.contains(Role.Admin) =>
         Future.successful(
           Forbidden(JsonError("Generating reset tokens for users of same or higher permission level is not allowed"))
         )
