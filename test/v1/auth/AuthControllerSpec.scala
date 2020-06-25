@@ -204,11 +204,11 @@ class AuthControllerSpec extends PlaySpec with GuiceOneAppPerSuite with Injectin
     "logged in as admin" should {
       implicit val r = Role.Admin
 
-      "reject generating a token for another admin" in {
+      "allow generating a token for another admin" in {
         val aaron = doSync(authService.register("Aaron Admin", None))
         doSync(userRepository.setRole(aaron.id, Some(Role.Admin)))
 
-        status(doAuthenticatedRequest(GET, s"/v1/auth/password/reset/new/${aaron.id}")) must equal(FORBIDDEN)
+        status(doAuthenticatedRequest(GET, s"/v1/auth/password/reset/new/${aaron.id}")) must equal(CREATED)
       }
 
       "generate a token for research users" in {
