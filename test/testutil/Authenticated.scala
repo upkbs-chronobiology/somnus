@@ -61,6 +61,10 @@ trait Authenticated extends BeforeAndAfterAll with GuiceOneAppPerSuite with Inje
   override def beforeAll(): Unit = {
     super.beforeAll()
 
+    recreateTestUsers()
+  }
+
+  protected def recreateTestUsers(): Unit = {
     Await.result(for {
       baseUser <- registerTestUser("test_base")
       researchUser <- registerTestUser("test_researcher", Some(Role.Researcher))

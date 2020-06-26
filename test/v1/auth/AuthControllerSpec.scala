@@ -10,6 +10,7 @@ import auth.AuthService
 import auth.roles.Role
 import models.PasswordRepository
 import models.UserRepository
+import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.libs.json.Json
@@ -19,11 +20,23 @@ import play.api.test.Injecting
 import testutil.Authenticated
 import testutil.TestUtils
 
-class AuthControllerSpec extends PlaySpec with GuiceOneAppPerSuite with Injecting with TestUtils with Authenticated {
+class AuthControllerSpec
+    extends PlaySpec
+    with GuiceOneAppPerSuite
+    with Injecting
+    with TestUtils
+    with Authenticated
+    with BeforeAndAfterEach {
 
   private val userRepository = inject[UserRepository]
   private val passwordRepository = inject[PasswordRepository]
   private val authService = inject[AuthService]
+
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+
+    recreateTestUsers()
+  }
 
   "AuthController sign-up endpoint" should {
 
@@ -154,6 +167,53 @@ class AuthControllerSpec extends PlaySpec with GuiceOneAppPerSuite with Injectin
         status(loginResponse) must equal(OK)
         header("X-Auth-Token", loginResponse).get.length must equal(256)
       }
+
+      "change own password" in {
+        val NewPassword = "NewTest123"
+
+        val changeResponse =
+          doAuthenticatedRequest(POST, "/v1/auth/password/mine/change", Some(pwChangeJson(TestPassword, NewPassword)))
+
+        status(changeResponse) must equal(OK)
+
+        val logoutResponse = doAuthenticatedRequest(GET, "/v1/auth/logout")
+        status(logoutResponse) must equal(OK)
+
+        val oldLoginResponse =
+          doAuthenticatedRequest(POST, "/v1/auth/login", Some(logInJson(baseUser.name, TestPassword)))
+        status(oldLoginResponse) must equal(BAD_REQUEST)
+
+        val newLoginResponse =
+          doAuthenticatedRequest(POST, "/v1/auth/login", Some(logInJson(baseUser.name, NewPassword)))
+        status(newLoginResponse) must equal(OK)
+      }
+
+      "refuse to change own password if new one is too short" in {
+        val changeResponse =
+          doAuthenticatedRequest(POST, "/v1/auth/password/mine/change", Some(pwChangeJson(TestPassword, "1234567")))
+
+        status(changeResponse) must equal(BAD_REQUEST)
+        val error = contentAsJson(changeResponse)
+        error("newPassword").as[Seq[String]].head must include("length")
+      }
+
+      "refuse to change own password if old one is missing" in {
+        val changeResponse =
+          doAuthenticatedRequest(POST, "/v1/auth/password/mine/change", Some(pwChangeJson(null, "987654321")))
+
+        status(changeResponse) must equal(BAD_REQUEST)
+        val error = contentAsJson(changeResponse)
+        error("oldPassword").as[Seq[String]].head must include("required")
+      }
+
+      "refuse to change own password if old one is wrong" in {
+        val changeResponse =
+          doAuthenticatedRequest(POST, "/v1/auth/password/mine/change", Some(pwChangeJson("thisiswrong", "987654321")))
+
+        status(changeResponse) must equal(BAD_REQUEST)
+        val error = contentAsJson(changeResponse)
+        error("message").as[String].toLowerCase must include("old password")
+      }
     }
 
     "logged in as researcher" should {
@@ -222,5 +282,10 @@ class AuthControllerSpec extends PlaySpec with GuiceOneAppPerSuite with Injectin
 
   private def signUpJson(name: String, password: String) = Json.obj("name" -> name, "password" -> password)
 
+  private def logInJson(name: String, password: String) = Json.obj("name" -> name, "password" -> password)
+
   private def pwResetJson(password: String) = Json.obj("password" -> password)
+
+  private def pwChangeJson(oldPassword: String, newPassword: String) =
+    Json.obj("oldPassword" -> oldPassword, "newPassword" -> newPassword)
 }
