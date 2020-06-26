@@ -86,4 +86,8 @@ class AuthService @Inject() (
         }
     }
   }
+
+  def updatePassword(loginInfo: LoginInfo, newPassword: String): Future[PasswordInfo] = {
+    authInfoRepository.update(loginInfo, passwordHasher.hash(newPassword))
+  }
 }

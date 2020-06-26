@@ -59,6 +59,16 @@ object PwResetForm {
   val form = Form(mapping("password" -> SignUpForm.passwordField)(PwResetFormData.apply)(PwResetFormData.unapply))
 }
 
+case class PwChangeFormData(oldPassword: String, newPassword: String)
+
+object PwChangeForm {
+  val form = Form(
+    mapping("oldPassword" -> nonEmptyText, "newPassword" -> SignUpForm.passwordField)(PwChangeFormData.apply)(
+      PwChangeFormData.unapply
+    )
+  )
+}
+
 class AuthController @Inject() (
   val environment: Environment[DefaultEnv],
   rcc: RestControllerComponents,
@@ -174,6 +184,24 @@ class AuthController @Inject() (
               case e: IllegalArgumentException =>
                 BadRequest(JsonError(e.getMessage))
             }
+      )
+  }
+
+  def changePassword() = silhouette.SecuredAction.async { implicit request =>
+    PwChangeForm.form
+      .bindFromRequest()
+      .fold(
+        badForm => Future.successful(BadRequest(badForm.errorsAsJson)),
+        formData => {
+          val credentials = Credentials(request.identity.name, formData.oldPassword)
+          credentialsProvider
+            .authenticate(credentials)
+            .flatMap(authService.updatePassword(_, formData.newPassword))
+            .map(_ => Ok(JsonSuccess("Password successfully updated")))
+            .recover {
+              case _: InvalidPasswordException => BadRequest(JsonError("Old password is not correct"))
+            }
+        }
       )
   }
 }
