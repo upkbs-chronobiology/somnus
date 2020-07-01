@@ -37,15 +37,15 @@ object UserCreationForm {
   val form = Form(mapping("name" -> nonEmptyText)(UserCreationFormData.apply)(UserCreationFormData.unapply))
 }
 
-case class UserUpdateFormData(role: Option[String])
+case class UserUpdateFormData(role: Option[String], organizationId: Option[Long])
 
 object UserUpdateForm {
   private val RolePattern: Regex = new Regex(s"^(${Role.values.mkString("|")})$$")
 
   val form = Form(
-    mapping("role" -> optional(nonEmptyText.verifying(pattern(RolePattern))))(UserUpdateFormData.apply)(
-      UserUpdateFormData.unapply
-    )
+    mapping("role" -> optional(nonEmptyText.verifying(pattern(RolePattern))), "organizationId" -> optional(longNumber))(
+      UserUpdateFormData.apply
+    )(UserUpdateFormData.unapply)
   )
 }
 
@@ -69,12 +69,13 @@ class UserController @Inject() (
   }
 
   def create = silhouette.SecuredAction(ForEditors).async { implicit request =>
+    val actorOrg = request.identity.organizationId
     UserCreationForm.form
       .bindFromRequest()
       .fold(
         badForm => Future.successful(BadRequest(badForm.errorsAsJson)),
         formData =>
-          authService.register(formData.name, None).map(u => Created(Json.toJson(u))) recover {
+          authService.register(formData.name, None, actorOrg).map(u => Created(Json.toJson(u))) recover {
             case e: IllegalArgumentException => BadRequest(JsonError(s"Failed to create user: ${e.getMessage}"))
           }
       )
@@ -111,10 +112,15 @@ class UserController @Inject() (
             if (request.identity.id == id && formData.role != request.identity.role)
               Future
                 .successful(BadRequest(JsonError("Refusing to reduce current user's own rights (by altering role)")))
-            else
-              userRepository
-                .setRole(id, formData.role.map(r => Role.withName(r)))
-                .map(num => Ok(JsonSuccess(s"Updated $num user(s)")))
+            else {
+              for {
+                _ <- userRepository
+                  .setRole(id, formData.role.map(r => Role.withName(r)))
+                _ <- if (request.identity.hasRole(Role.Admin))
+                  userRepository.setOrganization(id, formData.organizationId)
+                else Future.successful()
+              } yield Ok(JsonSuccess("Update successful"))
+            }
           }
         )
   }

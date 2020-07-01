@@ -10,14 +10,22 @@ create table `password`
     `hasher` VARCHAR(255)
 );
 
+create table `organization`
+(
+    `id`   BIGINT AUTO_INCREMENT PRIMARY KEY,
+    `name` VARCHAR(255) NOT NULL UNIQUE
+);
+
 create table `user`
 (
-    `id`          BIGINT AUTO_INCREMENT PRIMARY KEY,
-    `name`        VARCHAR(255) NOT NULL UNIQUE,
-    `password_id` BIGINT UNIQUE,
-    `role`        VARCHAR(255),
-    `created`     TIMESTAMP    NOT NULL DEFAULT current_timestamp(),
-    FOREIGN KEY (`password_id`) REFERENCES `password` (`id`)
+    `id`              BIGINT AUTO_INCREMENT PRIMARY KEY,
+    `name`            VARCHAR(255) NOT NULL UNIQUE,
+    `password_id`     BIGINT UNIQUE,
+    `role`            VARCHAR(255),
+    `created`         TIMESTAMP    NOT NULL DEFAULT current_timestamp(),
+    `organization_id` BIGINT,
+    FOREIGN KEY (`password_id`) REFERENCES `password` (`id`),
+    FOREIGN KEY (`organization_id`) REFERENCES `organization` (`id`)
 );
 
 create table `pw_reset`
@@ -117,6 +125,8 @@ create table `study_access`
 
 # --- !Downs
 
+drop table if exists `study_access`;
+drop table if exists `user_session`;
 drop table if exists `answer`;
 drop table if exists `question`;
 drop table if exists `schedule`;
@@ -125,6 +135,5 @@ drop table if exists `study_participants`;
 drop table if exists `study`;
 drop table if exists `pw_reset`;
 drop table if exists `user`;
+drop table if exists `organization`;
 drop table if exists `password`;
-drop table if exists `user_session`;
-drop table if exists `study_access`;

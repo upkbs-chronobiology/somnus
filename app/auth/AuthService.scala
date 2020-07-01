@@ -32,13 +32,13 @@ class AuthService @Inject() (
 
   private val TokenLength = 8
 
-  def register(username: String, password: Option[String]): Future[User] = {
+  def register(username: String, password: Option[String], organizationId: Option[Long] = None): Future[User] = {
     val loginInfo = LoginInfo(credentialsProvider.id, username)
     userService.retrieve(loginInfo).flatMap {
       case Some(_) => Future.failed(new IllegalArgumentException("user already exists"))
       case None =>
         for {
-          user <- userRepository.create(User(0, loginInfo.providerKey, None))
+          user <- userRepository.create(User(0, loginInfo.providerKey, None, organizationId = organizationId))
           _ <- Futures.swapOption(password.map(pw => authInfoRepository.add(loginInfo, passwordHasher.hash(pw))))
         } yield
         // TODO: Log in?
