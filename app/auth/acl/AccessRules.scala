@@ -12,6 +12,7 @@ import models.AccessLevel
 import models.AccessLevel.AccessLevel
 import models.Answer
 import models.AnswersRepository
+import models.OrganizationRepository
 import models.Questionnaire
 import models.QuestionnairesRepository
 import models.QuestionsRepository
@@ -32,7 +33,8 @@ class AccessRules @Inject() (
   questionnairesRepo: QuestionnairesRepository,
   questionsRepo: QuestionsRepository,
   answersRepo: AnswersRepository,
-  schedulesRepo: SchedulesRepository
+  schedulesRepo: SchedulesRepository,
+  organizationRepo: OrganizationRepository
 )(implicit ec: ExecutionContext) {
 
   val DisconnectedEntitiesPublic = true
@@ -42,11 +44,29 @@ class AccessRules @Inject() (
       case _ if actor.id == targetUserId => Future.successful(true)
       case _ if actor.hasRole(Role.Admin) => Future.successful(true)
       case _ =>
-        // TODO: Implement editable access control (similar to studies)?
-        // For now, all researchers have read access to all accounts
-        val mayAccess = level <= AccessLevel.Read &&
-          Role.level(actor) >= Role.level(Role.Researcher)
-        Future.successful(mayAccess)
+        val targetUserOrg = userRepository
+          .get(targetUserId)
+          .map(_.getOrElse(throw new IllegalArgumentException(s"No user with id $targetUserId")))
+          .map(_.organizationId)
+        actor.organizationId match {
+          case Some(orgId) =>
+            for {
+              org <- organizationRepo.get(orgId)
+              targetOrg <- targetUserOrg
+            } yield {
+              // Researchers have write access in their organization
+              targetOrg == org.map(_.id) && level <= AccessLevel.Write &&
+              Role.level(actor) >= Role.level(Role.Researcher)
+            }
+          case None =>
+            // TODO: Revoke any non-organization access in the future (except for admins)
+            // For now, non-organization researchers have read access to all non-organization accounts
+            targetUserOrg
+              .map(
+                _.isEmpty && level <= AccessLevel.Read &&
+                  Role.level(actor) >= Role.level(Role.Researcher)
+              )
+        }
     }
   }
 
@@ -129,5 +149,14 @@ class AccessRules @Inject() (
       .get(scheduleId)
       .flatMapOption(s => mayAccessSchedule(user, s, level))
       .map(_.getOrElse(false))
+  }
+
+  def mayAccessOrganization(user: User, organizationId: Long, level: AccessLevel): Boolean = {
+    val userInOrganization = user.organizationId.contains(organizationId)
+    user.role.map(Role.withName) match {
+      case Some(Role.Admin) => true
+      case Some(Role.Researcher) => userInOrganization && level <= AccessLevel.Write
+      case _ => userInOrganization && level <= AccessLevel.Read
+    }
   }
 }

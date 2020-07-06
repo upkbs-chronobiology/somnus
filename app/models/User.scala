@@ -1,8 +1,5 @@
 package models
 
-import javax.inject.Inject
-import javax.inject.Singleton
-
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -10,6 +7,8 @@ import auth.roles.Role.Role
 import com.mohiva.play.silhouette.api.Identity
 import com.mohiva.play.silhouette.api.LoginInfo
 import com.mohiva.play.silhouette.api.services.IdentityService
+import javax.inject.Inject
+import javax.inject.Singleton
 import play.api.db.slick.DatabaseConfigProvider
 import play.api.libs.json.Json
 import play.api.libs.json.JsValue
@@ -19,14 +18,20 @@ import slick.jdbc.MySQLProfile.api._
 import slick.lifted.Tag
 
 // TODO: Consider directly using Role enum instead of String
-case class User(id: Long, name: String, passwordId: Option[Long], role: Option[String] = None) extends Identity {
+case class User(
+  id: Long,
+  name: String,
+  passwordId: Option[Long],
+  role: Option[String] = None,
+  organizationId: Option[Long] = None
+) extends Identity {
   def hasRole(otherRole: Role) = this.role.contains(otherRole.toString)
 }
 
 object User {
   implicit val implicitWrites = new Writes[User] {
     def writes(user: User): JsValue = {
-      Json.obj("name" -> user.name, "role" -> user.role, "id" -> user.id)
+      Json.obj("name" -> user.name, "role" -> user.role, "id" -> user.id, "organizationId" -> user.organizationId)
     }
   }
 
@@ -39,8 +44,10 @@ class UserTable(tag: Tag) extends Table[User](tag, "user") {
   def passwordId = column[Long]("password_id", O.Unique)
   def password = foreignKey("password", passwordId.?, TableQuery[PasswordTable])(_.id.?)
   def role = column[String]("role")
+  def organizationId = column[Long]("organization_id")
+  def organization = foreignKey("organization", organizationId.?, TableQuery[OrganizationTable])(_.id.?)
 
-  override def * = (id, name, passwordId.?, role.?) <> (User.tupled, User.unapply)
+  override def * = (id, name, passwordId.?, role.?, organizationId.?) <> (User.tupled, User.unapply)
 }
 
 trait UserService extends IdentityService[User]
@@ -107,5 +114,9 @@ class UserRepository @Inject() (dbConfigProvider: DatabaseConfigProvider) extend
   def setRole(name: String, role: Option[Role]): Future[Int] = {
     val query = userByName(name).map(_.role.?).update(role.map(_.toString))
     dbConfig.db.run(query)
+  }
+
+  def setOrganization(id: Long, organizationId: Option[Long]): Future[Int] = {
+    dbConfig.db.run(users.filter(_.id === id).map(_.organizationId.?).update(organizationId))
   }
 }

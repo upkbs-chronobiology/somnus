@@ -3,17 +3,22 @@ package v1.user
 import auth.AuthService
 import auth.roles.Role
 import models.AccessLevel
+import models.Organization
+import models.OrganizationRepository
 import models.Study
 import models.StudyAccess
 import models.StudyAccessRepository
 import models.StudyRepository
+import models.User
 import models.UserRepository
 import org.scalatest.BeforeAndAfterAll
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.libs.json.JsArray
+import play.api.libs.json.JsNull
 import play.api.libs.json.JsObject
 import play.api.libs.json.Json
+import play.api.libs.json.JsString
 import play.api.test.Helpers._
 import play.api.test.Injecting
 import testutil.Authenticated
@@ -25,7 +30,10 @@ class UserControllerSpec
     with BeforeAndAfterAll
     with Authenticated {
 
-  val donald = doSync(inject[AuthService].register("Donald Duck", Some("00112233")))
+  private lazy val organizationRepo = inject[OrganizationRepository]
+  private lazy val userRepo = inject[UserRepository]
+
+  var donald = doSync(inject[AuthService].register("Donald Duck", Some("00112233")))
 
   override def beforeAll(): Unit = {
     super.beforeAll()
@@ -42,6 +50,12 @@ class UserControllerSpec
 
     doSync(studyRepo.addParticipant(secretStudy.id, donald.id))
     doSync(studyRepo.addParticipant(secretStudy.id, baseUser.id))
+
+    val organization = doSync(organizationRepo.create(Organization(0, "Sample Labs")))
+    doSync(userRepo.setOrganization(researchUser.id, Some(organization.id)))
+    researchUser = researchUser.copy(organizationId = Some(organization.id))
+    doSync(userRepo.setOrganization(donald.id, Some(organization.id)))
+    donald = donald.copy(organizationId = Some(organization.id))
   }
 
   "UserController" when {
@@ -103,11 +117,40 @@ class UserControllerSpec
         list.head.apply("name").as[String] must equal("Test Study")
       }
 
-      "reject updating users" in {
-        val response =
-          doAuthenticatedRequest(PUT, s"/v1/users/${donald.id}", Some(userUpdateJson(Role.Researcher.toString)))
+      "reject updating users in different organization" in {
+        val org = doSync(organizationRepo.create(Organization(0, "Other Org")))
+        val user = doSync(userRepo.create(User(0, "Other-org Guy", None, None, Some(org.id))))
 
-        status(response) must equal(403)
+        val response =
+          doAuthenticatedRequest(PUT, s"/v1/users/${user.id}", Some(userUpdateJson(Role.Researcher.toString)))
+
+        status(response) must equal(FORBIDDEN)
+      }
+
+      "update role of user in same organization" in {
+        val user = doSync(userRepo.create(User(0, "Same-org Guy", None, None, researchUser.organizationId)))
+
+        val response =
+          doAuthenticatedRequest(PUT, s"/v1/users/${user.id}", Some(userUpdateJson(Role.Researcher.toString)))
+
+        status(response) must equal(OK)
+        doSync(userRepo.get(user.id)).value.role.value must equal(Role.Researcher.toString)
+      }
+
+      "not change user organizations" in {
+        val user = doSync(userRepo.create(User(0, "Same-org Guy 2", None, None, researchUser.organizationId)))
+
+        val response =
+          doAuthenticatedRequest(PUT, s"/v1/users/${user.id}", Some(userUpdateJson(null, Some(123))))
+
+        status(response) must equal(OK)
+        doSync(userRepo.get(user.id)).value.organizationId must equal(researchUser.organizationId)
+      }
+
+      "create users under same organization" in {
+        val response = doAuthenticatedRequest(POST, "/v1/users", Some(userCreationJson("My Participant")))
+        status(response) must equal(CREATED)
+        contentAsJson(response).apply("organizationId").as[Long] must equal(researchUser.organizationId.get)
       }
     }
 
@@ -180,11 +223,22 @@ class UserControllerSpec
         list(0).apply("name").as[String] must equal("Test Study")
         list(1).apply("name").as[String] must equal("Noyb Study")
       }
+
+      "not change user organizations" in {
+        val org = doSync(organizationRepo.create(Organization(0, "Example Org")))
+
+        val response =
+          doAuthenticatedRequest(PUT, s"/v1/users/${donald.id}", Some(userUpdateJson(null, Some(org.id))))
+
+        status(response) must equal(OK)
+        doSync(userRepo.get(donald.id)).value.organizationId.value must equal(org.id)
+      }
     }
   }
 
-  def userUpdateJson(role: String): JsObject = {
-    Json.obj("role" -> role)
+  @SuppressWarnings(Array("org.wartremover.warts.Product", "org.wartremover.warts.Serializable"))
+  def userUpdateJson(role: String, organizationId: Option[Long] = None): JsObject = {
+    Json.obj("role" -> role, "organizationId" -> organizationId.map(_.toString).map(JsString).orElse(Some(JsNull)))
   }
 
   def userCreationJson(name: String): JsObject = Json.obj("name" -> name)
